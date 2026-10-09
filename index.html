@@ -12,12 +12,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <!-- PWA Manifest Dynamic Injection -->
+    <!-- PWA Manifest & Service Worker Setup -->
     <script>
+        // 1. إنشاء ملف Manifest ديناميكياً
         const manifest = {
             "name": "دفتر الحسابات البسيط",
             "short_name": "دفتر الحسابات",
-            "start_url": ".",
+            "start_url": "./",
             "display": "standalone",
             "background_color": "#0f172a",
             "theme_color": "#0f172a",
@@ -29,13 +30,25 @@
                 }
             ]
         };
-        const stringManifest = JSON.stringify(manifest);
-        const blob = new Blob([stringManifest], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
+        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const link = document.createElement('link');
         link.rel = 'manifest';
-        link.href = manifestURL;
+        link.href = URL.createObjectURL(blob);
         document.head.appendChild(link);
+
+        // 2. تسجيل Service Worker لضمان ظهور زر التثبيت
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {});
+                `;
+                const swBlob = new Blob([swCode], { type: 'text/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob))
+                    .catch(err => console.log('SW registration failed: ', err));
+            });
+        }
     </script>
 
     <style>
@@ -487,7 +500,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="font-bold text-base">${tx.amount.toLocaleString('en-US')} د.ج</span>
-                        <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition title='حذف المعاملة'">
+                        <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف المعاملة">
                             🗑️
                         </button>
                     </div>
@@ -572,6 +585,7 @@
 
         function openTransactionModal() {
             document.getElementById('form-transaction').reset();
+            document.getElementById('modal-transaction').classList.add('hidden'); // تصحيح بسيط
             document.getElementById('modal-transaction').classList.remove('hidden');
         }
 
