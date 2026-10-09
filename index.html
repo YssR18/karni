@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دفتر الحسابات البسيط</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- خط Cairo العربي -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- PWA Manifest Dynamic Injection -->
+    <script>
+        const manifest = {
+            "name": "دفتر الحسابات البسيط",
+            "short_name": "دفتر الحسابات",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#0f172a",
+            "icons": [
+                {
+                    "src": "https://cdn-icons-png.flaticon.com/512/2654/2654280.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifest);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+    </script>
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-report, #printable-report * { visibility: visible; }
+            #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white py-4 px-6 shadow-md no-print">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold cursor-pointer flex items-center gap-2" onclick="showScreen('home')">
+                📖 دفتر الحسابات
+            </h1>
+            
+            <div class="flex items-center gap-4">
+                <!-- زر تثبيت التطبيق -->
+                <button id="btn-install-pwa" onclick="installPWA()" class="hidden bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
+                    📥 تثبيت التطبيق
+                </button>
+                <!-- الساعة والتاريخ -->
+                <div class="text-left">
+                    <div id="clock" class="text-lg font-bold tracking-wider text-amber-400">00:00:00</div>
+                    <div id="date" class="text-xs text-slate-400">---</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 no-print">
+
+        <!-- 1. الشاشة الرئيسية -->
+        <section id="screen-home" class="space-y-6">
+            <div class="text-center py-4">
+                <h2 class="text-2xl font-bold text-slate-700">مرحباً بك في دفترك المالي</h2>
+                <p class="text-slate-500 text-sm mt-1">إدارة الديون والعملاء والموردين بمزامنة سحابية آمنة</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- بطاقة العملاء -->
+                <div onclick="openSection('customers')" class="bg-white border-2 border-blue-500/20 hover:border-blue-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-2">قسم العملاء</span>
+                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-blue-600 transition">العملاء</h3>
+                            <p class="text-xs text-slate-500 mt-1">(هم يدينون لي / ديون لي عندهم)</p>
+                        </div>
+                        <div class="text-3xl bg-blue-50 p-3 rounded-xl text-blue-600">👥</div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                            <span>إجمالي المبالغ المستحقة لي:</span>
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-1">
+                                <span id="eye-icon-cust">👁️</span>
+                            </button>
+                        </div>
+                        <div id="total-customers-balance" class="text-2xl font-bold text-blue-600">**** د.ج</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة الموردين -->
+                <div onclick="openSection('suppliers')" class="bg-white border-2 border-emerald-500/20 hover:border-emerald-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold mb-2">قسم الموردين</span>
+                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-emerald-600 transition">الموردون</h3>
+                            <p class="text-xs text-slate-500 mt-1">(أنا أدين لهم / ديون عليّ لهم)</p>
+                        </div>
+                        <div class="text-3xl bg-emerald-50 p-3 rounded-xl text-emerald-600">🚚</div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                            <span>إجمالي المبالغ المطلوبة مني:</span>
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-1">
+                                <span id="eye-icon-supp">👁️</span>
+                            </button>
+                        </div>
+                        <div id="total-suppliers-balance" class="text-2xl font-bold text-emerald-600">**** د.ج</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. شاشة القائمة (عملاء / موردين) -->
+        <section id="screen-list" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b pb-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('home')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 transition">← العودة</button>
+                    <h2 id="list-title" class="text-2xl font-bold text-slate-800">---</h2>
+                </div>
+                <button onclick="openAddModal()" id="btn-add-person" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2">
+                    <span>+</span> <span id="btn-add-text">إضافة</span>
+                </button>
+            </div>
+
+            <div id="people-container" class="grid gap-3">
+                <!-- تعبئة القائمة -->
+            </div>
+        </section>
+
+        <!-- 3. شاشة تفاصيل الشخص -->
+        <section id="screen-detail" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b pb-4">
+                <button onclick="showScreen('list')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 transition">← رجوع للقائمة</button>
+                <div class="text-left flex items-center gap-2">
+                    <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
+                        <span>🖨️</span> طباعة التقرير
+                    </button>
+                    <div>
+                        <h2 id="person-name" class="text-xl font-bold text-slate-800">---</h2>
+                        <p id="person-phone" class="text-xs text-slate-500">---</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center shadow-lg">
+                <div>
+                    <div class="text-xs text-slate-400" id="balance-label">الرصيد الحالي</div>
+                    <div id="person-balance" class="text-3xl font-bold mt-1">0 د.ج</div>
+                </div>
+                <button onclick="openTransactionModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl transition shadow">
+                    + تسجيل حركة جديدة
+                </button>
+            </div>
+
+            <h3 class="font-bold text-slate-700 mt-6">سجل المعاملات:</h3>
+            <div id="transactions-container" class="space-y-2">
+                <!-- تعبئة السجل -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- منطقة التقرير القابل للطباعة فقط -->
+    <div id="printable-report" class="hidden p-8 bg-white text-slate-900 dir-rtl">
+        <div class="border-b pb-4 mb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">كشف حساب مالي</h1>
+                <p id="rpt-type" class="text-sm text-slate-500">قسم الحسابات</p>
+            </div>
+            <div class="text-left text-xs text-slate-500">
+                <div>تاريخ التقرير: <span id="rpt-date">--/--/----</span></div>
+            </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-lg mb-6 flex justify-between items-center border">
+            <div>
+                <div class="text-xs text-slate-500">معلومات الحساب:</div>
+                <div id="rpt-name" class="text-lg font-bold text-slate-800">---</div>
+                <div id="rpt-details" class="text-xs text-slate-600">---</div>
+            </div>
+            <div class="text-left">
+                <div class="text-xs text-slate-500">الرصيد الإجمالي النهائي:</div>
+                <div id="rpt-balance" class="text-xl font-bold text-slate-900">0 د.ج</div>
+            </div>
+        </div>
+
+        <table class="w-full text-right border-collapse text-sm">
+            <thead>
+                <tr class="bg-slate-100 border-b">
+                    <th class="p-2 border">التاريخ</th>
+                    <th class="p-2 border">نوع الحركة</th>
+                    <th class="p-2 border">رقم الفاتورة</th>
+                    <th class="p-2 border">البيان / ملاحظة</th>
+                    <th class="p-2 border">المبلغ</th>
+                </tr>
+            </thead>
+            <tbody id="rpt-rows">
+                <!-- تفاصيل الحركات -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal: إضافة شخص -->
+    <div id="modal-add" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modal-add-title" class="text-lg font-bold text-slate-800">إضافة جديد</h3>
+            <form id="form-add-person" onsubmit="handleSavePerson(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">الاسم الكامل *</label>
+                    <input type="text" id="input-name" required class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
+                    <input type="text" id="input-phone" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">العنوان</label>
+                    <input type="text" id="input-address" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">الرصيد الافتتاحي</label>
+                    <input type="number" step="any" id="input-initial" placeholder="0" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">أدخل المبلغ المسجل للبدء به فوراً.</p>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
+                    <button type="button" onclick="closeModal('modal-add')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: تسجيل حركة جديدة -->
+    <div id="modal-transaction" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-800">تسجيل حركة جديدة</h3>
+            <form id="form-transaction" onsubmit="handleSaveTransaction(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">نوع الحركة *</label>
+                    <select id="input-tx-type" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                        <option value="add">إضافة مبلغ (زيادة دين)</option>
+                        <option value="pay">تسديد (إنقاص الدين)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ *</label>
+                    <input type="number" step="any" id="input-tx-amount" required placeholder="0.00" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الفاتورة (يدوياً)</label>
+                    <input type="text" id="input-tx-invoice" placeholder="مثال: INV-1024" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">ملاحظة / بيان</label>
+                    <input type="text" id="input-tx-note" placeholder="مثال: دفعة نقدية، بضاعة..." class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition">حفظ الحركة</button>
+                    <button type="button" onclick="closeModal('modal-transaction')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // --- 1. إعدادات Firebase ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch(e) {
+            console.warn("Firebase غير موصول بعد.");
+        }
+
+        // --- 2. PWA Installation Handler ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('btn-install-pwa').classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('btn-install-pwa').classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        // --- 3. حالة التطبيق ---
+        let state = {
+            activeSection: 'customers',
+            currentPersonId: null,
+            hideBalance: true,
+            customers: JSON.parse(localStorage.getItem('app_customers') || '[]'),
+            suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
+        };
+
+        // --- 4. المزامنة ---
+        function syncWithCloud() {
+            if (!db) return;
+            
+            db.collection("customers").onSnapshot((snapshot) => {
+                state.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                localStorage.setItem('app_customers', JSON.stringify(state.customers));
+                updateHomeTotals();
+                if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
+                if (!document.getElementById('screen-detail').classList.contains('hidden')) {
+                    const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
+                    if (p) renderTransactions(p);
+                }
+            });
+
+            db.collection("suppliers").onSnapshot((snapshot) => {
+                state.suppliers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                localStorage.setItem('app_suppliers', JSON.stringify(state.suppliers));
+                updateHomeTotals();
+                if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
+            });
+        }
+
+        // --- 5. الساعة والعيون والعمليات ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('date').innerText = now.toLocaleDateString('en-GB');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function toggleBalanceVisibility() {
+            state.hideBalance = !state.hideBalance;
+            document.getElementById('eye-icon-cust').innerText = state.hideBalance ? '👁️' : '🙈';
+            document.getElementById('eye-icon-supp').innerText = state.hideBalance ? '👁️' : '🙈';
+            updateHomeTotals();
+        }
+
+        function getPersonBalance(person) {
+            let balance = parseFloat(person.initialBalance) || 0;
+            (person.transactions || []).forEach(tx => {
+                if (tx.type === 'add') balance += tx.amount;
+                if (tx.type === 'pay') balance -= tx.amount;
+            });
+            return balance;
+        }
+
+        function updateHomeTotals() {
+            const totalCust = state.customers.reduce((sum, p) => sum + getPersonBalance(p), 0);
+            const totalSupp = state.suppliers.reduce((sum, p) => sum + getPersonBalance(p), 0);
+
+            const custEl = document.getElementById('total-customers-balance');
+            const suppEl = document.getElementById('total-suppliers-balance');
+
+            if (state.hideBalance) {
+                custEl.innerText = '**** د.ج';
+                suppEl.innerText = '**** د.ج';
+            } else {
+                custEl.innerText = totalCust.toLocaleString('en-US') + ' د.ج';
+                suppEl.innerText = totalSupp.toLocaleString('en-US') + ' د.ج';
+            }
+        }
+
+        // --- 6. الشاشات والريندر ---
+        function showScreen(screenId) {
+            ['home', 'list', 'detail'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+            });
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+        }
+
+        function openSection(type) {
+            state.activeSection = type;
+            const isCustomer = type === 'customers';
+            
+            document.getElementById('list-title').innerText = isCustomer ? 'قسم العملاء' : 'قسم الموردين';
+            document.getElementById('btn-add-text').innerText = isCustomer ? 'إضافة عميل' : 'إضافة مورد';
+            
+            const btn = document.getElementById('btn-add-person');
+            btn.className = isCustomer 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2';
+
+            renderPeopleList();
+            showScreen('list');
+        }
+
+        function renderPeopleList() {
+            const container = document.getElementById('people-container');
+            const list = state[state.activeSection];
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-400">لا يوجد أي أسماء مسجلة حالياً</div>`;
+                return;
+            }
+
+            list.forEach(person => {
+                const bal = getPersonBalance(person);
+                const el = document.createElement('div');
+                el.className = 'bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm flex justify-between items-center cursor-pointer transition';
+                el.onclick = () => openPersonDetail(person.id);
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold text-slate-800">${person.name}</div>
+                        <div class="text-xs text-slate-400">${person.phone || 'بدون هاتف'} - ${person.address || 'بدون عنوان'}</div>
+                    </div>
+                    <div class="text-left">
+                        <div class="text-xs text-slate-400">الرصيد:</div>
+                        <div class="font-bold ${bal > 0 ? 'text-slate-800' : 'text-slate-400'}">${bal.toLocaleString('en-US')} د.ج</div>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function openPersonDetail(id) {
+            state.currentPersonId = id;
+            const person = state[state.activeSection].find(p => p.id === id);
+            if (!person) return;
+
+            document.getElementById('person-name').innerText = person.name;
+            document.getElementById('person-phone').innerText = `هاتف: ${person.phone || 'غير مدون'} | عنوان: ${person.address || 'غير مدون'}`;
+            
+            const isCust = state.activeSection === 'customers';
+            document.getElementById('balance-label').innerText = isCust ? 'المبلغ المستحق لك عليه (يدين لك):' : 'المبلغ المستحق له عليك (تدين له):';
+
+            renderTransactions(person);
+            showScreen('detail');
+        }
+
+        function renderTransactions(person) {
+            const bal = getPersonBalance(person);
+            document.getElementById('person-balance').innerText = bal.toLocaleString('en-US') + ' د.ج';
+
+            const container = document.getElementById('transactions-container');
+            container.innerHTML = '';
+
+            if (person.initialBalance) {
+                const initEl = document.createElement('div');
+                initEl.className = 'bg-slate-100 p-3 rounded-lg flex justify-between items-center text-xs text-slate-600';
+                initEl.innerHTML = `<span>رصيد افتتاحي</span><span class="font-bold">${parseFloat(person.initialBalance).toLocaleString('en-US')} د.ج</span>`;
+                container.appendChild(initEl);
+            }
+
+            (person.transactions || []).forEach(tx => {
+                const el = document.createElement('div');
+                const isAdd = tx.type === 'add';
+                el.className = `p-3 rounded-xl border flex justify-between items-center text-sm ${isAdd ? 'bg-red-50 border-red-100 text-red-700' : 'bg-green-50 border-green-100 text-green-700'}`;
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold flex items-center gap-2">
+                            <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
+                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 px-2 py-0.5 rounded border border-slate-200">فاتورة: ${tx.invoice}</span>` : ''}
+                        </div>
+                        <div class="text-xs opacity-75 mt-0.5">${tx.note || 'بدون ملاحظة'} • ${tx.date}</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-base">${tx.amount.toLocaleString('en-US')} د.ج</span>
+                        <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition title='حذف المعاملة'">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        // --- 7. حذف معاملة ---
+        async function deleteTransaction(txId) {
+            if (!confirm('هل أنت تأكد من رغبتك في حذف هذه المعاملة؟')) return;
+
+            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            if (!person) return;
+
+            const updatedTx = (person.transactions || []).filter(t => t.id != txId);
+
+            if (db) {
+                await db.collection(state.activeSection).doc(person.id).update({
+                    transactions: updatedTx
+                });
+            } else {
+                person.transactions = updatedTx;
+                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+                renderTransactions(person);
+                updateHomeTotals();
+            }
+        }
+
+        // --- 8. طباعة التقرير / كشف الحساب ---
+        function printReport() {
+            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            if (!person) return;
+
+            const isCust = state.activeSection === 'customers';
+            document.getElementById('rpt-type').innerText = isCust ? 'كشف حساب عميل' : 'كشف حساب مورد';
+            document.getElementById('rpt-date').innerText = new Date().toLocaleDateString('en-GB');
+            document.getElementById('rpt-name').innerText = person.name;
+            document.getElementById('rpt-details').innerText = `هاتف: ${person.phone || 'غير مدون'} | عنوان: ${person.address || 'غير مدون'}`;
+            document.getElementById('rpt-balance').innerText = getPersonBalance(person).toLocaleString('en-US') + ' د.ج';
+
+            const rowsContainer = document.getElementById('rpt-rows');
+            rowsContainer.innerHTML = '';
+
+            if (person.initialBalance) {
+                rowsContainer.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2 border">-</td>
+                        <td class="p-2 border font-bold">رصيد افتتاحي</td>
+                        <td class="p-2 border">-</td>
+                        <td class="p-2 border">منقول من الدفتر</td>
+                        <td class="p-2 border font-bold">${parseFloat(person.initialBalance).toLocaleString('en-US')} د.ج</td>
+                    </tr>
+                `;
+            }
+
+            (person.transactions || []).forEach(tx => {
+                const isAdd = tx.type === 'add';
+                rowsContainer.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2 border">${tx.date}</td>
+                        <td class="p-2 border ${isAdd ? 'text-red-600' : 'text-green-600'} font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
+                        <td class="p-2 border">${tx.invoice || '-'}</td>
+                        <td class="p-2 border">${tx.note || '-'}</td>
+                        <td class="p-2 border font-bold">${tx.amount.toLocaleString('en-US')} د.ج</td>
+                    </tr>
+                `;
+            });
+
+            const rpt = document.getElementById('printable-report');
+            rpt.classList.remove('hidden');
+            window.print();
+            rpt.classList.add('hidden');
+        }
+
+        // --- 9. حفظ وتحديث ---
+        function openAddModal() {
+            document.getElementById('modal-add-title').innerText = state.activeSection === 'customers' ? 'إضافة عميل جديد' : 'إضافة مورد جديد';
+            document.getElementById('form-add-person').reset();
+            document.getElementById('modal-add').classList.remove('hidden');
+        }
+
+        function openTransactionModal() {
+            document.getElementById('form-transaction').reset();
+            document.getElementById('modal-transaction').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        async function handleSavePerson(e) {
+            e.preventDefault();
+            const id = 'ID_' + Date.now();
+            const newPerson = {
+                id: id,
+                name: document.getElementById('input-name').value,
+                phone: document.getElementById('input-phone').value,
+                address: document.getElementById('input-address').value,
+                initialBalance: parseFloat(document.getElementById('input-initial').value) || 0,
+                transactions: []
+            };
+
+            if (db) {
+                await db.collection(state.activeSection).doc(id).set(newPerson);
+            } else {
+                state[state.activeSection].push(newPerson);
+                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+                renderPeopleList();
+                updateHomeTotals();
+            }
+            closeModal('modal-add');
+        }
+
+        async function handleSaveTransaction(e) {
+            e.preventDefault();
+            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            if (!person) return;
+
+            const now = new Date();
+            const tx = {
+                id: Date.now(),
+                type: document.getElementById('input-tx-type').value,
+                amount: parseFloat(document.getElementById('input-tx-amount').value) || 0,
+                invoice: document.getElementById('input-tx-invoice').value.trim(),
+                note: document.getElementById('input-tx-note').value,
+                date: now.toLocaleDateString('en-GB')
+            };
+
+            const updatedTransactions = [...(person.transactions || []), tx];
+
+            if (db) {
+                await db.collection(state.activeSection).doc(person.id).update({
+                    transactions: updatedTransactions
+                });
+            } else {
+                person.transactions = updatedTransactions;
+                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+                renderTransactions(person);
+                updateHomeTotals();
+            }
+            closeModal('modal-transaction');
+        }
+
+        // البدء
+        updateHomeTotals();
+        syncWithCloud();
+    </script>
+</body>
+</html>
