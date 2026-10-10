@@ -1,15 +1,15 @@
 /* Service worker: دفتر الحسابات
  * - الصفحة نفسها: الشبكة أولاً، وعند انقطاع الإنترنت تُقدَّم النسخة المخزنة
- * - المكتبات والخطوط: تُقدَّم من التخزين وتُحدَّث في الخلفية
+ * - ملفات الموقع (tailwind.css والأيقونات): الشبكة أولاً ثم النسخة المخزنة
+ * - مكتبات Firebase والخطوط: تُقدَّم من التخزين وتُحدَّث في الخلفية
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'daftar-' + VERSION;
 
-const PRECACHE_PAGES = ['./', './index.html'];
+const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const PRECACHE_LIBS = [
-  'https://cdn.tailwindcss.com/',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
@@ -18,7 +18,6 @@ const PRECACHE_LIBS = [
 
 // المضيفات الخارجية المسموح بتخزين ملفاتها
 const CACHEABLE_HOSTS = [
-  'cdn.tailwindcss.com',
   'www.gstatic.com',
   'fonts.googleapis.com',
   'fonts.gstatic.com',
@@ -65,6 +64,20 @@ async function networkFirstPage(request) {
   }
 }
 
+// ملفات الموقع نفسه (CSS, أيقونات...): الشبكة أولاً حتى لا يبقى تنسيق قديم مع صفحة جديدة
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE);
+  try {
+    const fresh = await fetch(request);
+    if (fresh && fresh.ok) cache.put(request, fresh.clone());
+    return fresh;
+  } catch (err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    throw err;
+  }
+}
+
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE);
   const cached = await cache.match(request);
@@ -91,7 +104,7 @@ self.addEventListener('fetch', (event) => {
     if (request.mode === 'navigate') {
       event.respondWith(networkFirstPage(request));
     } else {
-      event.respondWith(staleWhileRevalidate(request));
+      event.respondWith(networkFirst(request));
     }
     return;
   }
