@@ -6,6 +6,11 @@
     <title>دفتر الحسابات البسيط</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- خط Cairo العربي -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
@@ -26,21 +31,19 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header -->
-    <header class="bg-slate-900 text-white py-4 px-6 shadow-md no-print">
+    <header class="bg-slate-900 dark:bg-slate-950 text-white py-4 px-6 shadow-md no-print border-b dark:border-slate-800">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-bold cursor-pointer flex items-center gap-2" onclick="showScreen('home')">
                 📖 دفتر الحسابات
             </h1>
             
             <div class="flex items-center gap-4">
-                <!-- زر تثبيت التطبيق -->
                 <button id="btn-install-pwa" onclick="installPWA()" class="hidden bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
                     📥 تثبيت التطبيق
                 </button>
-                <!-- الساعة والتاريخ -->
                 <div class="text-left">
                     <div id="clock" class="text-lg font-bold tracking-wider text-amber-400">00:00:00</div>
                     <div id="date" class="text-xs text-slate-400">---</div>
@@ -55,66 +58,66 @@
         <!-- 1. الشاشة الرئيسية -->
         <section id="screen-home" class="space-y-6">
             <div class="text-center py-4">
-                <h2 class="text-2xl font-bold text-slate-700">مرحباً بك في دفترك المالي</h2>
-                <p class="text-slate-500 text-sm mt-1">إدارة الديون والعملاء والموردين بمزامنة سحابية آمنة</p>
+                <h2 class="text-2xl font-bold text-slate-700 dark:text-slate-200">مرحباً بك في دفترك المالي</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">إدارة الديون والعملاء والموردين بمزامنة سحابية آمنة</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- بطاقة العملاء -->
-                <div onclick="openSection('customers')" class="bg-white border-2 border-blue-500/20 hover:border-blue-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                <div onclick="openSection('customers')" class="bg-white dark:bg-slate-800 border-2 border-blue-500/20 hover:border-blue-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-2">قسم العملاء</span>
-                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-blue-600 transition">العملاء</h3>
-                            <p class="text-xs text-slate-500 mt-1">(هم يدينون لي / ديون لي عندهم)</p>
+                            <span class="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 rounded-full text-xs font-bold mb-2">قسم العملاء</span>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">العملاء</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(هم يدينون لي / ديون لي عندهم)</p>
                         </div>
-                        <div class="text-3xl bg-blue-50 p-3 rounded-xl text-blue-600">👥</div>
+                        <div class="text-3xl bg-blue-50 dark:bg-slate-700 p-3 rounded-xl text-blue-600 dark:text-blue-400">👥</div>
                     </div>
                     <div>
                         <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
                             <span>إجمالي المبالغ المستحقة لي:</span>
-                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-1">
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 focus:outline-none p-1">
                                 <span id="eye-icon-cust">👁️</span>
                             </button>
                         </div>
-                        <div id="total-customers-balance" class="text-2xl font-bold text-blue-600">**** د.ج</div>
+                        <div id="total-customers-balance" class="text-2xl font-bold text-blue-600 dark:text-blue-400">****</div>
                     </div>
                 </div>
 
                 <!-- بطاقة الموردين -->
-                <div onclick="openSection('suppliers')" class="bg-white border-2 border-emerald-500/20 hover:border-emerald-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                <div onclick="openSection('suppliers')" class="bg-white dark:bg-slate-800 border-2 border-emerald-500/20 hover:border-emerald-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold mb-2">قسم الموردين</span>
-                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-emerald-600 transition">الموردون</h3>
-                            <p class="text-xs text-slate-500 mt-1">(أنا أدين لهم / ديون عليّ لهم)</p>
+                            <span class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded-full text-xs font-bold mb-2">قسم الموردين</span>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">الموردون</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(أنا أدين لهم / ديون عليّ لهم)</p>
                         </div>
-                        <div class="text-3xl bg-emerald-50 p-3 rounded-xl text-emerald-600">🚚</div>
+                        <div class="text-3xl bg-emerald-50 dark:bg-slate-700 p-3 rounded-xl text-emerald-600 dark:text-emerald-400">🚚</div>
                     </div>
                     <div>
                         <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
                             <span>إجمالي المبالغ المطلوبة مني:</span>
-                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-1">
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 focus:outline-none p-1">
                                 <span id="eye-icon-supp">👁️</span>
                             </button>
                         </div>
-                        <div id="total-suppliers-balance" class="text-2xl font-bold text-emerald-600">**** د.ج</div>
+                        <div id="total-suppliers-balance" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">****</div>
                     </div>
                 </div>
 
                 <!-- بطاقة الإعدادات -->
-                <div onclick="openSettingsModal()" class="bg-white border-2 border-slate-500/20 hover:border-slate-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                <div onclick="openSettingsModal()" class="bg-white dark:bg-slate-800 border-2 border-slate-500/20 hover:border-slate-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="inline-block px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold mb-2">الإعدادات</span>
-                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-slate-600 transition">إعدادات المحل</h3>
-                            <p class="text-xs text-slate-500 mt-1">(تعديل عنوان و اسم النشاط للتقارير)</p>
+                            <span class="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full text-xs font-bold mb-2">الإعدادات</span>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition">إعدادات النظام</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(اسم المحل، المظهر، خيارات العملة)</p>
                         </div>
-                        <div class="text-3xl bg-slate-50 p-3 rounded-xl text-slate-600">⚙️</div>
+                        <div class="text-3xl bg-slate-50 dark:bg-slate-700 p-3 rounded-xl text-slate-600 dark:text-slate-300">⚙️</div>
                     </div>
                     <div>
-                        <div class="text-xs text-slate-400">العنوان الحالي في الورقة:</div>
-                        <div id="home-shop-name" class="text-sm font-bold text-slate-700 truncate">إسم المحل أو النشاط</div>
+                        <div class="text-xs text-slate-400">اسم النشاط الحالي:</div>
+                        <div id="home-shop-name" class="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">إسم المحل أو النشاط</div>
                     </div>
                 </div>
             </div>
@@ -122,10 +125,10 @@
 
         <!-- 2. شاشة القائمة (عملاء / موردين) -->
         <section id="screen-list" class="hidden space-y-4">
-            <div class="flex items-center justify-between border-b pb-4">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
                 <div class="flex items-center gap-3">
-                    <button onclick="showScreen('home')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 transition">← العودة</button>
-                    <h2 id="list-title" class="text-2xl font-bold text-slate-800">---</h2>
+                    <button onclick="showScreen('home')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← العودة</button>
+                    <h2 id="list-title" class="text-2xl font-bold text-slate-800 dark:text-slate-100">---</h2>
                 </div>
                 <button onclick="openAddModal()" id="btn-add-person" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2">
                     <span>+</span> <span id="btn-add-text">إضافة</span>
@@ -139,30 +142,34 @@
 
         <!-- 3. شاشة تفاصيل الشخص -->
         <section id="screen-detail" class="hidden space-y-4">
-            <div class="flex items-center justify-between border-b pb-4">
-                <button onclick="showScreen('list')" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 transition">← رجوع للقائمة</button>
-                <div class="text-left flex items-center gap-2">
-                    <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
-                        <span>🖨️</span> طباعة التقرير
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
+                <button onclick="showScreen('list')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← رجوع للقائمة</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openEditPersonModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
+                        ✏️ تعديل الملف
                     </button>
-                    <div>
-                        <h2 id="person-name" class="text-xl font-bold text-slate-800">---</h2>
-                        <p id="person-phone" class="text-xs text-slate-500">---</p>
-                    </div>
+                    <button onclick="deleteCurrentPerson()" class="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1">
+                        🗑️ حذف
+                    </button>
+                    <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
+                        🖨️ طباعة التقرير
+                    </button>
                 </div>
             </div>
 
             <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center shadow-lg">
                 <div>
-                    <div class="text-xs text-slate-400" id="balance-label">الرصيد الحالي</div>
-                    <div id="person-balance" class="text-3xl font-bold mt-1">0 د.ج</div>
+                    <h2 id="person-name" class="text-xl font-bold">---</h2>
+                    <p id="person-phone" class="text-xs text-slate-400 mt-1">---</p>
+                    <div class="text-xs text-slate-400 mt-3" id="balance-label">الرصيد الحالي</div>
+                    <div id="person-balance" class="text-3xl font-bold mt-0.5">0</div>
                 </div>
                 <button onclick="openTransactionModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl transition shadow">
                     + تسجيل حركة جديدة
                 </button>
             </div>
 
-            <h3 class="font-bold text-slate-700 mt-6">سجل المعاملات:</h3>
+            <h3 class="font-bold text-slate-700 dark:text-slate-300 mt-6">سجل المعاملات:</h3>
             <div id="transactions-container" class="space-y-2">
                 <!-- تعبئة السجل -->
             </div>
@@ -175,113 +182,140 @@
         <div class="text-center border-b pb-4 mb-4">
             <h1 id="rpt-shop-title" class="text-2xl md:text-3xl font-bold text-slate-900">إسم المحل أو النشاط</h1>
             <div class="flex justify-between items-center mt-3 text-xs text-slate-500">
-                <span id="rpt-type">كشف حساب</span>
+                <span id="rpt-type" class="font-bold">كشف حساب</span>
                 <span>تاريخ التقرير: <span id="rpt-date">--/--/----</span></span>
             </div>
         </div>
 
-        <div class="bg-slate-50 p-4 rounded-lg mb-6 flex justify-between items-center border">
-            <div>
-                <div class="text-xs text-slate-500">معلومات الحساب:</div>
-                <div id="rpt-name" class="text-lg font-bold text-slate-800">---</div>
-                <div id="rpt-details" class="text-xs text-slate-600">---</div>
-            </div>
-            <div class="text-left">
-                <div class="text-xs text-slate-500">الرصيد الإجمالي النهائي:</div>
-                <div id="rpt-balance" class="text-xl font-bold text-slate-900">0 د.ج</div>
-            </div>
+        <div class="bg-slate-50 p-4 rounded-lg mb-6 border">
+            <div class="text-xs text-slate-500">معلومات الحساب:</div>
+            <div id="rpt-name" class="text-lg font-bold text-slate-800">---</div>
+            <div id="rpt-details" class="text-xs text-slate-600">---</div>
         </div>
 
         <table class="w-full text-right border-collapse text-sm">
             <thead>
-                <tr class="bg-slate-100 border-b">
-                    <th class="p-2 border">التاريخ</th>
-                    <th class="p-2 border">نوع الحركة</th>
-                    <th class="p-2 border">رقم الفاتورة</th>
-                    <th class="p-2 border">البيان / ملاحظة</th>
-                    <th class="p-2 border">المبلغ</th>
+                <tr class="bg-slate-800 text-white font-bold border-b border-slate-900">
+                    <th class="p-3 border border-slate-700">التاريخ</th>
+                    <th class="p-3 border border-slate-700">نوع الحركة</th>
+                    <th class="p-3 border border-slate-700">رقم السند / الفاتورة</th>
+                    <th class="p-3 border border-slate-700">البيان / ملاحظة</th>
+                    <th class="p-3 border border-slate-700">المبلغ</th>
                 </tr>
             </thead>
             <tbody id="rpt-rows">
                 <!-- تفاصيل الحركات -->
             </tbody>
+            <tfoot>
+                <tr class="bg-slate-200 text-slate-900 font-bold border-t-2 border-slate-900">
+                    <td colspan="4" class="p-3 border border-slate-400 text-left">الرصيد الإجمالي النهائي:</td>
+                    <td id="rpt-balance" class="p-3 border border-slate-400 text-lg">0</td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 
-    <!-- Modal: إعدادات المحل -->
+    <!-- Modal: إعدادات النظام -->
     <div id="modal-settings" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-slate-800">إعدادات المحل والنشاط</h3>
-            <form id="form-settings" onsubmit="saveSettings(event)" class="space-y-3">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إعدادات النظام والمظهر</h3>
+            <form id="form-settings" onsubmit="saveSettings(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">اسم المحل / النشاط (عنوان الورقة وسط الصفحة) *</label>
-                    <input type="text" id="input-shop-name" required class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="مثال: مؤسسة التجارة العامة">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">اسم المحل / النشاط (عنوان التقارير) *</label>
+                    <input type="text" id="input-shop-name" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="مثال: مؤسسة التجارة العامة">
                 </div>
+                
+                <!-- خيار الوضع الليلي -->
+                <div class="flex items-center justify-between border-t border-b dark:border-slate-700 py-3">
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">الوضع الليلي (Dark Mode)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="input-dark-mode" onchange="toggleDarkMode(this.checked)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <!-- خيار إظهار د.ج -->
+                <div class="flex items-center justify-between pb-3 border-b dark:border-slate-700">
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">إظهار رمز العملة (د.ج)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="input-show-currency" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
-                    <button type="button" onclick="closeModal('modal-settings')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                    <button type="submit" class="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
+                    <button type="button" onclick="closeModal('modal-settings')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: إضافة شخص -->
+    <!-- Modal: إضافة / تعديل شخص -->
     <div id="modal-add" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 id="modal-add-title" class="text-lg font-bold text-slate-800">إضافة جديد</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modal-add-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">إضافة جديد</h3>
             <form id="form-add-person" onsubmit="handleSavePerson(event)" class="space-y-3">
+                <input type="hidden" id="input-edit-person-id">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">الاسم الكامل *</label>
-                    <input type="text" id="input-name" required class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">الاسم الكامل *</label>
+                    <input type="text" id="input-name" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
-                    <input type="text" id="input-phone" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رقم الهاتف</label>
+                    <input type="text" id="input-phone" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">العنوان</label>
-                    <input type="text" id="input-address" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">العنوان</label>
+                    <input type="text" id="input-address" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">الرصيد الافتتاحي</label>
-                    <input type="number" step="any" id="input-initial" placeholder="0" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                    <p class="text-[10px] text-slate-400 mt-1">أدخل المبلغ المسجل للبدء به فوراً.</p>
+                <div id="initial-balance-field">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">الرصيد الافتتاحي</label>
+                    <input type="number" step="any" id="input-initial" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
-                    <button type="button" onclick="closeModal('modal-add')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                    <button type="button" onclick="closeModal('modal-add')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: تسجيل حركة جديدة -->
+    <!-- Modal: تسجيل / تعديل حركة -->
     <div id="modal-transaction" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-slate-800">تسجيل حركة جديدة</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modal-tx-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">تسجيل حركة جديدة</h3>
             <form id="form-transaction" onsubmit="handleSaveTransaction(event)" class="space-y-3">
+                <input type="hidden" id="input-tx-edit-id">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">نوع الحركة *</label>
-                    <select id="input-tx-type" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نوع الحركة *</label>
+                    <select id="input-tx-type" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         <option value="add">إضافة مبلغ (زيادة دين)</option>
                         <option value="pay">تسديد (إنقاص الدين)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ *</label>
-                    <input type="number" step="any" id="input-tx-amount" required placeholder="0.00" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">المبلغ *</label>
+                    <input type="number" step="any" id="input-tx-amount" required placeholder="0.00" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الفاتورة (يدوياً)</label>
-                    <input type="text" id="input-tx-invoice" placeholder="مثال: INV-1024" class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نوع الوثيقة والرقم (يدوياً)</label>
+                    <div class="flex gap-2">
+                        <select id="input-tx-doc-type" class="w-1/3 border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-xs">
+                            <option value="فاتورة">فاتورة</option>
+                            <option value="سند قبض">سند قبض</option>
+                            <option value="سند صرف">سند صرف</option>
+                        </select>
+                        <input type="text" id="input-tx-invoice" placeholder="الرقم..." class="w-2/3 border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">ملاحظة / بيان</label>
-                    <input type="text" id="input-tx-note" placeholder="مثال: دفعة نقدية، بضاعة..." class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظة / بيان</label>
+                    <input type="text" id="input-tx-note" placeholder="مثال: دفعة نقدية، بضاعة..." class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition">حفظ الحركة</button>
-                    <button type="button" onclick="closeModal('modal-transaction')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                    <button type="button" onclick="closeModal('modal-transaction')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -333,18 +367,43 @@
             activeSection: 'customers',
             currentPersonId: null,
             hideBalance: true,
+            showCurrency: localStorage.getItem('app_show_currency') !== 'false',
             customers: JSON.parse(localStorage.getItem('app_customers') || '[]'),
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
         };
 
-        // عرض اسم المحل المحفوظ في الشاشة الرئيسية عند البدء
+        // تهيئة المظهر والعملة
+        function initThemeAndConfig() {
+            const isDark = localStorage.getItem('app_dark_mode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateHomeShopNameDisplay();
+        }
+
+        function toggleDarkMode(enabled) {
+            if (enabled) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('app_dark_mode', 'true');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('app_dark_mode', 'false');
+            }
+        }
+
+        function formatAmount(num) {
+            const val = num.toLocaleString('en-US');
+            return state.showCurrency ? `${val} د.ج` : val;
+        }
+
         function updateHomeShopNameDisplay() {
             const el = document.getElementById('home-shop-name');
             if(el) {
                 el.innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             }
         }
-        updateHomeShopNameDisplay();
 
         // --- 4. المزامنة ---
         function syncWithCloud() {
@@ -404,15 +463,15 @@
             const suppEl = document.getElementById('total-suppliers-balance');
 
             if (state.hideBalance) {
-                custEl.innerText = '**** د.ج';
-                suppEl.innerText = '**** د.ج';
+                custEl.innerText = '****';
+                suppEl.innerText = '****';
             } else {
-                custEl.innerText = totalCust.toLocaleString('en-US') + ' د.ج';
-                suppEl.innerText = totalSupp.toLocaleString('en-US') + ' د.ج';
+                custEl.innerText = formatAmount(totalCust);
+                suppEl.innerText = formatAmount(totalSupp);
             }
         }
 
-        // --- 6. التنقل بين الشاشات والإعدادات ---
+        // --- 6. التنقل الشاشات ---
         function showScreen(screenId) {
             ['home', 'list', 'detail'].forEach(id => {
                 const el = document.getElementById(`screen-${id}`);
@@ -439,16 +498,22 @@
         }
 
         function openSettingsModal() {
-            const currentName = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
-            document.getElementById('input-shop-name').value = currentName;
+            document.getElementById('input-shop-name').value = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
+            document.getElementById('input-dark-mode').checked = localStorage.getItem('app_dark_mode') === 'true';
+            document.getElementById('input-show-currency').checked = state.showCurrency;
             document.getElementById('modal-settings').classList.remove('hidden');
         }
 
         function saveSettings(e) {
             e.preventDefault();
-            const val = document.getElementById('input-shop-name').value.trim() || 'إسم المحل أو النشاط';
-            localStorage.setItem('app_shop_name', val);
+            const shopName = document.getElementById('input-shop-name').value.trim() || 'إسم المحل أو النشاط';
+            localStorage.setItem('app_shop_name', shopName);
+
+            state.showCurrency = document.getElementById('input-show-currency').checked;
+            localStorage.setItem('app_show_currency', state.showCurrency);
+
             updateHomeShopNameDisplay();
+            updateHomeTotals();
             closeModal('modal-settings');
         }
 
@@ -465,16 +530,16 @@
             list.forEach(person => {
                 const bal = getPersonBalance(person);
                 const el = document.createElement('div');
-                el.className = 'bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm flex justify-between items-center cursor-pointer transition';
+                el.className = 'bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 shadow-sm flex justify-between items-center cursor-pointer transition';
                 el.onclick = () => openPersonDetail(person.id);
                 el.innerHTML = `
                     <div>
-                        <div class="font-bold text-slate-800">${person.name}</div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100">${person.name}</div>
                         <div class="text-xs text-slate-400">${person.phone || 'بدون هاتف'} - ${person.address || 'بدون عنوان'}</div>
                     </div>
                     <div class="text-left">
                         <div class="text-xs text-slate-400">الرصيد:</div>
-                        <div class="font-bold ${bal > 0 ? 'text-slate-800' : 'text-slate-400'}">${bal.toLocaleString('en-US')} د.ج</div>
+                        <div class="font-bold ${bal > 0 ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400'}">${formatAmount(bal)}</div>
                     </div>
                 `;
                 container.appendChild(el);
@@ -498,42 +563,88 @@
 
         function renderTransactions(person) {
             const bal = getPersonBalance(person);
-            document.getElementById('person-balance').innerText = bal.toLocaleString('en-US') + ' د.ج';
+            document.getElementById('person-balance').innerText = formatAmount(bal);
 
             const container = document.getElementById('transactions-container');
             container.innerHTML = '';
 
             if (person.initialBalance) {
                 const initEl = document.createElement('div');
-                initEl.className = 'bg-slate-100 p-3 rounded-lg flex justify-between items-center text-xs text-slate-600';
-                initEl.innerHTML = `<span>رصيد افتتاحي</span><span class="font-bold">${parseFloat(person.initialBalance).toLocaleString('en-US')} د.ج</span>`;
+                initEl.className = 'bg-slate-100 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center text-xs text-slate-600 dark:text-slate-300';
+                initEl.innerHTML = `<span>رصيد افتتاحي</span><span class="font-bold">${formatAmount(parseFloat(person.initialBalance))}</span>`;
                 container.appendChild(initEl);
             }
 
             (person.transactions || []).forEach(tx => {
                 const el = document.createElement('div');
                 const isAdd = tx.type === 'add';
-                el.className = `p-3 rounded-xl border flex justify-between items-center text-sm ${isAdd ? 'bg-red-50 border-red-100 text-red-700' : 'bg-green-50 border-green-100 text-green-700'}`;
+                el.className = `p-3 rounded-xl border flex justify-between items-center text-sm ${isAdd ? 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-400'}`;
                 el.innerHTML = `
                     <div>
                         <div class="font-bold flex items-center gap-2">
                             <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
-                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 px-2 py-0.5 rounded border border-slate-200">فاتورة: ${tx.invoice}</span>` : ''}
+                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${tx.docType \vert{}\vert{} 'وثيقة'}: ${tx.invoice}</span>` : ''}
                         </div>
                         <div class="text-xs opacity-75 mt-0.5">${tx.note || 'بدون ملاحظة'} • ${tx.date}</div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="font-bold text-base">${tx.amount.toLocaleString('en-US')} د.ج</span>
-                        <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف المعاملة">
-                            🗑️
-                        </button>
+                        <span class="font-bold text-base">${formatAmount(tx.amount)}</span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openEditTransactionModal('${tx.id}')" class="text-slate-400 hover:text-blue-600 p-1 transition" title="تعديل">✏️</button>
+                            <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف">🗑️</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(el);
             });
         }
 
-        // --- 7. حذف معاملة ---
+        // --- 7. تعديل وحذف العميل / المعاملة ---
+        function openEditPersonModal() {
+            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            if (!person) return;
+
+            document.getElementById('modal-add-title').innerText = 'تعديل بيانات الملف';
+            document.getElementById('input-edit-person-id').value = person.id;
+            document.getElementById('input-name').value = person.name;
+            document.getElementById('input-phone').value = person.phone || '';
+            document.getElementById('input-address').value = person.address || '';
+            document.getElementById('initial-balance-field').classList.add('hidden'); // إخفاء الرصيد الافتتاحي عند التعديل
+
+            document.getElementById('modal-add').classList.remove('hidden');
+        }
+
+        async function deleteCurrentPerson() {
+            if (!confirm('هل أنت متأكد من حذف هذا الحساب نهائياً مع كل معاملاته؟')) return;
+
+            const personId = state.currentPersonId;
+            if (db) {
+                await db.collection(state.activeSection).doc(personId).delete();
+            } else {
+                state[state.activeSection] = state[state.activeSection].filter(p => p.id !== personId);
+                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+            }
+            showScreen('list');
+        }
+
+        function openEditTransactionModal(txId) {
+            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            if (!person) return;
+
+            const tx = (person.transactions || []).find(t => t.id == txId);
+            if (!tx) return;
+
+            document.getElementById('modal-tx-title').innerText = 'تعديل المعاملة';
+            document.getElementById('input-tx-edit-id').value = tx.id;
+            document.getElementById('input-tx-type').value = tx.type;
+            document.getElementById('input-tx-amount').value = tx.amount;
+            document.getElementById('input-tx-doc-type').value = tx.docType || 'فاتورة';
+            document.getElementById('input-tx-invoice').value = tx.invoice || '';
+            document.getElementById('input-tx-note').value = tx.note || '';
+
+            document.getElementById('modal-transaction').classList.remove('hidden');
+        }
+
         async function deleteTransaction(txId) {
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
@@ -560,38 +671,40 @@
             if (!person) return;
 
             const isCust = state.activeSection === 'customers';
-            // استخدام اسم المحل المحفوظ في الإعدادات
             document.getElementById('rpt-shop-title').innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             document.getElementById('rpt-type').innerText = isCust ? 'كشف حساب عميل' : 'كشف حساب مورد';
             document.getElementById('rpt-date').innerText = new Date().toLocaleDateString('en-GB');
             document.getElementById('rpt-name').innerText = person.name;
             document.getElementById('rpt-details').innerText = `هاتف: ${person.phone || 'غير مدون'} | عنوان: ${person.address || 'غير مدون'}`;
-            document.getElementById('rpt-balance').innerText = getPersonBalance(person).toLocaleString('en-US') + ' د.ج';
+            
+            const totalBal = getPersonBalance(person);
+            document.getElementById('rpt-balance').innerText = formatAmount(totalBal);
 
             const rowsContainer = document.getElementById('rpt-rows');
             rowsContainer.innerHTML = '';
 
             if (person.initialBalance) {
                 rowsContainer.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-2 border">-</td>
-                        <td class="p-2 border font-bold">رصيد افتتاحي</td>
-                        <td class="p-2 border">-</td>
-                        <td class="p-2 border">منقول من الدفتر</td>
-                        <td class="p-2 border font-bold">${parseFloat(person.initialBalance).toLocaleString('en-US')} د.ج</td>
+                    <tr class="border-b border-slate-300">
+                        <td class="p-2.5 border border-slate-300">-</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">رصيد افتتاحي</td>
+                        <td class="p-2.5 border border-slate-300">-</td>
+                        <td class="p-2.5 border border-slate-300">منقول من الدفتر</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(parseFloat(person.initialBalance))}</td>
                     </tr>
                 `;
             }
 
             (person.transactions || []).forEach(tx => {
                 const isAdd = tx.type === 'add';
+                const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: ${tx.invoice}` : '-';
                 rowsContainer.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-2 border">${tx.date}</td>
-                        <td class="p-2 border ${isAdd ? 'text-red-600' : 'text-green-600'} font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
-                        <td class="p-2 border">${tx.invoice || '-'}</td>
-                        <td class="p-2 border">${tx.note || '-'}</td>
-                        <td class="p-2 border font-bold">${tx.amount.toLocaleString('en-US')} د.ج</td>
+                    <tr class="border-b border-slate-300">
+                        <td class="p-2.5 border border-slate-300">${tx.date}</td>
+                        <td class="p-2.5 border border-slate-300 ${isAdd ? 'text-red-600' : 'text-green-600'} font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
+                        <td class="p-2.5 border border-slate-300">${docLabel}</td>
+                        <td class="p-2.5 border border-slate-300">${tx.note || '-'}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(tx.amount)}</td>
                     </tr>
                 `;
             });
@@ -605,11 +718,15 @@
         // --- 9. الحفظ والتحكم بالـ Modals ---
         function openAddModal() {
             document.getElementById('modal-add-title').innerText = state.activeSection === 'customers' ? 'إضافة عميل جديد' : 'إضافة مورد جديد';
+            document.getElementById('input-edit-person-id').value = '';
             document.getElementById('form-add-person').reset();
+            document.getElementById('initial-balance-field').classList.remove('hidden');
             document.getElementById('modal-add').classList.remove('hidden');
         }
 
         function openTransactionModal() {
+            document.getElementById('modal-tx-title').innerText = 'تسجيل حركة جديدة';
+            document.getElementById('input-tx-edit-id').value = '';
             document.getElementById('form-transaction').reset();
             document.getElementById('modal-transaction').classList.remove('hidden');
         }
@@ -620,23 +737,47 @@
 
         async function handleSavePerson(e) {
             e.preventDefault();
-            const id = 'ID_' + Date.now();
-            const newPerson = {
-                id: id,
-                name: document.getElementById('input-name').value,
-                phone: document.getElementById('input-phone').value,
-                address: document.getElementById('input-address').value,
-                initialBalance: parseFloat(document.getElementById('input-initial').value) || 0,
-                transactions: []
-            };
+            const editId = document.getElementById('input-edit-person-id').value;
 
-            if (db) {
-                await db.collection(state.activeSection).doc(id).set(newPerson);
+            if (editId) {
+                // تعديل ملف شخص محدد
+                const person = state[state.activeSection].find(p => p.id === editId);
+                if (person) {
+                    person.name = document.getElementById('input-name').value;
+                    person.phone = document.getElementById('input-phone').value;
+                    person.address = document.getElementById('input-address').value;
+
+                    if (db) {
+                        await db.collection(state.activeSection).doc(editId).update({
+                            name: person.name,
+                            phone: person.phone,
+                            address: person.address
+                        });
+                    } else {
+                        localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+                    }
+                    openPersonDetail(editId);
+                }
             } else {
-                state[state.activeSection].push(newPerson);
-                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
-                renderPeopleList();
-                updateHomeTotals();
+                // إضافة جديد
+                const id = 'ID_' + Date.now();
+                const newPerson = {
+                    id: id,
+                    name: document.getElementById('input-name').value,
+                    phone: document.getElementById('input-phone').value,
+                    address: document.getElementById('input-address').value,
+                    initialBalance: parseFloat(document.getElementById('input-initial').value) || 0,
+                    transactions: []
+                };
+
+                if (db) {
+                    await db.collection(state.activeSection).doc(id).set(newPerson);
+                } else {
+                    state[state.activeSection].push(newPerson);
+                    localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
+                    renderPeopleList();
+                    updateHomeTotals();
+                }
             }
             closeModal('modal-add');
         }
@@ -646,17 +787,28 @@
             const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
             if (!person) return;
 
+            const editTxId = document.getElementById('input-tx-edit-id').value;
             const now = new Date();
-            const tx = {
-                id: Date.now(),
+
+            const txData = {
+                id: editTxId ? parseInt(editTxId) : Date.now(),
                 type: document.getElementById('input-tx-type').value,
                 amount: parseFloat(document.getElementById('input-tx-amount').value) || 0,
+                docType: document.getElementById('input-tx-doc-type').value,
                 invoice: document.getElementById('input-tx-invoice').value.trim(),
                 note: document.getElementById('input-tx-note').value,
-                date: now.toLocaleDateString('en-GB')
+                date: editTxId ? ((person.transactions || []).find(t => t.id == editTxId) || {}).date || now.toLocaleDateString('en-GB') : now.toLocaleDateString('en-GB')
             };
 
-            const updatedTransactions = [...(person.transactions || []), tx];
+            let updatedTransactions = [...(person.transactions || [])];
+
+            if (editTxId) {
+                // تعديل معاملة
+                updatedTransactions = updatedTransactions.map(t => t.id == editTxId ? txData : t);
+            } else {
+                // إضافة معاملة جديدة
+                updatedTransactions.push(txData);
+            }
 
             if (db) {
                 await db.collection(state.activeSection).doc(person.id).update({
@@ -671,7 +823,8 @@
             closeModal('modal-transaction');
         }
 
-        // البدء والتزامن
+        // البدء والتهيئة
+        initThemeAndConfig();
         updateHomeTotals();
         syncWithCloud();
     </script>
