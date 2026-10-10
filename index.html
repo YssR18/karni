@@ -372,7 +372,6 @@
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
         };
 
-        // تهيئة المظهر والعملة
         function initThemeAndConfig() {
             const isDark = localStorage.getItem('app_dark_mode') === 'true';
             if (isDark) {
@@ -609,7 +608,7 @@
             document.getElementById('input-name').value = person.name;
             document.getElementById('input-phone').value = person.phone || '';
             document.getElementById('input-address').value = person.address || '';
-            document.getElementById('initial-balance-field').classList.add('hidden'); // إخفاء الرصيد الافتتاحي عند التعديل
+            document.getElementById('initial-balance-field').classList.add('hidden');
 
             document.getElementById('modal-add').classList.remove('hidden');
         }
@@ -740,7 +739,6 @@
             const editId = document.getElementById('input-edit-person-id').value;
 
             if (editId) {
-                // تعديل ملف شخص محدد
                 const person = state[state.activeSection].find(p => p.id === editId);
                 if (person) {
                     person.name = document.getElementById('input-name').value;
@@ -759,7 +757,6 @@
                     openPersonDetail(editId);
                 }
             } else {
-                // إضافة جديد
                 const id = 'ID_' + Date.now();
                 const newPerson = {
                     id: id,
@@ -803,10 +800,8 @@
             let updatedTransactions = [...(person.transactions || [])];
 
             if (editTxId) {
-                // تعديل معاملة
                 updatedTransactions = updatedTransactions.map(t => t.id == editTxId ? txData : t);
             } else {
-                // إضافة معاملة جديدة
                 updatedTransactions.push(txData);
             }
 
