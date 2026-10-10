@@ -1,19 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دفتر الحسابات البسيط</title>
-    
-    <!-- السطر الذي ستلصقه هنا: -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='110' fill='%230f172a'/><rect x='96' y='96' width='320' height='320' rx='40' fill='%231e293b'/><rect x='116' y='96' width='30' height='320' fill='%230f172a'/><circle cx='131' cy='150' r='8' fill='%2364748b'/><circle cx='131' cy='256' r='8' fill='%2364748b'/><circle cx='131' cy='362' r='8' fill='%2364748b'/><path d='M166 96H396C418.091 96 436 113.909 436 136V376C436 398.091 418.091 416 396 416H166V96Z' fill='%23f8fafc'/><line x1='200' y1='160' x2='380' y2='160' stroke='%23e2e8f0' stroke-width='8' stroke-linecap='round'/><line x1='200' y1='210' x2='380' y2='210' stroke='%23e2e8f0' stroke-width='8' stroke-linecap='round'/><line x1='200' y1='260' x2='320' y2='260' stroke='%23e2e8f0' stroke-width='8' stroke-linecap='round'/><text x='310' y='350' font-size='160' font-weight='bold' fill='%233b82f6' text-anchor='middle' font-family='Cairo, sans-serif'>K</text><g transform='rotate(-35 340 180)'><rect x='330' y='80' width='30' height='180' rx='4' fill='%23f59e0b'/><polygon points='330,260 360,260 345,290' fill='%23cbd5e1'/><rect x='330' y='60' width='30' height='25' rx='4' fill='%23ef4444'/></g></svg>">
-
-    <!-- باقي الإعدادات والسكربتات الموجودة لديك مسبقاً -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    ...
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دفتر الحسابات البسيط</title>
@@ -213,6 +200,10 @@
                 <div>
                     <h2 id="person-name" class="text-xl font-bold">---</h2>
                     <p id="person-phone" class="text-xs text-slate-400 mt-1">---</p>
+                    <div id="person-actions" class="hidden flex gap-2 mt-2">
+                        <button onclick="callPerson()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">📞 اتصال</button>
+                        <button onclick="whatsappPerson()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">💬 واتساب</button>
+                    </div>
                     <div class="text-xs text-slate-400 mt-3" id="balance-label">الرصيد الحالي</div>
                     <div id="person-balance" class="text-3xl font-bold mt-0.5">0</div>
                 </div>
@@ -253,6 +244,7 @@
                     <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">رقم السند / الفاتورة</th>
                     <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">البيان / ملاحظة</th>
                     <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">المبلغ</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">الرصيد</th>
                 </tr>
             </thead>
             <tbody id="rpt-rows">
@@ -372,6 +364,10 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">التاريخ</label>
+                    <input type="date" id="input-tx-date" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظة / بيان</label>
                     <input type="text" id="input-tx-note" placeholder="مثال: دفعة نقدية، بضاعة..." class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
@@ -462,6 +458,63 @@
 
         function esc(v) {
             return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function toISODate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function isoToDisplay(iso) { // yyyy-mm-dd -> dd/mm/yyyy
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+            return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+        }
+
+        function displayToISO(str) { // dd/mm/yyyy -> yyyy-mm-dd
+            const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(str || '').trim());
+            return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+        }
+
+        function txTime(tx) {
+            const iso = displayToISO(tx.date);
+            return iso ? Date.parse(iso) : 0;
+        }
+
+        function sortedTransactions(person) {
+            return [...(person.transactions || [])].sort((a, b) =>
+                (txTime(a) - txTime(b)) || ((Number(a.id) || 0) - (Number(b.id) || 0)));
+        }
+
+        function currentPerson() {
+            return state[state.activeSection].find(p => p.id === state.currentPersonId);
+        }
+
+        function normalizePhone(raw) { // أرقام جزائرية: 0XXXXXXXXX -> 213XXXXXXXXX
+            let d = String(raw || '').replace(/\D/g, '');
+            if (d.startsWith('00')) d = d.slice(2);
+            else if (d.startsWith('0')) d = '213' + d.slice(1);
+            return d;
+        }
+
+        function callPerson() {
+            const p = currentPerson();
+            if (!p || !p.phone) return;
+            window.location.href = 'tel:' + String(p.phone).replace(/[^\d+]/g, '');
+        }
+
+        function whatsappPerson() {
+            const p = currentPerson();
+            if (!p) return;
+            const num = normalizePhone(p.phone);
+            if (!num) return;
+            const shop = localStorage.getItem('app_shop_name') || '';
+            const amount = getPersonBalance(p).toLocaleString('en-US') + ' د.ج';
+            const text = state.activeSection === 'customers'
+                ? `السلام عليكم ${p.name}،\nنذكّركم بأن رصيد حسابكم${shop ? ' لدى ' + shop : ''} هو: ${amount}.\nشكراً لكم.`
+                : `السلام عليكم ${p.name}،\nرصيد حسابنا لديكم حسب سجلاتنا: ${amount}.${shop ? '\n' + shop : ''}`;
+            window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(text), '_blank');
         }
 
         function formatAmount(num) {
@@ -732,6 +785,7 @@
             document.getElementById('person-phone').innerText = `هاتف: ${person.phone || 'غير مدون'} | عنوان: ${person.address || 'غير مدون'}`;
             
             const isCust = state.activeSection === 'customers';
+            document.getElementById('person-actions').classList.toggle('hidden', !(person.phone || '').replace(/\D/g, ''));
             document.getElementById('balance-label').innerText = isCust ? 'المبلغ المستحق لك عليه (يدين لك):' : 'المبلغ المستحق له عليك (تدين له):';
 
             renderTransactions(person);
@@ -752,7 +806,7 @@
                 container.appendChild(initEl);
             }
 
-            (person.transactions || []).forEach(tx => {
+            sortedTransactions(person).forEach(tx => {
                 const el = document.createElement('div');
                 const isAdd = tx.type === 'add';
                 el.className = `p-3 rounded-xl border flex justify-between items-center text-sm ${isAdd ? 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-400'}`;
@@ -820,6 +874,7 @@
             document.getElementById('input-tx-doc-type').value = tx.docType || 'فاتورة';
             document.getElementById('input-tx-invoice').value = tx.invoice || '';
             document.getElementById('input-tx-note').value = tx.note || '';
+            document.getElementById('input-tx-date').value = displayToISO(tx.date) || toISODate(new Date());
 
             document.getElementById('modal-transaction').classList.remove('hidden');
         }
@@ -827,20 +882,29 @@
         async function deleteTransaction(txId) {
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
-            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            const section = state.activeSection;
+            const person = currentPerson();
             if (!person) return;
 
-            const updatedTx = (person.transactions || []).filter(t => t.id != txId);
+            const without = (list) => (list || []).filter(t => t.id != txId);
 
-            if (db) {
-                await db.collection(state.activeSection).doc(person.id).update({
-                    transactions: updatedTx
-                });
-            } else {
-                person.transactions = updatedTx;
-                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
-                renderTransactions(person);
-                updateHomeTotals();
+            try {
+                if (db) {
+                    const ref = db.collection(section).doc(person.id);
+                    await db.runTransaction(async (tr) => {
+                        const snap = await tr.get(ref);
+                        if (!snap.exists) return;
+                        tr.update(ref, { transactions: without(snap.data().transactions) });
+                    });
+                } else {
+                    person.transactions = without(person.transactions);
+                    localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
+                    renderTransactions(person);
+                    updateHomeTotals();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
         }
 
@@ -870,11 +934,14 @@
                         <td class="p-2.5 border border-slate-300">-</td>
                         <td class="p-2.5 border border-slate-300">منقول من الدفتر</td>
                         <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(parseFloat(person.initialBalance))}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(parseFloat(person.initialBalance))}</td>
                     </tr>
                 `;
             }
 
-            (person.transactions || []).forEach(tx => {
+            let running = parseFloat(person.initialBalance) || 0;
+            sortedTransactions(person).forEach(tx => {
+                running += tx.type === 'add' ? tx.amount : -tx.amount;
                 const isAdd = tx.type === 'add';
                 const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: ${tx.invoice}` : '-';
                 rowsContainer.innerHTML += `
@@ -884,6 +951,7 @@
                         <td class="p-2.5 border border-slate-300">${esc(docLabel)}</td>
                         <td class="p-2.5 border border-slate-300">${esc(tx.note) || '-'}</td>
                         <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(tx.amount)}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(running)}</td>
                     </tr>
                 `;
             });
@@ -907,6 +975,7 @@
             document.getElementById('modal-tx-title').innerText = 'تسجيل حركة جديدة';
             document.getElementById('input-tx-edit-id').value = '';
             document.getElementById('form-transaction').reset();
+            document.getElementById('input-tx-date').value = toISODate(new Date());
             document.getElementById('modal-transaction').classList.remove('hidden');
         }
 
@@ -961,41 +1030,68 @@
 
         async function handleSaveTransaction(e) {
             e.preventDefault();
-            const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
+            const section = state.activeSection;
+            const person = currentPerson();
             if (!person) return;
 
             const editTxId = document.getElementById('input-tx-edit-id').value;
-            const now = new Date();
+            const type = document.getElementById('input-tx-type').value;
+            const amount = parseFloat(document.getElementById('input-tx-amount').value) || 0;
+            const isoDate = document.getElementById('input-tx-date').value || toISODate(new Date());
+            const oldTx = editTxId ? (person.transactions || []).find(t => t.id == editTxId) : null;
+
+            if (amount <= 0) {
+                alert('أدخل مبلغاً أكبر من صفر.');
+                return;
+            }
+
+            // تنبيه عند تسديد مبلغ أكبر من الرصيد الحالي
+            if (type === 'pay') {
+                const others = { ...person, transactions: (person.transactions || []).filter(t => !editTxId || t.id != editTxId) };
+                const balBefore = getPersonBalance(others);
+                if (amount > balBefore) {
+                    const msg = `مبلغ التسديد (${formatAmount(amount)}) أكبر من الرصيد الحالي (${formatAmount(balBefore)}).\nسيصبح الرصيد سالباً. هل تريد المتابعة؟`;
+                    if (!confirm(msg)) return;
+                }
+            }
 
             const txData = {
-                id: editTxId ? parseInt(editTxId) : Date.now(),
-                type: document.getElementById('input-tx-type').value,
-                amount: parseFloat(document.getElementById('input-tx-amount').value) || 0,
+                id: oldTx ? oldTx.id : Date.now(),
+                type: type,
+                amount: amount,
                 docType: document.getElementById('input-tx-doc-type').value,
                 invoice: document.getElementById('input-tx-invoice').value.trim(),
                 note: document.getElementById('input-tx-note').value,
-                date: editTxId ? ((person.transactions || []).find(t => t.id == editTxId) || {}).date || now.toLocaleDateString('en-GB') : now.toLocaleDateString('en-GB')
+                date: isoToDisplay(isoDate)
             };
 
-            let updatedTransactions = [...(person.transactions || [])];
+            const apply = (list) => {
+                const arr = [...(list || [])];
+                const i = editTxId ? arr.findIndex(t => t.id == editTxId) : -1;
+                if (i >= 0) arr[i] = txData; else arr.push(txData);
+                return arr;
+            };
 
-            if (editTxId) {
-                updatedTransactions = updatedTransactions.map(t => t.id == editTxId ? txData : t);
-            } else {
-                updatedTransactions.push(txData);
+            try {
+                if (db) {
+                    // قراءة وكتابة داخل معاملة حتى لا تضيع تعديلات جهاز آخر
+                    const ref = db.collection(section).doc(person.id);
+                    await db.runTransaction(async (tr) => {
+                        const snap = await tr.get(ref);
+                        const current = snap.exists ? (snap.data().transactions || []) : [];
+                        tr.update(ref, { transactions: apply(current) });
+                    });
+                } else {
+                    person.transactions = apply(person.transactions);
+                    localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
+                    renderTransactions(person);
+                    updateHomeTotals();
+                }
+                closeModal('modal-transaction');
+            } catch (err) {
+                console.error(err);
+                alert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
-
-            if (db) {
-                await db.collection(state.activeSection).doc(person.id).update({
-                    transactions: updatedTransactions
-                });
-            } else {
-                person.transactions = updatedTransactions;
-                localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
-                renderTransactions(person);
-                updateHomeTotals();
-            }
-            closeModal('modal-transaction');
         }
 
         // --- 10. النسخ الاحتياطي ---
