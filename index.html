@@ -426,6 +426,10 @@
                 localStorage.setItem('app_suppliers', JSON.stringify(state.suppliers));
                 updateHomeTotals();
                 if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
+                if (!document.getElementById('screen-detail').classList.contains('hidden')) {
+                    const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
+                    if (p) renderTransactions(p);
+                }
             });
         }
 
@@ -588,7 +592,7 @@
                     <div>
                         <div class="font-bold flex items-center gap-2">
                             <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
-                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${tx.docType \vert{}\vert{} 'وثيقة'}: ${tx.invoice}</span>` : ''}
+                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${tx.docType || 'وثيقة'}: ${tx.invoice}</span>` : ''}
                         </div>
                         <div class="text-xs opacity-75 mt-0.5">${tx.note || 'بدون ملاحظة'} • ${tx.date}</div>
                     </div>
@@ -630,6 +634,8 @@
                 localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
             }
             showScreen('list');
+            renderPeopleList();
+            updateHomeTotals();
         }
 
         function openEditTransactionModal(txId) {
