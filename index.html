@@ -18,8 +18,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D8%B3%D9%8A%D8%B7%22%2C%22short_name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2654%2F2654280.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -71,6 +73,7 @@
             </h1>
             
             <div class="flex items-center gap-4">
+                <span id="sync-badge" class="hidden bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg"></span>
                 <button id="btn-install-pwa" onclick="installPWA()" class="hidden bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
                     📥 تثبيت التطبيق
                 </button>
@@ -404,6 +407,17 @@
             console.warn("Firebase غير موصول بعد.");
         }
 
+        // تخزين محلي لبيانات Firestore ليعمل التطبيق بدون إنترنت
+        try {
+            if (db) {
+                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                    console.warn('التخزين المحلي غير متاح:', err && err.code);
+                });
+            }
+        } catch (e) {
+            console.warn('التخزين المحلي غير متاح:', e);
+        }
+
         // --- 2. PWA Installation Handler ---
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -458,6 +472,62 @@
 
         function esc(v) {
             return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // --- حالة الاتصال والمزامنة ---
+        const syncState = { pending: { customers: false, suppliers: false } };
+
+        function updateSyncBadge() {
+            const el = document.getElementById('sync-badge');
+            if (!el) return;
+            const offline = !navigator.onLine;
+            const pending = syncState.pending.customers || syncState.pending.suppliers;
+            if (offline) {
+                el.innerText = pending ? '📴 بدون إنترنت • تعديلات بانتظار الرفع' : '📴 بدون إنترنت';
+                el.classList.remove('hidden');
+            } else if (pending) {
+                el.innerText = '⏳ جاري المزامنة...';
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+        window.addEventListener('online', updateSyncBadge);
+        window.addEventListener('offline', updateSyncBadge);
+
+        // الكتابة تُحفظ محلياً فوراً وتُرفع للسحابة عند توفر الاتصال، فلا ننتظر تأكيد الخادم
+        function dbWrite(promise) {
+            promise.catch((err) => {
+                console.error(err);
+                alert(err && err.code === 'permission-denied'
+                    ? 'ليست لديك صلاحية حفظ هذا التعديل.'
+                    : 'تعذّر رفع التعديل إلى السحابة: ' + ((err && err.message) || 'خطأ غير معروف'));
+            });
+        }
+
+        function isOfflineError(err) {
+            const code = err && err.code;
+            return code === 'unavailable' || code === 'deadline-exceeded' ||
+                /offline|network/i.test((err && err.message) || '');
+        }
+
+        // تعديل قائمة الحركات: معاملة آمنة عند الاتصال، وكتابة محلية مؤجلة بدون اتصال
+        async function commitTransactions(section, person, mutator) {
+            const ref = db.collection(section).doc(person.id);
+            if (navigator.onLine) {
+                try {
+                    await db.runTransaction(async (tr) => {
+                        const snap = await tr.get(ref);
+                        if (!snap.exists) throw new Error('هذا الحساب لم يعد موجوداً');
+                        tr.update(ref, { transactions: mutator(snap.data().transactions || []) });
+                    });
+                    return;
+                } catch (err) {
+                    if (!isOfflineError(err)) throw err;
+                }
+            }
+            const local = state[section].find(p => p.id === person.id) || person;
+            dbWrite(ref.update({ transactions: mutator(local.transactions || []) }));
         }
 
         function toISODate(d) {
@@ -549,7 +619,9 @@
                 }
             };
             ['customers', 'suppliers'].forEach(col => {
-                const unsub = db.collection(col).onSnapshot((snapshot) => {
+                const unsub = db.collection(col).onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+                    syncState.pending[col] = !!(snapshot.metadata && snapshot.metadata.hasPendingWrites);
+                    updateSyncBadge();
                     state[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     localStorage.setItem('app_' + col, JSON.stringify(state[col]));
                     refresh();
@@ -573,6 +645,9 @@
             unsubs.forEach(u => { try { u(); } catch (e) {} });
             unsubs = [];
             cloudStarted = false;
+            syncState.pending.customers = false;
+            syncState.pending.suppliers = false;
+            updateSyncBadge();
             state.customers = [];
             state.suppliers = [];
             state.currentPersonId = null;
@@ -851,7 +926,7 @@
 
             const personId = state.currentPersonId;
             if (db) {
-                await db.collection(state.activeSection).doc(personId).delete();
+                dbWrite(db.collection(state.activeSection).doc(personId).delete());
             } else {
                 state[state.activeSection] = state[state.activeSection].filter(p => p.id !== personId);
                 localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
@@ -891,12 +966,7 @@
 
             try {
                 if (db) {
-                    const ref = db.collection(section).doc(person.id);
-                    await db.runTransaction(async (tr) => {
-                        const snap = await tr.get(ref);
-                        if (!snap.exists) return;
-                        tr.update(ref, { transactions: without(snap.data().transactions) });
-                    });
+                    await commitTransactions(section, person, without);
                 } else {
                     person.transactions = without(person.transactions);
                     localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
@@ -1005,12 +1075,12 @@
                     person.initialBalance = newInitial;
 
                     if (db) {
-                        await db.collection(state.activeSection).doc(editId).update({
+                        dbWrite(db.collection(state.activeSection).doc(editId).update({
                             name: person.name,
                             phone: person.phone,
                             address: person.address,
                             initialBalance: newInitial
-                        });
+                        }));
                     } else {
                         localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
                     }
@@ -1028,7 +1098,7 @@
                 };
 
                 if (db) {
-                    await db.collection(state.activeSection).doc(id).set(newPerson);
+                    dbWrite(db.collection(state.activeSection).doc(id).set(newPerson));
                 } else {
                     state[state.activeSection].push(newPerson);
                     localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
@@ -1085,13 +1155,7 @@
 
             try {
                 if (db) {
-                    // قراءة وكتابة داخل معاملة حتى لا تضيع تعديلات جهاز آخر
-                    const ref = db.collection(section).doc(person.id);
-                    await db.runTransaction(async (tr) => {
-                        const snap = await tr.get(ref);
-                        const current = snap.exists ? (snap.data().transactions || []) : [];
-                        tr.update(ref, { transactions: apply(current) });
-                    });
+                    await commitTransactions(section, person, apply);
                 } else {
                     person.transactions = apply(person.transactions);
                     localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
@@ -1153,6 +1217,10 @@
             const file = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!file) return;
+            if (db && !navigator.onLine) {
+                alert('الاستيراد يحتاج اتصالاً بالإنترنت. أعد المحاولة عند عودة الاتصال.');
+                return;
+            }
             try {
                 const data = JSON.parse(await file.text());
                 const customers = (Array.isArray(data.customers) ? data.customers : []).map(sanitizePerson).filter(Boolean);
@@ -1194,6 +1262,14 @@
 
         // البدء والتهيئة
         initThemeAndConfig();
+        updateSyncBadge();
+
+        // تسجيل service worker ليعمل التطبيق بدون إنترنت
+        if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch((e) => console.warn('تعذّر تسجيل sw.js:', e));
+            });
+        }
         updateHomeTotals();
         initAuth();
     </script>
