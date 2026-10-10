@@ -22,6 +22,7 @@
             #printable-report, #printable-report * { visibility: visible; }
             #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
+            @page { size: auto; margin: 10mm; }
         }
     </style>
 </head>
@@ -58,7 +59,7 @@
                 <p class="text-slate-500 text-sm mt-1">إدارة الديون والعملاء والموردين بمزامنة سحابية آمنة</p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-3 gap-6">
                 <!-- بطاقة العملاء -->
                 <div onclick="openSection('customers')" class="bg-white border-2 border-blue-500/20 hover:border-blue-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
@@ -98,6 +99,22 @@
                             </button>
                         </div>
                         <div id="total-suppliers-balance" class="text-2xl font-bold text-emerald-600">**** د.ج</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة الإعدادات -->
+                <div onclick="openSettingsModal()" class="bg-white border-2 border-slate-500/20 hover:border-slate-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold mb-2">الإعدادات</span>
+                            <h3 class="text-2xl font-bold text-slate-800 group-hover:text-slate-600 transition">إعدادات المحل</h3>
+                            <p class="text-xs text-slate-500 mt-1">(تعديل عنوان و اسم النشاط للتقارير)</p>
+                        </div>
+                        <div class="text-3xl bg-slate-50 p-3 rounded-xl text-slate-600">⚙️</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">العنوان الحالي في الورقة:</div>
+                        <div id="home-shop-name" class="text-sm font-bold text-slate-700 truncate">إسم المحل أو النشاط</div>
                     </div>
                 </div>
             </div>
@@ -154,14 +171,12 @@
     </main>
 
     <!-- منطقة التقرير القابل للطباعة فقط -->
-    <div id="printable-report" class="hidden p-8 bg-white text-slate-900 dir-rtl">
-        <div class="border-b pb-4 mb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold">كشف حساب مالي</h1>
-                <p id="rpt-type" class="text-sm text-slate-500">قسم الحسابات</p>
-            </div>
-            <div class="text-left text-xs text-slate-500">
-                <div>تاريخ التقرير: <span id="rpt-date">--/--/----</span></div>
+    <div id="printable-report" class="hidden p-6 bg-white text-slate-900 dir-rtl">
+        <div class="text-center border-b pb-4 mb-4">
+            <h1 id="rpt-shop-title" class="text-2xl md:text-3xl font-bold text-slate-900">إسم المحل أو النشاط</h1>
+            <div class="flex justify-between items-center mt-3 text-xs text-slate-500">
+                <span id="rpt-type">كشف حساب</span>
+                <span>تاريخ التقرير: <span id="rpt-date">--/--/----</span></span>
             </div>
         </div>
 
@@ -191,6 +206,23 @@
                 <!-- تفاصيل الحركات -->
             </tbody>
         </table>
+    </div>
+
+    <!-- Modal: إعدادات المحل -->
+    <div id="modal-settings" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-800">إعدادات المحل والنشاط</h3>
+            <form id="form-settings" onsubmit="saveSettings(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">اسم المحل / النشاط (عنوان الورقة وسط الصفحة) *</label>
+                    <input type="text" id="input-shop-name" required class="w-full border rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="مثال: مؤسسة التجارة العامة">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
+                    <button type="button" onclick="closeModal('modal-settings')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Modal: إضافة شخص -->
@@ -305,6 +337,15 @@
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
         };
 
+        // عرض اسم المحل المحفوظ في الشاشة الرئيسية عند البدء
+        function updateHomeShopNameDisplay() {
+            const el = document.getElementById('home-shop-name');
+            if(el) {
+                el.innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
+            }
+        }
+        updateHomeShopNameDisplay();
+
         // --- 4. المزامنة ---
         function syncWithCloud() {
             if (!db) return;
@@ -371,7 +412,7 @@
             }
         }
 
-        // --- 6. التنقل بين الشاشات ---
+        // --- 6. التنقل بين الشاشات والإعدادات ---
         function showScreen(screenId) {
             ['home', 'list', 'detail'].forEach(id => {
                 const el = document.getElementById(`screen-${id}`);
@@ -395,6 +436,20 @@
 
             renderPeopleList();
             showScreen('list');
+        }
+
+        function openSettingsModal() {
+            const currentName = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
+            document.getElementById('input-shop-name').value = currentName;
+            document.getElementById('modal-settings').classList.remove('hidden');
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            const val = document.getElementById('input-shop-name').value.trim() || 'إسم المحل أو النشاط';
+            localStorage.setItem('app_shop_name', val);
+            updateHomeShopNameDisplay();
+            closeModal('modal-settings');
         }
 
         function renderPeopleList() {
@@ -505,6 +560,8 @@
             if (!person) return;
 
             const isCust = state.activeSection === 'customers';
+            // استخدام اسم المحل المحفوظ في الإعدادات
+            document.getElementById('rpt-shop-title').innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             document.getElementById('rpt-type').innerText = isCust ? 'كشف حساب عميل' : 'كشف حساب مورد';
             document.getElementById('rpt-date').innerText = new Date().toLocaleDateString('en-GB');
             document.getElementById('rpt-name').innerText = person.name;
