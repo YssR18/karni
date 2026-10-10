@@ -12,44 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <!-- PWA Manifest & Service Worker Setup -->
-    <script>
-        // 1. إنشاء ملف Manifest ديناميكياً
-        const manifest = {
-            "name": "دفتر الحسابات البسيط",
-            "short_name": "دفتر الحسابات",
-            "start_url": "./",
-            "display": "standalone",
-            "background_color": "#0f172a",
-            "theme_color": "#0f172a",
-            "icons": [
-                {
-                    "src": "https://cdn-icons-png.flaticon.com/512/2654/2654280.png",
-                    "sizes": "512x512",
-                    "type": "image/png"
-                }
-            ]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = URL.createObjectURL(blob);
-        document.head.appendChild(link);
-
-        // 2. تسجيل Service Worker لضمان ظهور زر التثبيت
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', (e) => self.skipWaiting());
-                    self.addEventListener('activate', (e) => self.clients.claim());
-                    self.addEventListener('fetch', (e) => {});
-                `;
-                const swBlob = new Blob([swCode], { type: 'text/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(swBlob))
-                    .catch(err => console.log('SW registration failed: ', err));
-            });
-        }
-    </script>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D8%B3%D9%8A%D8%B7%22%2C%22short_name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2654%2F2654280.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -293,22 +257,23 @@
 
     <!-- Application Script -->
     <script>
-        // --- 1. إعدادات Firebase ---
+        // --- 1. إعدادات Firebase (ضع مفاتيحك الحقيقية هنا بدلاً من الرموز الوهمية) ---
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+    apiKey: "AIzaSyC09quM2H6TW0BuFem5iQ8JuzNO_fNr2pA",
+    authDomain: "karni-18.firebaseapp.com",
+    projectId: "karni-18",
+    storageBucket: "karni-18.firebasestorage.app",
+    messagingSenderId: "168254390038",
+    appId: "1:168254390038:web:89650055e9c4f282435a37",
+    measurementId: "G-KZZV36R62M"
+};
 
         let db = null;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
         } catch(e) {
-            console.warn("Firebase غير موصول بعد.");
+            console.warn("Firebase غير موصول بعد، تأكد من إدخال المفاتيح الصحيحة.");
         }
 
         // --- 2. PWA Installation Handler ---
@@ -340,7 +305,7 @@
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
         };
 
-        // --- 4. المزامنة ---
+        // --- 4. المزامنة السحابية ---
         function syncWithCloud() {
             if (!db) return;
             
@@ -353,6 +318,8 @@
                     const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
                     if (p) renderTransactions(p);
                 }
+            }, (error) => {
+                console.error("خطأ في مزامنة العملاء:", error);
             });
 
             db.collection("suppliers").onSnapshot((snapshot) => {
@@ -360,6 +327,8 @@
                 localStorage.setItem('app_suppliers', JSON.stringify(state.suppliers));
                 updateHomeTotals();
                 if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
+            }, (error) => {
+                console.error("خطأ في مزامنة الموردين:", error);
             });
         }
 
@@ -585,7 +554,6 @@
 
         function openTransactionModal() {
             document.getElementById('form-transaction').reset();
-            document.getElementById('modal-transaction').classList.add('hidden'); // تصحيح بسيط
             document.getElementById('modal-transaction').classList.remove('hidden');
         }
 
@@ -626,7 +594,7 @@
                 id: Date.now(),
                 type: document.getElementById('input-tx-type').value,
                 amount: parseFloat(document.getElementById('input-tx-amount').value) || 0,
-                invoice: document.getElementById('input-tx-invoice').value.trim(),
+                invoice: document.getElementById('input-tx-invoice>().value.trim(),
                 note: document.getElementById('input-tx-note').value,
                 date: now.toLocaleDateString('en-GB')
             };
@@ -646,7 +614,7 @@
             closeModal('modal-transaction');
         }
 
-        // البدء
+        // البدء والتزامن
         updateHomeTotals();
         syncWithCloud();
     </script>
