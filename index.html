@@ -16,6 +16,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D8%B3%D9%8A%D8%B7%22%2C%22short_name%22%3A%22%D8%AF%D9%81%D8%AA%D8%B1%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%D8%A7%D8%AA%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2654%2F2654280.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
@@ -37,6 +38,31 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
+    <!-- شاشة تسجيل الدخول -->
+    <div id="screen-login" class="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 no-print">
+        <div class="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-700">
+            <div class="text-center">
+                <div class="text-4xl">📖</div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 mt-2">دفتر الحسابات</h2>
+            </div>
+            <div id="login-loading" class="text-center text-sm text-slate-500 dark:text-slate-400 py-4">جاري التحميل...</div>
+            <form id="login-form" onsubmit="handleLogin(event)" class="hidden space-y-3">
+                <p class="text-xs text-slate-500 dark:text-slate-400 text-center">سجّل الدخول للوصول إلى بياناتك</p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="login-email" required autocomplete="username" dir="ltr" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">كلمة المرور</label>
+                    <input type="password" id="login-password" required autocomplete="current-password" dir="ltr" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                </div>
+                <div id="login-error" class="hidden text-xs text-red-600 dark:text-red-400 text-center font-bold"></div>
+                <button type="submit" id="login-btn" class="w-full bg-slate-800 dark:bg-blue-600 hover:bg-slate-900 dark:hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition disabled:opacity-60">دخول</button>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Header -->
     <header class="bg-slate-900 dark:bg-slate-950 text-white py-4 px-6 shadow-md no-print border-b dark:border-slate-800">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
@@ -48,6 +74,7 @@
                 <button id="btn-install-pwa" onclick="installPWA()" class="hidden bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
                     📥 تثبيت التطبيق
                 </button>
+                <button id="btn-logout" onclick="handleLogout()" class="hidden bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">🚪 خروج</button>
                 <div class="text-left">
                     <div id="clock" class="text-lg font-bold tracking-wider text-amber-400">00:00:00</div>
                     <div id="date" class="text-xs text-slate-400">---</div>
@@ -137,6 +164,14 @@
                 <button onclick="openAddModal()" id="btn-add-person" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2">
                     <span>+</span> <span id="btn-add-text">إضافة</span>
                 </button>
+            </div>
+
+            <div class="flex gap-2">
+                <input type="search" id="input-search" oninput="renderPeopleList()" placeholder="🔍 ابحث بالاسم أو رقم الهاتف..." class="flex-1 min-w-0 border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                <select id="select-sort" onchange="renderPeopleList()" class="border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2.5 text-xs outline-none">
+                    <option value="name">حسب الاسم</option>
+                    <option value="balance">الأكبر رصيداً</option>
+                </select>
             </div>
 
             <div id="people-container" class="grid gap-3">
@@ -247,6 +282,16 @@
                     </label>
                 </div>
 
+                <div class="border-b dark:border-slate-700 pb-3 space-y-2">
+                    <div class="text-sm font-bold text-slate-700 dark:text-slate-300">النسخ الاحتياطي</div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="exportData()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬇️ تصدير البيانات</button>
+                        <button type="button" onclick="document.getElementById('input-import-file').click()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬆️ استيراد بيانات</button>
+                        <input type="file" id="input-import-file" accept=".json,application/json" class="hidden" onchange="importData(event)">
+                    </div>
+                    <p class="text-xs text-slate-400">الاستيراد يضيف الحسابات ويستبدل ما يحمل نفس المعرّف، ولا يحذف أي حساب موجود.</p>
+                </div>
+
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
                     <button type="button" onclick="closeModal('modal-settings')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
@@ -339,9 +384,13 @@
         };
 
         let db = null;
+        let auth = null;
+        let unsubs = [];
+        let cloudStarted = false;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
+            auth = firebase.auth();
         } catch(e) {
             console.warn("Firebase غير موصول بعد.");
         }
@@ -398,6 +447,10 @@
             }
         }
 
+        function esc(v) {
+            return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
         function formatAmount(num) {
             const val = num.toLocaleString('en-US');
             return state.showCurrency ? `${val} د.ج` : val;
@@ -411,30 +464,114 @@
         }
 
         // --- 4. المزامنة ---
+        function onSyncError(err) {
+            console.error('Firestore error:', err);
+            if (err && err.code === 'permission-denied' && !window.__permAlerted) {
+                window.__permAlerted = true;
+                alert('ليست لديك صلاحية قراءة البيانات. تأكد من تسجيل الدخول بالحساب الصحيح ومن قواعد Firestore.');
+            }
+        }
+
         function syncWithCloud() {
             if (!db) return;
-            
-            db.collection("customers").onSnapshot((snapshot) => {
-                state.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                localStorage.setItem('app_customers', JSON.stringify(state.customers));
+            const refresh = () => {
                 updateHomeTotals();
                 if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
                 if (!document.getElementById('screen-detail').classList.contains('hidden')) {
                     const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
                     if (p) renderTransactions(p);
                 }
+            };
+            ['customers', 'suppliers'].forEach(col => {
+                const unsub = db.collection(col).onSnapshot((snapshot) => {
+                    state[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    localStorage.setItem('app_' + col, JSON.stringify(state[col]));
+                    refresh();
+                }, onSyncError);
+                unsubs.push(unsub);
             });
+        }
 
-            db.collection("suppliers").onSnapshot((snapshot) => {
-                state.suppliers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                localStorage.setItem('app_suppliers', JSON.stringify(state.suppliers));
-                updateHomeTotals();
-                if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
-                if (!document.getElementById('screen-detail').classList.contains('hidden')) {
-                    const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
-                    if (p) renderTransactions(p);
+        // --- 4.1 تسجيل الدخول ---
+        function hideLogin() {
+            document.getElementById('screen-login').classList.add('hidden');
+        }
+
+        function showLoginForm() {
+            document.getElementById('screen-login').classList.remove('hidden');
+            document.getElementById('login-loading').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
+        function stopSyncAndClear() {
+            unsubs.forEach(u => { try { u(); } catch (e) {} });
+            unsubs = [];
+            cloudStarted = false;
+            state.customers = [];
+            state.suppliers = [];
+            state.currentPersonId = null;
+            localStorage.removeItem('app_customers');
+            localStorage.removeItem('app_suppliers');
+            ['modal-settings', 'modal-add', 'modal-transaction'].forEach(id => closeModal(id));
+            showScreen('home');
+            updateHomeTotals();
+        }
+
+        function initAuth() {
+            if (!db) { hideLogin(); return; } // وضع محلي بدون سحابة
+            if (!auth) {
+                document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
+                return;
+            }
+            const timer = setTimeout(showLoginForm, 6000);
+            auth.onAuthStateChanged((user) => {
+                clearTimeout(timer);
+                const logoutBtn = document.getElementById('btn-logout');
+                if (user) {
+                    hideLogin();
+                    logoutBtn.classList.remove('hidden');
+                    if (!cloudStarted) { cloudStarted = true; syncWithCloud(); }
+                } else {
+                    logoutBtn.classList.add('hidden');
+                    stopSyncAndClear();
+                    showLoginForm();
                 }
             });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const errEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerText = 'جاري الدخول...';
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                document.getElementById('login-password').value = '';
+            } catch (err) {
+                const msgs = {
+                    'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                    'auth/wrong-password': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                    'auth/user-not-found': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                    'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة',
+                    'auth/user-disabled': 'هذا الحساب معطّل',
+                    'auth/too-many-requests': 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة',
+                    'auth/network-request-failed': 'تعذّر الاتصال بالإنترنت',
+                    'auth/operation-not-allowed': 'تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase'
+                };
+                errEl.innerText = msgs[err.code] || ('تعذّر تسجيل الدخول (' + (err.code || 'خطأ') + ')');
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'دخول';
+            }
+        }
+
+        function handleLogout() {
+            if (auth && confirm('هل تريد تسجيل الخروج؟')) auth.signOut();
         }
 
         // --- 5. الساعة والتاريخ ---
@@ -496,6 +633,8 @@
 
         function openSection(type) {
             state.activeSection = type;
+            const searchEl = document.getElementById('input-search'); if (searchEl) searchEl.value = '';
+            const sortEl = document.getElementById('select-sort'); if (sortEl) sortEl.value = 'name';
             const isCustomer = type === 'customers';
             
             document.getElementById('list-title').innerText = isCustomer ? 'قسم العملاء' : 'قسم الموردين';
@@ -532,11 +671,23 @@
 
         function renderPeopleList() {
             const container = document.getElementById('people-container');
-            const list = state[state.activeSection];
+            const all = state[state.activeSection];
+            const q = ((document.getElementById('input-search') || {}).value || '').trim().toLowerCase();
+            const sortBy = (document.getElementById('select-sort') || {}).value || 'name';
             container.innerHTML = '';
 
-            if (list.length === 0) {
+            if (all.length === 0) {
                 container.innerHTML = `<div class="text-center py-12 text-slate-400">لا يوجد أي أسماء مسجلة حالياً</div>`;
+                return;
+            }
+
+            const list = all.filter(p => !q || (p.name || '').toLowerCase().includes(q) || (p.phone || '').includes(q));
+            list.sort(sortBy === 'balance'
+                ? (x, y) => getPersonBalance(y) - getPersonBalance(x)
+                : (x, y) => (x.name || '').localeCompare(y.name || '', 'ar'));
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-400">لا توجد نتائج مطابقة للبحث</div>`;
                 return;
             }
 
@@ -547,8 +698,8 @@
                 el.onclick = () => openPersonDetail(person.id);
                 el.innerHTML = `
                     <div>
-                        <div class="font-bold text-slate-800 dark:text-slate-100">${person.name}</div>
-                        <div class="text-xs text-slate-400">${person.phone || 'بدون هاتف'} - ${person.address || 'بدون عنوان'}</div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100">${esc(person.name)}</div>
+                        <div class="text-xs text-slate-400">${esc(person.phone) || 'بدون هاتف'} - ${esc(person.address) || 'بدون عنوان'}</div>
                     </div>
                     <div class="text-left">
                         <div class="text-xs text-slate-400">الرصيد:</div>
@@ -596,9 +747,9 @@
                     <div>
                         <div class="font-bold flex items-center gap-2">
                             <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
-                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${tx.docType || 'وثيقة'}: ${tx.invoice}</span>` : ''}
+                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
                         </div>
-                        <div class="text-xs opacity-75 mt-0.5">${tx.note || 'بدون ملاحظة'} • ${tx.date}</div>
+                        <div class="text-xs opacity-75 mt-0.5">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="font-bold text-base">${formatAmount(tx.amount)}</span>
@@ -715,10 +866,10 @@
                 const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: ${tx.invoice}` : '-';
                 rowsContainer.innerHTML += `
                     <tr class="border-b border-slate-300">
-                        <td class="p-2.5 border border-slate-300">${tx.date}</td>
+                        <td class="p-2.5 border border-slate-300">${esc(tx.date)}</td>
                         <td class="p-2.5 border border-slate-300 ${isAdd ? 'text-red-600' : 'text-green-600'} font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
-                        <td class="p-2.5 border border-slate-300">${docLabel}</td>
-                        <td class="p-2.5 border border-slate-300">${tx.note || '-'}</td>
+                        <td class="p-2.5 border border-slate-300">${esc(docLabel)}</td>
+                        <td class="p-2.5 border border-slate-300">${esc(tx.note) || '-'}</td>
                         <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(tx.amount)}</td>
                     </tr>
                 `;
@@ -834,10 +985,97 @@
             closeModal('modal-transaction');
         }
 
+        // --- 10. النسخ الاحتياطي ---
+        function exportData() {
+            const data = {
+                app: 'daftar-alhisabat',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                shopName: localStorage.getItem('app_shop_name') || '',
+                customers: state.customers,
+                suppliers: state.suppliers
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `daftar-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function sanitizePerson(p) {
+            if (!p || typeof p !== 'object' || !p.name) return null;
+            let id = String(p.id || ('ID_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7))).replace(/\//g, '_');
+            if (/^\.+$/.test(id) || /^__.*__$/.test(id)) id = 'imp_' + id;
+            const txs = Array.isArray(p.transactions) ? p.transactions : [];
+            return {
+                id: id,
+                name: String(p.name),
+                phone: String(p.phone || ''),
+                address: String(p.address || ''),
+                initialBalance: parseFloat(p.initialBalance) || 0,
+                transactions: txs.filter(t => t && (t.type === 'add' || t.type === 'pay')).map(t => ({
+                    id: Number(t.id) || (Date.now() + Math.floor(Math.random() * 100000)),
+                    type: t.type,
+                    amount: parseFloat(t.amount) || 0,
+                    docType: String(t.docType || 'فاتورة'),
+                    invoice: String(t.invoice || ''),
+                    note: String(t.note || ''),
+                    date: String(t.date || '')
+                }))
+            };
+        }
+
+        async function importData(e) {
+            const file = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            try {
+                const data = JSON.parse(await file.text());
+                const customers = (Array.isArray(data.customers) ? data.customers : []).map(sanitizePerson).filter(Boolean);
+                const suppliers = (Array.isArray(data.suppliers) ? data.suppliers : []).map(sanitizePerson).filter(Boolean);
+                if (!customers.length && !suppliers.length) {
+                    alert('الملف لا يحتوي على بيانات صالحة.');
+                    return;
+                }
+                const msg = `سيتم استيراد ${customers.length} عميل و ${suppliers.length} مورد.\nالحسابات التي لها نفس المعرّف سيتم استبدالها، ولن يُحذف أي حساب موجود.\nهل تريد المتابعة؟`;
+                if (!confirm(msg)) return;
+
+                if (db) {
+                    const ops = [
+                        ...customers.map(p => ['customers', p]),
+                        ...suppliers.map(p => ['suppliers', p])
+                    ];
+                    for (let i = 0; i < ops.length; i += 400) {
+                        const batch = db.batch();
+                        ops.slice(i, i + 400).forEach(([col, p]) => batch.set(db.collection(col).doc(p.id), p));
+                        await batch.commit();
+                    }
+                } else {
+                    [['customers', customers], ['suppliers', suppliers]].forEach(([col, items]) => {
+                        items.forEach(p => {
+                            const idx = state[col].findIndex(x => x.id === p.id);
+                            if (idx >= 0) state[col][idx] = p; else state[col].push(p);
+                        });
+                        localStorage.setItem('app_' + col, JSON.stringify(state[col]));
+                    });
+                    updateHomeTotals();
+                    if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
+                }
+                alert('تم الاستيراد بنجاح.');
+            } catch (err) {
+                console.error(err);
+                alert('تعذّر قراءة الملف أو استيراده. تأكد أنه ملف نسخة احتياطية صحيح.');
+            }
+        }
+
         // البدء والتهيئة
         initThemeAndConfig();
         updateHomeTotals();
-        syncWithCloud();
+        initAuth();
     </script>
 </body>
 </html>
