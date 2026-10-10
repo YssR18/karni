@@ -6,16 +6,12 @@
     <title>دفتر الحسابات البسيط</title>
     <!-- Tailwind CSS (مبني مسبقاً: tailwind.css) -->
     <link rel="stylesheet" href="tailwind.css">
-    <!-- خط النظام العربي البديل -->
-    <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-    </style>
+    <!-- خط Cairo العربي -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <!-- مكتبة html2pdf لتوليد ملفات PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
@@ -23,6 +19,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
+        body { font-family: 'Cairo', sans-serif; }
         @media print {
             body * { visibility: hidden; }
             #printable-report, #printable-report * { visibility: visible; }
@@ -221,33 +218,31 @@
 
     </main>
 
-    <!-- منطقة التقرير القابل للطباعة والتصدير لـ PDF -->
-    <div id="printable-report" class="hidden p-6 bg-white text-black font-sans dir-rtl text-xs">
-        <div class="flex justify-between items-center border-b-2 border-black pb-3 mb-4">
-            <div>
-                <h1 id="rpt-shop-title" class="text-xl font-bold text-black">إسم المحل أو النشاط</h1>
-                <p id="rpt-type" class="text-sm font-bold text-black mt-1">كشف حساب</p>
-            </div>
-            <div class="text-left space-y-0.5 text-xs font-bold text-black">
-                <p>تاريخ التقرير: <span id="rpt-date">--/--/----</span></p>
-                <p>رقم الهاتف: <span id="rpt-phone">--</span></p>
+    <!-- منطقة التقرير القابل للطباعة فقط -->
+    <div id="printable-report" class="hidden p-6 bg-white text-slate-900 dir-rtl">
+        <div class="text-center border-b pb-4 mb-4">
+            <h1 id="rpt-shop-title" class="text-2xl md:text-3xl font-bold text-slate-900">إسم المحل أو النشاط</h1>
+            <div class="flex justify-between items-center mt-3 text-xs text-slate-500">
+                <span id="rpt-type" class="text-xl font-bold text-slate-900">كشف حساب</span>
+                <span>تاريخ التقرير: <span id="rpt-date">--/--/----</span></span>
             </div>
         </div>
 
-        <div class="bg-slate-100 p-3 rounded mb-4 border border-black font-bold">
-            <div class="text-black">معلومات العميل: <span id="rpt-name" class="text-black">---</span></div>
-            <div id="rpt-details" class="text-black font-normal mt-0.5">---</div>
+        <div class="bg-slate-50 p-4 rounded-lg mb-6 border">
+            <div class="text-xs text-slate-500">معلومات الحساب:</div>
+            <div id="rpt-name" class="text-lg font-bold text-slate-800">---</div>
+            <div id="rpt-details" class="text-xs text-slate-600">---</div>
         </div>
 
-        <table class="w-full text-right border-collapse border border-black text-xs mb-4">
+        <table class="w-full text-right border-collapse text-sm">
             <thead>
-                <tr class="bg-slate-200 text-black font-bold">
-                    <th class="p-2 border border-black text-right">التاريخ</th>
-                    <th class="p-2 border border-black text-right">نوع الحركة</th>
-                    <th class="p-2 border border-black text-right">رقم السند / الفاتورة</th>
-                    <th class="p-2 border border-black text-right">البيان / ملاحظة</th>
-                    <th class="p-2 border border-black text-right">المبلغ</th>
-                    <th class="p-2 border border-black text-right">الرصيد</th>
+                <tr class="bg-slate-200 text-slate-900 font-bold">
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">التاريخ</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">نوع الحركة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">رقم السند / الفاتورة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">البيان / ملاحظة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">المبلغ</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">الرصيد</th>
                 </tr>
             </thead>
             <tbody id="rpt-rows">
@@ -255,25 +250,10 @@
             </tbody>
         </table>
 
-        <!-- بطاقات الملخص الثلاثة أسفل الجدول -->
-        <div class="grid grid-cols-3 gap-2 mb-4 text-center font-bold">
-            <div class="border border-black p-2 bg-slate-50 rounded">
-                <div class="text-[10px] text-black">إجمالي المشتريات</div>
-                <div id="rpt-total-add" class="text-sm text-black">0</div>
-            </div>
-            <div class="border border-black p-2 bg-slate-50 rounded">
-                <div class="text-[10px] text-black">إجمالي الدفعات</div>
-                <div id="rpt-total-pay" class="text-sm text-black">0</div>
-            </div>
-            <div class="border border-black p-2 bg-slate-100 rounded">
-                <div class="text-[10px] text-black">الرصيد المتبقي النهائي</div>
-                <div id="rpt-balance" class="text-sm text-red-700">0</div>
-            </div>
-        </div>
-
-        <!-- الملاحظة الهامة -->
-        <div class="p-3 border-2 border-red-600 bg-red-50 rounded text-red-700 font-bold leading-relaxed">
-            ⚠️ <strong>ملاحظة هامة:</strong> يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ في حسابك أو هناك أي استفسار التواصل معنا على رقم المحل.
+        <!-- الرصيد الإجمالي (منفصل عن الجدول) -->
+        <div class="mt-8 flex justify-between items-center bg-slate-100 border-2 border-slate-800 rounded-lg p-4">
+            <span class="font-bold text-slate-900">الرصيد الإجمالي النهائي:</span>
+            <span id="rpt-balance" class="text-xl font-bold text-slate-900">0</span>
         </div>
     </div>
 
@@ -414,18 +394,12 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نص الرسالة (يمكنك تعديله قبل الإرسال)</label>
-                <textarea id="send-text" rows="8" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-sm leading-relaxed"></textarea>
+                <textarea id="send-text" rows="10" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none text-sm leading-relaxed"></textarea>
             </div>
-            <div class="flex flex-col gap-2">
-                <div class="flex gap-2">
-                    <button type="button" onclick="sendWhatsApp()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-1">💬 إرسال عبر واتساب</button>
-                    <button type="button" onclick="copySendText(this)" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl transition text-sm">📋 نسخ</button>
-                </div>
-                <button type="button" onclick="sendReportAsPDF()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow">
-                    <span>📄</span>
-                    <span>إرسال كشف الحساب كملف PDF</span>
-                </button>
-                <button type="button" onclick="closeModal('modal-send')" class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-xl transition text-xs">إلغاء</button>
+            <div class="flex gap-2">
+                <button type="button" onclick="sendWhatsApp()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition">💬 إرسال عبر واتساب</button>
+                <button type="button" onclick="copySendText(this)" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl transition">📋 نسخ</button>
+                <button type="button" onclick="closeModal('modal-send')" class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-4 py-2.5 rounded-xl transition">إلغاء</button>
             </div>
         </div>
     </div>
@@ -685,52 +659,25 @@
         }
 
         function buildStatementMessage(section, person) {
-            const shop = getShopName();
-            const dateStr = new Date().toLocaleDateString('en-GB');
             const start = parseFloat(person.initialBalance) || 0;
-            
             let bal = start;
-            let totalAdd = 0;
-            let totalPay = 0;
-
             const rows = sortedTransactions(person).map(t => {
-                if (t.type === 'add') totalAdd += t.amount;
-                if (t.type === 'pay') totalPay += t.amount;
-                
                 bal += t.type === 'add' ? t.amount : -t.amount;
-                const doc = t.invoice ? ` (${t.docType || 'وثيقة'} #${t.invoice})` : '';
-                const action = t.type === 'add' ? `+${moneyMsg(t.amount)}` : `-${moneyMsg(t.amount)}`;
-                
-                return `• ${t.date || '-'} | ${t.note || (t.type === 'add' ? 'إضافة' : 'تسديد')}${doc} (${action}) ← *${moneyMsg(bal)}*`;
+                const doc = t.invoice ? ` (${t.docType || 'وثيقة'} ${t.invoice})` : '';
+                return `• ${t.date || '-'} | ${t.type === 'add' ? 'إضافة' : 'تسديد'} ${moneyMsg(t.amount)}${doc} ← ${moneyMsg(bal)}`;
             });
-
-            const lines = [
-                shop ? `🏛️ *${shop}*` : null,
-                `🧾 *كشف حساب / فاتورة مالي*`,
-                SEP,
-                `👤 *العميل:* ${person.name}`,
-                person.phone ? `📞 *الهاتف:* ${person.phone}` : null,
-                `📅 *تاريخ التقرير:* ${dateStr}`,
-                SEP,
-                `📊 *سجل الحركات:*`
-            ].filter(Boolean);
-
-            if (start) {
-                lines.push(`• رصيد سابق مدور ← *${moneyMsg(start)}*`);
-            }
-
-            lines.push(...rows);
-            lines.push(
-                SEP,
-                `📉 *إجمالي المشتريات:* ${moneyMsg(totalAdd + start)}`,
-                `📈 *إجمالي الدفعات:* ${moneyMsg(totalPay)}`,
-                `💰 *الرصيد المتبقي النهائي:* *${moneyMsg(getPersonBalance(person))}*`,
-                SEP,
-                `⚠️ *ملاحظة هامة:*`,
-                `يرجى مراجعة كشف الحساب جيدا، وفي حال وجود أي خطأ في حسابك أو هناك أي استفسار التواصل معنا على رقم المحل.`
-            );
-
-            return lines.join('\n');
+            const head = [...msgHeader(person, '📋 *كشف حساب*', new Date().toLocaleDateString('en-GB')), SEP];
+            if (start) head.push(`رصيد افتتاحي: ${moneyMsg(start)}`);
+            const tail = [SEP, balanceLine(section, getPersonBalance(person))];
+            const make = (count) => {
+                const omitted = rows.length - count;
+                return [...head, ...(omitted > 0 ? [`… (${omitted} حركة أقدم غير معروضة)`] : []),
+                    ...rows.slice(rows.length - count), ...tail].join('\n');
+            };
+            let n = Math.min(rows.length, 40);
+            let text = make(n);
+            while (n > 0 && encodeURIComponent(text).length > SEND_URL_MAX) { n--; text = make(n); }
+            return text;
         }
 
         function buildSendMessage(kind, section, person, txId) {
@@ -807,7 +754,7 @@
         }
 
         function formatAmount(num) {
-            const val = Number(num || 0).toLocaleString('en-US');
+            const val = num.toLocaleString('en-US');
             return state.showCurrency ? `${val} د.ج` : val;
         }
 
@@ -877,43 +824,28 @@
             updateHomeTotals();
         }
 
-function initAuth() {
-    if (!db) { 
-        hideLogin(); 
-        return; 
-    } 
-
-    if (!auth) {
-        document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
-        return;
-    }
-
-    // إظهار النموذج مباشرة بعد ثانية واحدة كحد أقصى إذا استغرق Firebase وقتاً أطول
-    const timer = setTimeout(() => {
-        showLoginForm();
-    }, 1500);
-
-    auth.onAuthStateChanged((user) => {
-        clearTimeout(timer);
-        const logoutBtn = document.getElementById('btn-logout');
-        if (user) {
-            hideLogin();
-            logoutBtn.classList.remove('hidden');
-            if (!cloudStarted) { 
-                cloudStarted = true; 
-                syncWithCloud(); 
+        function initAuth() {
+            if (!db) { hideLogin(); return; } // وضع محلي بدون سحابة
+            if (!auth) {
+                document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
+                return;
             }
-        } else {
-            logoutBtn.classList.add('hidden');
-            stopSyncAndClear();
-            showLoginForm();
+            const timer = setTimeout(showLoginForm, 6000);
+            auth.onAuthStateChanged((user) => {
+                clearTimeout(timer);
+                const logoutBtn = document.getElementById('btn-logout');
+                if (user) {
+                    hideLogin();
+                    logoutBtn.classList.remove('hidden');
+                    if (!cloudStarted) { cloudStarted = true; syncWithCloud(); }
+                } else {
+                    logoutBtn.classList.add('hidden');
+                    stopSyncAndClear();
+                    showLoginForm();
+                }
+            });
         }
-    }, (error) => {
-        clearTimeout(timer);
-        console.error("Auth state error:", error);
-        showLoginForm();
-    });
-}
+
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value.trim();
@@ -1123,7 +1055,7 @@ function initAuth() {
                     <div>
                         <div class="font-bold flex items-center gap-2">
                             <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
-                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${esc(tx.docType \vert{}\vert{} 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
+                            ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
                         </div>
                         <div class="text-xs opacity-75 mt-0.5">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
                     </div>
@@ -1214,7 +1146,7 @@ function initAuth() {
             }
         }
 
-        // --- 8. طباعة التقرير وتصدير PDF ---
+        // --- 8. طباعة التقرير ---
         function printReport() {
             const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
             if (!person) return;
@@ -1223,9 +1155,8 @@ function initAuth() {
             document.getElementById('rpt-shop-title').innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             document.getElementById('rpt-type').innerText = isCust ? 'كشف حساب عميل' : 'كشف حساب مورد';
             document.getElementById('rpt-date').innerText = new Date().toLocaleDateString('en-GB');
-            document.getElementById('rpt-phone').innerText = person.phone || 'غير مدون';
             document.getElementById('rpt-name').innerText = person.name;
-            document.getElementById('rpt-details').innerText = `العنوان: ${person.address || 'غير مدون'}`;
+            document.getElementById('rpt-details').innerText = `هاتف: ${person.phone || 'غير مدون'} | عنوان: ${person.address || 'غير مدون'}`;
             
             const totalBal = getPersonBalance(person);
             document.getElementById('rpt-balance').innerText = formatAmount(totalBal);
@@ -1233,144 +1164,40 @@ function initAuth() {
             const rowsContainer = document.getElementById('rpt-rows');
             rowsContainer.innerHTML = '';
 
-            let totalAdd = 0;
-            let totalPay = 0;
-            const initial = parseFloat(person.initialBalance) || 0;
-            totalAdd += initial;
-
             if (person.initialBalance) {
                 rowsContainer.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-2 border border-black">-</td>
-                        <td class="p-2 border border-black font-bold">رصيد سابق مدور</td>
-                        <td class="p-2 border border-black">-</td>
-                        <td class="p-2 border border-black">منقول من الدفتر</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(initial)}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(initial)}</td>
+                    <tr class="border-b border-slate-300">
+                        <td class="p-2.5 border border-slate-300">-</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">رصيد افتتاحي</td>
+                        <td class="p-2.5 border border-slate-300">-</td>
+                        <td class="p-2.5 border border-slate-300">منقول من الدفتر</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(parseFloat(person.initialBalance))}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(parseFloat(person.initialBalance))}</td>
                     </tr>
                 `;
             }
 
-            let running = initial;
+            let running = parseFloat(person.initialBalance) || 0;
             sortedTransactions(person).forEach(tx => {
-                if (tx.type === 'add') totalAdd += tx.amount;
-                if (tx.type === 'pay') totalPay += tx.amount;
-
                 running += tx.type === 'add' ? tx.amount : -tx.amount;
                 const isAdd = tx.type === 'add';
-                const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: #${tx.invoice}` : '-';
+                const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: ${tx.invoice}` : '-';
                 rowsContainer.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-2 border border-black">${esc(tx.date)}</td>
-                        <td class="p-2 border border-black font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
-                        <td class="p-2 border border-black">${esc(docLabel)}</td>
-                        <td class="p-2 border border-black">${esc(tx.note) || '-'}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(tx.amount)}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(running)}</td>
+                    <tr class="border-b border-slate-300">
+                        <td class="p-2.5 border border-slate-300">${esc(tx.date)}</td>
+                        <td class="p-2.5 border border-slate-300 ${isAdd ? 'text-red-600' : 'text-green-600'} font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
+                        <td class="p-2.5 border border-slate-300">${esc(docLabel)}</td>
+                        <td class="p-2.5 border border-slate-300">${esc(tx.note) || '-'}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(tx.amount)}</td>
+                        <td class="p-2.5 border border-slate-300 font-bold">${formatAmount(running)}</td>
                     </tr>
                 `;
             });
-
-            document.getElementById('rpt-total-add').innerText = formatAmount(totalAdd);
-            document.getElementById('rpt-total-pay').innerText = formatAmount(totalPay);
 
             const rpt = document.getElementById('printable-report');
             rpt.classList.remove('hidden');
             window.print();
             rpt.classList.add('hidden');
-        }
-
-        async function sendReportAsPDF() {
-            const person = currentPerson();
-            if (!person) return;
-
-            const isCust = state.activeSection === 'customers';
-            document.getElementById('rpt-shop-title').innerText = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
-            document.getElementById('rpt-type').innerText = isCust ? 'كشف حساب عميل' : 'كشف حساب مورد';
-            document.getElementById('rpt-date').innerText = new Date().toLocaleDateString('en-GB');
-            document.getElementById('rpt-phone').innerText = person.phone || 'غير مدون';
-            document.getElementById('rpt-name').innerText = person.name;
-            document.getElementById('rpt-details').innerText = `العنوان: ${person.address || 'غير مدون'}`;
-            
-            const totalBal = getPersonBalance(person);
-            document.getElementById('rpt-balance').innerText = formatAmount(totalBal);
-
-            const rowsContainer = document.getElementById('rpt-rows');
-            rowsContainer.innerHTML = '';
-
-            let totalAdd = 0;
-            let totalPay = 0;
-            const initial = parseFloat(person.initialBalance) || 0;
-            totalAdd += initial;
-
-            if (person.initialBalance) {
-                rowsContainer.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-2 border border-black">-</td>
-                        <td class="p-2 border border-black font-bold">رصيد سابق مدور</td>
-                        <td class="p-2 border border-black">-</td>
-                        <td class="p-2 border border-black">منقول من الدفتر</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(initial)}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(initial)}</td>
-                    </tr>
-                `;
-            }
-
-            let running = initial;
-            sortedTransactions(person).forEach(tx => {
-                if (tx.type === 'add') totalAdd += tx.amount;
-                if (tx.type === 'pay') totalPay += tx.amount;
-
-                running += tx.type === 'add' ? tx.amount : -tx.amount;
-                const isAdd = tx.type === 'add';
-                const docLabel = tx.invoice ? `${tx.docType || 'وثيقة'}: #${tx.invoice}` : '-';
-                rowsContainer.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-2 border border-black">${esc(tx.date)}</td>
-                        <td class="p-2 border border-black font-bold">${isAdd ? 'إضافة دين +' : 'تسديد -'}</td>
-                        <td class="p-2 border border-black">${esc(docLabel)}</td>
-                        <td class="p-2 border border-black">${esc(tx.note) || '-'}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(tx.amount)}</td>
-                        <td class="p-2 border border-black font-bold">${formatAmount(running)}</td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('rpt-total-add').innerText = formatAmount(totalAdd);
-            document.getElementById('rpt-total-pay').innerText = formatAmount(totalPay);
-
-            const element = document.getElementById('printable-report');
-            element.classList.remove('hidden');
-
-            const opt = {
-                margin:       0.4,
-                filename:     `كشف_حساب_${person.name.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-
-            try {
-                const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
-                element.classList.add('hidden');
-
-                const file = new File([pdfBlob], `كشف_حساب_${person.name}.pdf`, { type: 'application/pdf' });
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: 'كشف حساب مالي',
-                        text: `مرحباً ${person.name}، تجد مرفقاً كشف حسابك المالي.`,
-                        files: [file]
-                    });
-                } else {
-                    html2pdf().set(opt).from(element).save();
-                    alert('تم تحميل ملف الـ PDF بنجاح!');
-                }
-            } catch (err) {
-                console.error(err);
-                element.classList.add('hidden');
-                alert('حدث خطأ أثناء إنشاء ملف الـ PDF.');
-            }
         }
 
         // --- 9. الحفظ والتحكم بالـ Modals ---
@@ -1533,7 +1360,7 @@ function initAuth() {
         function sanitizePerson(p) {
             if (!p || typeof p !== 'object' || !p.name) return null;
             let id = String(p.id || ('ID_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7))).replace(/\//g, '_');
-            if (/^\.+$/.test(id) \vert{}\vert{} /^__.*__$/.test(id)) id = 'imp_' + id;
+            if (/^\.+$/.test(id) || /^__.*__$/.test(id)) id = 'imp_' + id;
             const txs = Array.isArray(p.transactions) ? p.transactions : [];
             return {
                 id: id,
