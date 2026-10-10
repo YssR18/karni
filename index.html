@@ -840,7 +840,8 @@
             document.getElementById('input-name').value = person.name;
             document.getElementById('input-phone').value = person.phone || '';
             document.getElementById('input-address').value = person.address || '';
-            document.getElementById('initial-balance-field').classList.add('hidden');
+            document.getElementById('input-initial').value = parseFloat(person.initialBalance) || '';
+            document.getElementById('initial-balance-field').classList.remove('hidden');
 
             document.getElementById('modal-add').classList.remove('hidden');
         }
@@ -990,15 +991,25 @@
             if (editId) {
                 const person = state[state.activeSection].find(p => p.id === editId);
                 if (person) {
+                    const newInitial = parseFloat(document.getElementById('input-initial').value) || 0;
+                    const oldInitial = parseFloat(person.initialBalance) || 0;
+                    if (newInitial !== oldInitial) {
+                        const before = getPersonBalance(person);
+                        const after = before - oldInitial + newInitial;
+                        if (!confirm(`سيتغير الرصيد الافتتاحي من ${formatAmount(oldInitial)} إلى ${formatAmount(newInitial)}.\nوسيتغير الرصيد الإجمالي من ${formatAmount(before)} إلى ${formatAmount(after)}.\nهل تريد المتابعة؟`)) return;
+                    }
+
                     person.name = document.getElementById('input-name').value;
                     person.phone = document.getElementById('input-phone').value;
                     person.address = document.getElementById('input-address').value;
+                    person.initialBalance = newInitial;
 
                     if (db) {
                         await db.collection(state.activeSection).doc(editId).update({
                             name: person.name,
                             phone: person.phone,
-                            address: person.address
+                            address: person.address,
+                            initialBalance: newInitial
                         });
                     } else {
                         localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
