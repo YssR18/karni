@@ -257,23 +257,23 @@
 
     <!-- Application Script -->
     <script>
-        // --- 1. إعدادات Firebase (ضع مفاتيحك الحقيقية هنا بدلاً من الرموز الوهمية) ---
+        // --- 1. إعدادات Firebase الخاصة بك ---
         const firebaseConfig = {
-    apiKey: "AIzaSyC09quM2H6TW0BuFem5iQ8JuzNO_fNr2pA",
-    authDomain: "karni-18.firebaseapp.com",
-    projectId: "karni-18",
-    storageBucket: "karni-18.firebasestorage.app",
-    messagingSenderId: "168254390038",
-    appId: "1:168254390038:web:89650055e9c4f282435a37",
-    measurementId: "G-KZZV36R62M"
-};
+            apiKey: "AIzaSyC09quM2H6TW0BuFem5iQ8JuzNO_fNr2pA",
+            authDomain: "karni-18.firebaseapp.com",
+            projectId: "karni-18",
+            storageBucket: "karni-18.firebasestorage.app",
+            messagingSenderId: "168254390038",
+            appId: "1:168254390038:web:89650055e9c4f282435a37",
+            measurementId: "G-KZZV36R62M"
+        };
 
         let db = null;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
         } catch(e) {
-            console.warn("Firebase غير موصول بعد، تأكد من إدخال المفاتيح الصحيحة.");
+            console.warn("Firebase غير موصول بعد.");
         }
 
         // --- 2. PWA Installation Handler ---
@@ -305,7 +305,7 @@
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
         };
 
-        // --- 4. المزامنة السحابية ---
+        // --- 4. المزامنة ---
         function syncWithCloud() {
             if (!db) return;
             
@@ -318,8 +318,6 @@
                     const p = state[state.activeSection].find(x => x.id === state.currentPersonId);
                     if (p) renderTransactions(p);
                 }
-            }, (error) => {
-                console.error("خطأ في مزامنة العملاء:", error);
             });
 
             db.collection("suppliers").onSnapshot((snapshot) => {
@@ -327,16 +325,16 @@
                 localStorage.setItem('app_suppliers', JSON.stringify(state.suppliers));
                 updateHomeTotals();
                 if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
-            }, (error) => {
-                console.error("خطأ في مزامنة الموردين:", error);
             });
         }
 
-        // --- 5. الساعة والعيون والعمليات ---
+        // --- 5. الساعة والتاريخ ---
         function updateClock() {
             const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
-            document.getElementById('date').innerText = now.toLocaleDateString('en-GB');
+            const clockEl = document.getElementById('clock');
+            const dateEl = document.getElementById('date');
+            if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', { hour12: false });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('en-GB');
         }
         setInterval(updateClock, 1000);
         updateClock();
@@ -373,12 +371,14 @@
             }
         }
 
-        // --- 6. الشاشات والريندر ---
+        // --- 6. التنقل بين الشاشات ---
         function showScreen(screenId) {
             ['home', 'list', 'detail'].forEach(id => {
-                document.getElementById(`screen-${id}`).classList.add('hidden');
+                const el = document.getElementById(`screen-${id}`);
+                if (el) el.classList.add('hidden');
             });
-            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            const target = document.getElementById(`screen-${screenId}`);
+            if (target) target.classList.remove('hidden');
         }
 
         function openSection(type) {
@@ -480,7 +480,7 @@
 
         // --- 7. حذف معاملة ---
         async function deleteTransaction(txId) {
-            if (!confirm('هل أنت تأكد من رغبتك في حذف هذه المعاملة؟')) return;
+            if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
             const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
             if (!person) return;
@@ -499,7 +499,7 @@
             }
         }
 
-        // --- 8. طباعة التقرير / كشف الحساب ---
+        // --- 8. طباعة التقرير ---
         function printReport() {
             const person = state[state.activeSection].find(p => p.id === state.currentPersonId);
             if (!person) return;
@@ -545,7 +545,7 @@
             rpt.classList.add('hidden');
         }
 
-        // --- 9. حفظ وتحديث ---
+        // --- 9. الحفظ والتحكم بالـ Modals ---
         function openAddModal() {
             document.getElementById('modal-add-title').innerText = state.activeSection === 'customers' ? 'إضافة عميل جديد' : 'إضافة مورد جديد';
             document.getElementById('form-add-person').reset();
@@ -594,7 +594,7 @@
                 id: Date.now(),
                 type: document.getElementById('input-tx-type').value,
                 amount: parseFloat(document.getElementById('input-tx-amount').value) || 0,
-                invoice: document.getElementById('input-tx-invoice>().value.trim(),
+                invoice: document.getElementById('input-tx-invoice').value.trim(),
                 note: document.getElementById('input-tx-note').value,
                 date: now.toLocaleDateString('en-GB')
             };
