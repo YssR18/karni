@@ -347,7 +347,8 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('btn-install-pwa').classList.remove('hidden');
+            const btn = document.getElementById('btn-install-pwa');
+            if(btn) btn.classList.remove('hidden');
         });
 
         function installPWA() {
@@ -355,7 +356,8 @@
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        document.getElementById('btn-install-pwa').classList.add('hidden');
+                        const btn = document.getElementById('btn-install-pwa');
+                        if(btn) btn.classList.add('hidden');
                     }
                     deferredPrompt = null;
                 });
@@ -440,8 +442,10 @@
 
         function toggleBalanceVisibility() {
             state.hideBalance = !state.hideBalance;
-            document.getElementById('eye-icon-cust').innerText = state.hideBalance ? '👁️' : '🙈';
-            document.getElementById('eye-icon-supp').innerText = state.hideBalance ? '👁️' : '🙈';
+            const eyeCust = document.getElementById('eye-icon-cust');
+            const eyeSupp = document.getElementById('eye-icon-supp');
+            if(eyeCust) eyeCust.innerText = state.hideBalance ? '👁️' : '🙈';
+            if(eyeSupp) eyeSupp.innerText = state.hideBalance ? '👁️' : '🙈';
             updateHomeTotals();
         }
 
@@ -461,12 +465,14 @@
             const custEl = document.getElementById('total-customers-balance');
             const suppEl = document.getElementById('total-suppliers-balance');
 
-            if (state.hideBalance) {
-                custEl.innerText = '****';
-                suppEl.innerText = '****';
-            } else {
-                custEl.innerText = formatAmount(totalCust);
-                suppEl.innerText = formatAmount(totalSupp);
+            if(custEl && suppEl) {
+                if (state.hideBalance) {
+                    custEl.innerText = '****';
+                    suppEl.innerText = '****';
+                } else {
+                    custEl.innerText = formatAmount(totalCust);
+                    suppEl.innerText = formatAmount(totalSupp);
+                }
             }
         }
 
