@@ -877,28 +877,43 @@
             updateHomeTotals();
         }
 
-        function initAuth() {
-            if (!db) { hideLogin(); return; } // وضع محلي بدون سحابة
-            if (!auth) {
-                document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
-                return;
-            }
-            const timer = setTimeout(showLoginForm, 6000);
-            auth.onAuthStateChanged((user) => {
-                clearTimeout(timer);
-                const logoutBtn = document.getElementById('btn-logout');
-                if (user) {
-                    hideLogin();
-                    logoutBtn.classList.remove('hidden');
-                    if (!cloudStarted) { cloudStarted = true; syncWithCloud(); }
-                } else {
-                    logoutBtn.classList.add('hidden');
-                    stopSyncAndClear();
-                    showLoginForm();
-                }
-            });
-        }
+function initAuth() {
+    if (!db) { 
+        hideLogin(); 
+        return; 
+    } 
 
+    if (!auth) {
+        document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
+        return;
+    }
+
+    // إظهار النموذج مباشرة بعد ثانية واحدة كحد أقصى إذا استغرق Firebase وقتاً أطول
+    const timer = setTimeout(() => {
+        showLoginForm();
+    }, 1500);
+
+    auth.onAuthStateChanged((user) => {
+        clearTimeout(timer);
+        const logoutBtn = document.getElementById('btn-logout');
+        if (user) {
+            hideLogin();
+            logoutBtn.classList.remove('hidden');
+            if (!cloudStarted) { 
+                cloudStarted = true; 
+                syncWithCloud(); 
+            }
+        } else {
+            logoutBtn.classList.add('hidden');
+            stopSyncAndClear();
+            showLoginForm();
+        }
+    }, (error) => {
+        clearTimeout(timer);
+        console.error("Auth state error:", error);
+        showLoginForm();
+    });
+}
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value.trim();
