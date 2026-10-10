@@ -28,6 +28,10 @@
             #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
             @page { size: auto; margin: 10mm; }
+            #printable-report, #printable-report * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -182,7 +186,7 @@
         <div class="text-center border-b pb-4 mb-4">
             <h1 id="rpt-shop-title" class="text-2xl md:text-3xl font-bold text-slate-900">إسم المحل أو النشاط</h1>
             <div class="flex justify-between items-center mt-3 text-xs text-slate-500">
-                <span id="rpt-type" class="font-bold">كشف حساب</span>
+                <span id="rpt-type" class="text-xl font-bold text-slate-900">كشف حساب</span>
                 <span>تاريخ التقرير: <span id="rpt-date">--/--/----</span></span>
             </div>
         </div>
@@ -195,24 +199,24 @@
 
         <table class="w-full text-right border-collapse text-sm">
             <thead>
-                <tr class="bg-slate-800 text-white font-bold border-b border-slate-900">
-                    <th class="p-3 border border-slate-700">التاريخ</th>
-                    <th class="p-3 border border-slate-700">نوع الحركة</th>
-                    <th class="p-3 border border-slate-700">رقم السند / الفاتورة</th>
-                    <th class="p-3 border border-slate-700">البيان / ملاحظة</th>
-                    <th class="p-3 border border-slate-700">المبلغ</th>
+                <tr class="bg-slate-200 text-slate-900 font-bold">
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">التاريخ</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">نوع الحركة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">رقم السند / الفاتورة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">البيان / ملاحظة</th>
+                    <th class="p-3 border border-slate-500 text-right text-slate-900 font-bold">المبلغ</th>
                 </tr>
             </thead>
             <tbody id="rpt-rows">
                 <!-- تفاصيل الحركات -->
             </tbody>
-            <tfoot>
-                <tr class="bg-slate-200 text-slate-900 font-bold border-t-2 border-slate-900">
-                    <td colspan="4" class="p-3 border border-slate-400 text-left">الرصيد الإجمالي النهائي:</td>
-                    <td id="rpt-balance" class="p-3 border border-slate-400 text-lg">0</td>
-                </tr>
-            </tfoot>
         </table>
+
+        <!-- الرصيد الإجمالي (منفصل عن الجدول) -->
+        <div class="mt-8 flex justify-between items-center bg-slate-100 border-2 border-slate-800 rounded-lg p-4">
+            <span class="font-bold text-slate-900">الرصيد الإجمالي النهائي:</span>
+            <span id="rpt-balance" class="text-xl font-bold text-slate-900">0</span>
+        </div>
     </div>
 
     <!-- Modal: إعدادات النظام -->
