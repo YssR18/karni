@@ -46,8 +46,8 @@
             <form id="login-form" onsubmit="handleLogin(event)" class="hidden space-y-3">
                 <p class="text-xs text-slate-500 dark:text-slate-400 text-center">سجّل الدخول للوصول إلى بياناتك</p>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="login-email" required autocomplete="username" dir="ltr" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">اسم المستخدم أو البريد الإلكتروني</label>
+                    <input type="text" id="login-email" required autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">كلمة المرور</label>
@@ -68,6 +68,7 @@
             </h1>
             
             <div class="flex items-center gap-4">
+                <span id="user-badge" class="hidden bg-slate-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg"></span>
                 <span id="sync-badge" class="hidden bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg"></span>
                 <button id="btn-install-pwa" onclick="installPWA()" class="hidden bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
                     📥 تثبيت التطبيق
@@ -185,7 +186,7 @@
                     <button onclick="openEditPersonModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
                         ✏️ تعديل الملف
                     </button>
-                    <button onclick="deleteCurrentPerson()" class="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1">
+                    <button onclick="deleteCurrentPerson()" class="owner-only bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1">
                         🗑️ حذف
                     </button>
                     <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow">
@@ -262,12 +263,12 @@
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إعدادات النظام والمظهر</h3>
             <form id="form-settings" onsubmit="saveSettings(event)" class="space-y-4">
-                <div>
+                <div class="owner-only">
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">اسم المحل / النشاط (عنوان التقارير) *</label>
                     <input type="text" id="input-shop-name" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="مثال: مؤسسة التجارة العامة">
                 </div>
                 
-                <div>
+                <div class="owner-only">
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تعريف المحل (سطر يظهر تحت الاسم في ملف PDF)</label>
                     <input type="text" id="input-shop-info" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="مثال: البيع بالجملة والتجزئة | الهاتف: 0555123456 | العنوان: ...">
                 </div>
@@ -290,7 +291,15 @@
                     </label>
                 </div>
 
-                <div class="border-b dark:border-slate-700 pb-3 space-y-2">
+                <div class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
+                    <div class="text-sm font-bold text-slate-700 dark:text-slate-300">الفريق</div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openUsersModal()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition">👥 المستخدمون</button>
+                        <button type="button" onclick="openActivityModal()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold py-2.5 rounded-xl transition">📜 سجل النشاط</button>
+                    </div>
+                </div>
+
+                <div class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">النسخ الاحتياطي</div>
                     <div class="flex gap-2">
                         <button type="button" onclick="exportData()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬇️ تصدير البيانات</button>
@@ -408,6 +417,41 @@
                 <button type="button" onclick="copySendText(this)" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl transition">📋 نسخ</button>
                 <button type="button" onclick="closeModal('modal-send')" class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-4 py-2.5 rounded-xl transition">إلغاء</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: المستخدمون -->
+    <div id="modal-users" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">👥 المستخدمون</h3>
+            <div id="users-note" class="hidden text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3"></div>
+            <div id="users-list" class="space-y-2 text-sm"></div>
+            <form id="form-user" onsubmit="createUser(event)" class="space-y-3 border-t dark:border-slate-700 pt-3">
+                <div class="text-sm font-bold text-slate-700 dark:text-slate-300">إضافة مستخدم جديد</div>
+                <input type="text" id="nu-name" required placeholder="الاسم الظاهر (مثال: ياسر)" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="nu-username" required dir="ltr" placeholder="اسم المستخدم (حروف إنجليزية وأرقام)" autocapitalize="none" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="nu-pass" required dir="ltr" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="nu-role" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none">
+                    <option value="accountant">محاسب (يضيف ويسدد، بدون حذف)</option>
+                    <option value="owner">مالك (كل الصلاحيات)</option>
+                </select>
+                <div id="nu-error" class="hidden text-xs text-red-600 dark:text-red-400 font-bold"></div>
+                <div class="flex gap-2">
+                    <button type="submit" id="nu-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition disabled:opacity-60">إضافة</button>
+                    <button type="button" onclick="closeModal('modal-users')" class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-5 py-2.5 rounded-xl transition">إغلاق</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: سجل النشاط -->
+    <div id="modal-activity" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-3 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">📜 سجل النشاط (آخر 100 عملية)</h3>
+                <button type="button" onclick="closeModal('modal-activity')" class="text-slate-500 text-xl px-2">✕</button>
+            </div>
+            <div id="activity-list" class="space-y-2 text-xs"></div>
         </div>
     </div>
 
@@ -1091,11 +1135,123 @@
             state.customers = [];
             state.suppliers = [];
             state.currentPersonId = null;
+            me = null;
+            applyRole();
             localStorage.removeItem('app_customers');
             localStorage.removeItem('app_suppliers');
-            ['modal-settings', 'modal-add', 'modal-transaction', 'modal-send'].forEach(id => closeModal(id));
+            ['modal-settings', 'modal-add', 'modal-transaction', 'modal-send', 'modal-users', 'modal-activity'].forEach(id => closeModal(id));
             showScreen('home');
             updateHomeTotals();
+        }
+
+        // --- المستخدمون والصلاحيات ---
+        let me = null;   // { uid, name, role: 'owner'|'accountant', legacy? }
+        const ROLE_LABEL = { owner: 'مالك', accountant: 'محاسب' };
+
+        function isOwner() { return !me || me.role === 'owner'; }
+
+        function applyRole() {
+            const owner = isOwner();
+            document.querySelectorAll('.owner-only').forEach(el => el.classList.toggle('hidden', !owner));
+            const sn = document.getElementById('input-shop-name');
+            if (sn) sn.required = owner;
+            const badge = document.getElementById('user-badge');
+            if (badge) {
+                if (me && !me.legacy) {
+                    badge.innerText = `👤 ${me.name} · ${ROLE_LABEL[me.role] || ''}`;
+                    badge.classList.remove('hidden');
+                } else badge.classList.add('hidden');
+            }
+        }
+
+        function actorStamp() {
+            return (db && me && !me.legacy) ? { by: me.name, byId: me.uid, at: Date.now() } : {};
+        }
+
+        function logActivity(action, section, person, details) {
+            if (!db || !me || me.legacy) return;
+            try {
+                const p = db.collection('activity').add({
+                    at: Date.now(), uid: me.uid, by: me.name, role: me.role, action,
+                    section: section || '', personId: person ? person.id : '', personName: person ? person.name : '',
+                    details: details || ''
+                });
+                if (p && p.catch) p.catch(() => {});
+            } catch (e) { /* السجل لا يوقف العمل */ }
+        }
+
+        function txDesc(tx) {
+            return `${tx.type === 'add' ? 'إضافة دين' : 'تسديد'} ${moneyMsg(tx.amount)}${tx.invoice ? ` — ${tx.docType || 'وثيقة'} ${tx.invoice}` : ''} (${tx.date})`;
+        }
+
+        async function loadProfile(user) {
+            const uid = user.uid || '';
+            const cacheKey = 'app_profile_' + uid;
+            const nameFrom = () => String(user.email || '').split('@')[0] || 'المستخدم';
+            let prof = null, legacy = false;
+            try {
+                const ref = db.collection('users').doc(uid);
+                const snap = await ref.get();
+                if (snap.exists) {
+                    const d = snap.data() || {};
+                    prof = { uid, name: d.name || nameFrom(), role: d.role === 'owner' ? 'owner' : 'accountant', active: d.active !== false };
+                } else {
+                    const any = await db.collection('users').limit(1).get();
+                    if (any.empty) {      // أول دخول للنظام: هذا الحساب يصبح المالك
+                        const d = { name: nameFrom(), role: 'owner', active: true, email: user.email || '', createdAt: Date.now() };
+                        await ref.set(d);
+                        prof = { uid, name: d.name, role: 'owner', active: true };
+                    } else {
+                        prof = { blocked: true };
+                    }
+                }
+            } catch (err) {
+                let cached = null;
+                try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
+                if (cached && isOfflineError(err)) prof = cached;
+                else { legacy = true; console.warn('نظام المستخدمين غير متاح (راجع قواعد Firebase):', err && (err.code || err.message)); }
+            }
+            if (!legacy && prof && (prof.blocked || prof.active === false)) {
+                alert(prof.blocked ? 'حسابك غير مفعّل في النظام. تواصل مع المالك.' : 'تم تعطيل هذا الحساب. تواصل مع المالك.');
+                auth.signOut();
+                return false;
+            }
+            if (legacy) {
+                me = { uid, name: nameFrom(), role: 'owner', legacy: true };
+            } else {
+                me = prof;
+                try { localStorage.setItem(cacheKey, JSON.stringify(prof)); } catch (e) {}
+            }
+            applyRole();
+            return true;
+        }
+
+        // إعدادات المحل المشتركة بين كل الأجهزة (اسم المحل وسطر التعريف)
+        function listenShopSettings() {
+            try {
+                const ref = db.collection('settings').doc('shop');
+                const unsub = ref.onSnapshot((snap) => {
+                    if (snap.exists) {
+                        const d = snap.data() || {};
+                        if (typeof d.name === 'string') localStorage.setItem('app_shop_name', d.name);
+                        if (typeof d.info === 'string') localStorage.setItem('app_shop_info', d.info);
+                        updateHomeShopNameDisplay();
+                    } else if (isOwner() && me && !me.legacy && localStorage.getItem('app_shop_name')) {
+                        pushShopSettings();   // أول مرة: ارفع إعدادات المالك الحالية
+                    }
+                }, () => {});
+                unsubs.push(unsub);
+            } catch (e) { /* غير متاح */ }
+        }
+
+        function pushShopSettings() {
+            if (!db || !me || me.legacy || !isOwner()) return;
+            try {
+                const p = db.collection('settings').doc('shop').set({
+                    name: localStorage.getItem('app_shop_name') || '', info: localStorage.getItem('app_shop_info') || ''
+                });
+                if (p && p.catch) p.catch(() => {});
+            } catch (e) {}
         }
 
         function initAuth() {
@@ -1105,13 +1261,15 @@
                 return;
             }
             const timer = setTimeout(showLoginForm, 6000);
-            auth.onAuthStateChanged((user) => {
+            auth.onAuthStateChanged(async (user) => {
                 clearTimeout(timer);
                 const logoutBtn = document.getElementById('btn-logout');
                 if (user) {
+                    const ok = await loadProfile(user);
+                    if (!ok) return;
                     hideLogin();
                     logoutBtn.classList.remove('hidden');
-                    if (!cloudStarted) { cloudStarted = true; syncWithCloud(); }
+                    if (!cloudStarted) { cloudStarted = true; syncWithCloud(); listenShopSettings(); }
                 } else {
                     logoutBtn.classList.add('hidden');
                     stopSyncAndClear();
@@ -1122,7 +1280,8 @@
 
         async function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
+            const raw = document.getElementById('login-email').value.trim();
+            const email = raw.includes('@') ? raw : raw.toLowerCase().replace(/\s+/g, '') + '@daftar.app';
             const pass = document.getElementById('login-password').value;
             const errEl = document.getElementById('login-error');
             const btn = document.getElementById('login-btn');
@@ -1133,11 +1292,12 @@
                 await auth.signInWithEmailAndPassword(email, pass);
                 document.getElementById('login-password').value = '';
             } catch (err) {
+                const bad = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 const msgs = {
-                    'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
-                    'auth/wrong-password': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
-                    'auth/user-not-found': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
-                    'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة',
+                    'auth/invalid-credential': bad,
+                    'auth/wrong-password': bad,
+                    'auth/user-not-found': bad,
+                    'auth/invalid-email': 'اسم المستخدم غير صحيح',
                     'auth/user-disabled': 'هذا الحساب معطّل',
                     'auth/too-many-requests': 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة',
                     'auth/network-request-failed': 'تعذّر الاتصال بالإنترنت',
@@ -1148,6 +1308,132 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'دخول';
+            }
+        }
+
+        // --- إدارة المستخدمين (للمالك) ---
+        async function openUsersModal() {
+            if (!isOwner()) return;
+            const note = document.getElementById('users-note');
+            note.classList.add('hidden');
+            document.getElementById('nu-error').classList.add('hidden');
+            document.getElementById('modal-users').classList.remove('hidden');
+            if (me && me.legacy) {
+                note.innerText = 'نظام المستخدمين غير مفعّل: قواعد Firebase لا تسمح بمجموعة users. راجع ملف قواعد Firebase المرفق.';
+                note.classList.remove('hidden');
+            }
+            await refreshUsers();
+        }
+
+        async function refreshUsers() {
+            const box = document.getElementById('users-list');
+            box.innerHTML = '<div class="text-xs text-slate-500">جاري التحميل...</div>';
+            try {
+                const snap = await db.collection('users').get();
+                const users = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                if (!users.length) { box.innerHTML = '<div class="text-xs text-slate-500">لا يوجد مستخدمون.</div>'; return; }
+                box.innerHTML = users.map(u => {
+                    const self = me && u.id === me.uid;
+                    const active = u.active !== false;
+                    return `<div class="border dark:border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2 ${active ? '' : 'opacity-50'}">
+                        <div class="min-w-0">
+                            <div class="font-bold truncate">${esc(u.name)} ${self ? '<span class="text-[11px] text-slate-400">(أنت)</span>' : ''}</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">${esc(u.username || u.email || '')} · ${ROLE_LABEL[u.role === 'owner' ? 'owner' : 'accountant']}${active ? '' : ' · معطّل'}</div>
+                        </div>
+                        <div class="flex gap-1 shrink-0">
+                            <button type="button" onclick="renameUser('${esc(u.id)}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تغيير الاسم">✏️</button>
+                            ${self ? '' : `<button type="button" onclick="toggleUserRole('${esc(u.id)}','${u.role === 'owner' ? 'accountant' : 'owner'}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تبديل الصلاحية">🔁</button>
+                            <button type="button" onclick="toggleUserActive('${esc(u.id)}',${active ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="${active ? 'تعطيل' : 'تفعيل'}">${active ? '🚫' : '✅'}</button>`}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                box.innerHTML = '<div class="text-xs text-red-600">تعذّر تحميل المستخدمين (قد تحتاج لتحديث قواعد Firebase).</div>';
+            }
+        }
+
+        async function userUpdate(id, data, action, details) {
+            try {
+                await db.collection('users').doc(id).update(data);
+                logActivity(action, '', null, details);
+                refreshUsers();
+            } catch (err) { console.error(err); alert('تعذّر حفظ التعديل.'); }
+        }
+
+        function renameUser(id) {
+            const name = (prompt('الاسم الظاهر الجديد:') || '').trim();
+            if (name) userUpdate(id, { name }, 'user_edit', `تغيير اسم مستخدم إلى ${name}`);
+        }
+
+        function toggleUserRole(id, role) {
+            if (confirm(`تغيير الصلاحية إلى «${ROLE_LABEL[role]}»؟`)) userUpdate(id, { role }, 'user_edit', `تغيير صلاحية مستخدم إلى ${ROLE_LABEL[role]}`);
+        }
+
+        function toggleUserActive(id, active) {
+            if (confirm(active ? 'تفعيل هذا الحساب؟' : 'تعطيل هذا الحساب؟ لن يستطيع الدخول للتطبيق.')) {
+                userUpdate(id, { active }, 'user_edit', active ? 'تفعيل مستخدم' : 'تعطيل مستخدم');
+            }
+        }
+
+        async function createUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('nu-name').value.trim();
+            const username = document.getElementById('nu-username').value.trim().toLowerCase();
+            const pass = document.getElementById('nu-pass').value;
+            const role = document.getElementById('nu-role').value === 'owner' ? 'owner' : 'accountant';
+            const err = document.getElementById('nu-error');
+            const btn = document.getElementById('nu-btn');
+            err.classList.add('hidden');
+            const fail = (m) => { err.innerText = m; err.classList.remove('hidden'); };
+            if (!/^[a-z0-9._-]{3,20}$/.test(username)) return fail('اسم المستخدم: 3 إلى 20 حرفاً إنجليزياً أو أرقاماً (يسمح بـ . _ -).');
+            if (pass.length < 6) return fail('كلمة المرور 6 أحرف على الأقل.');
+            if (!navigator.onLine) return fail('إضافة مستخدم تحتاج اتصالاً بالإنترنت.');
+            btn.disabled = true; btn.innerText = 'جاري الإضافة...';
+            const email = username + '@daftar.app';
+            let sec;
+            try {
+                try { sec = firebase.app('secondary'); } catch (x) { sec = firebase.initializeApp(firebaseConfig, 'secondary'); }
+                const cred = await sec.auth().createUserWithEmailAndPassword(email, pass);
+                await db.collection('users').doc(cred.user.uid).set({
+                    name, username, email, role, active: true, createdBy: me ? me.name : '', createdAt: Date.now()
+                });
+                try { await sec.auth().signOut(); } catch (x) {}
+                logActivity('user_add', '', null, `إضافة مستخدم ${name} (${username}) كـ ${ROLE_LABEL[role]}`);
+                document.getElementById('form-user').reset();
+                refreshUsers();
+            } catch (ex) {
+                console.error(ex);
+                const m = { 'auth/email-already-in-use': 'اسم المستخدم مستخدم من قبل.', 'auth/weak-password': 'كلمة المرور ضعيفة.', 'auth/network-request-failed': 'تعذّر الاتصال بالإنترنت.', 'permission-denied': 'قواعد Firebase لا تسمح بإنشاء المستخدمين. راجع ملف القواعد المرفق.' };
+                fail(m[ex.code] || ('تعذّر إنشاء المستخدم (' + (ex.code || 'خطأ') + ')'));
+            } finally {
+                btn.disabled = false; btn.innerText = 'إضافة';
+            }
+        }
+
+        // --- سجل النشاط (للمالك) ---
+        const ACTION_LABEL = {
+            add_tx: '➕ حركة جديدة', edit_tx: '✏️ تعديل حركة', delete_tx: '🗑️ حذف حركة',
+            add_person: '👤 إضافة حساب', edit_person: '✏️ تعديل حساب', delete_person: '🗑️ حذف حساب',
+            import: '⬆️ استيراد', user_add: '👥 إضافة مستخدم', user_edit: '👥 تعديل مستخدم'
+        };
+
+        async function openActivityModal() {
+            if (!isOwner()) return;
+            const box = document.getElementById('activity-list');
+            box.innerHTML = '<div class="text-slate-500">جاري التحميل...</div>';
+            document.getElementById('modal-activity').classList.remove('hidden');
+            try {
+                const snap = await db.collection('activity').orderBy('at', 'desc').limit(100).get();
+                const rows = snap.docs.map(d => d.data());
+                box.innerHTML = rows.length ? rows.map(a => `<div class="border dark:border-slate-700 rounded-xl p-2.5">
+                    <div class="flex justify-between gap-2"><span class="font-bold">${ACTION_LABEL[a.action] || esc(a.action)}</span><span class="text-slate-400" dir="ltr">${esc(new Date(a.at).toLocaleString('en-GB', { hour12: false }).slice(0, 17))}</span></div>
+                    <div class="text-slate-600 dark:text-slate-300 mt-0.5">👤 ${esc(a.by)}${a.personName ? ` · ${a.section === 'suppliers' ? 'مورد' : 'عميل'}: ${esc(a.personName)}` : ''}</div>
+                    ${a.details ? `<div class="text-slate-500 dark:text-slate-400 mt-0.5">${esc(a.details)}</div>` : ''}
+                </div>`).join('') : '<div class="text-slate-500">لا توجد عمليات مسجلة بعد.</div>';
+            } catch (err) {
+                console.error(err);
+                box.innerHTML = '<div class="text-red-600">تعذّر تحميل السجل (قد تحتاج لتحديث قواعد Firebase).</div>';
             }
         }
 
@@ -1240,9 +1526,12 @@
 
         function saveSettings(e) {
             e.preventDefault();
-            const shopName = document.getElementById('input-shop-name').value.trim() || 'إسم المحل أو النشاط';
-            localStorage.setItem('app_shop_name', shopName);
-            localStorage.setItem('app_shop_info', document.getElementById('input-shop-info').value.trim());
+            if (isOwner()) {
+                const shopName = document.getElementById('input-shop-name').value.trim() || 'إسم المحل أو النشاط';
+                localStorage.setItem('app_shop_name', shopName);
+                localStorage.setItem('app_shop_info', document.getElementById('input-shop-info').value.trim());
+                pushShopSettings();
+            }
 
             state.showCurrency = document.getElementById('input-show-currency').checked;
             localStorage.setItem('app_show_currency', state.showCurrency);
@@ -1334,13 +1623,14 @@
                             ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
                         </div>
                         <div class="text-xs opacity-75 mt-0.5">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
+                        ${tx.by ? `<div class="text-[11px] opacity-60 mt-0.5">👤 ${esc(tx.by)}${tx.at ? ' • ' + esc(new Date(tx.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })) : ''}${tx.editedBy ? ' • ✏️ عدّلها ' + esc(tx.editedBy) : ''}</div>` : ''}
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="font-bold text-base">${formatAmount(tx.amount)}</span>
                         <div class="flex items-center gap-1">
                             <button onclick="openSendModal('${tx.id}')" class="text-slate-400 hover:text-emerald-600 p-1 transition" title="إرسال عبر واتساب">📤</button>
                             <button onclick="openEditTransactionModal('${tx.id}')" class="text-slate-400 hover:text-blue-600 p-1 transition" title="تعديل">✏️</button>
-                            <button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف">🗑️</button>
+                            ${isOwner() ? `<button onclick="deleteTransaction('${tx.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف">🗑️</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1359,15 +1649,18 @@
             document.getElementById('input-phone').value = person.phone || '';
             document.getElementById('input-address').value = person.address || '';
             document.getElementById('input-initial').value = parseFloat(person.initialBalance) || '';
-            document.getElementById('initial-balance-field').classList.remove('hidden');
+            document.getElementById('initial-balance-field').classList.toggle('hidden', !isOwner());
 
             document.getElementById('modal-add').classList.remove('hidden');
         }
 
         async function deleteCurrentPerson() {
+            if (!isOwner()) { alert('حذف الحسابات للمالك فقط.'); return; }
             if (!confirm('هل أنت متأكد من حذف هذا الحساب نهائياً مع كل معاملاته؟')) return;
 
             const personId = state.currentPersonId;
+            const delP = state[state.activeSection].find(p => p.id === personId);
+            if (delP) logActivity('delete_person', state.activeSection, delP, `حذف حساب برصيد ${moneyMsg(getPersonBalance(delP))} و${(delP.transactions || []).length} حركة`);
             if (db) {
                 dbWrite(db.collection(state.activeSection).doc(personId).delete());
             } else {
@@ -1399,17 +1692,20 @@
         }
 
         async function deleteTransaction(txId) {
+            if (!isOwner()) { alert('حذف الحركات للمالك فقط.'); return; }
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
             const section = state.activeSection;
             const person = currentPerson();
             if (!person) return;
+            const delTx = (person.transactions || []).find(t => t.id == txId);
 
             const without = (list) => (list || []).filter(t => t.id != txId);
 
             try {
                 if (db) {
                     await commitTransactions(section, person, without);
+                    if (delTx) logActivity('delete_tx', section, person, txDesc(delTx));
                 } else {
                     person.transactions = without(person.transactions);
                     localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
@@ -1504,8 +1800,9 @@
             if (editId) {
                 const person = state[state.activeSection].find(p => p.id === editId);
                 if (person) {
-                    const newInitial = parseFloat(document.getElementById('input-initial').value) || 0;
                     const oldInitial = parseFloat(person.initialBalance) || 0;
+                    const newInitial = isOwner() ? (parseFloat(document.getElementById('input-initial').value) || 0) : oldInitial;
+                    const oldInfo = `${person.name}|${person.phone || ''}|${person.address || ''}`;
                     if (newInitial !== oldInitial) {
                         const before = getPersonBalance(person);
                         const after = before - oldInitial + newInitial;
@@ -1527,6 +1824,10 @@
                     } else {
                         localStorage.setItem(`app_${state.activeSection}`, JSON.stringify(state[state.activeSection]));
                     }
+                    const newInfo = `${person.name}|${person.phone || ''}|${person.address || ''}`;
+                    if (newInfo !== oldInfo || newInitial !== oldInitial) {
+                        logActivity('edit_person', state.activeSection, person, [newInfo !== oldInfo ? 'تعديل بيانات الملف' : '', newInitial !== oldInitial ? `الرصيد الافتتاحي من ${moneyMsg(oldInitial)} إلى ${moneyMsg(newInitial)}` : ''].filter(Boolean).join(' • '));
+                    }
                     openPersonDetail(editId);
                 }
             } else {
@@ -1539,8 +1840,11 @@
                     initialBalance: parseFloat(document.getElementById('input-initial').value) || 0,
                     transactions: []
                 };
+                const st = actorStamp();
+                if (st.by) { newPerson.createdBy = st.by; newPerson.createdAt = st.at; }
 
                 if (db) {
+                    logActivity('add_person', state.activeSection, newPerson, newPerson.initialBalance ? `رصيد افتتاحي ${moneyMsg(newPerson.initialBalance)}` : '');
                     dbWrite(db.collection(state.activeSection).doc(id).set(newPerson));
                 } else {
                     state[state.activeSection].push(newPerson);
@@ -1580,6 +1884,7 @@
             }
 
             const txData = {
+                ...(oldTx || {}),
                 id: oldTx ? oldTx.id : Date.now(),
                 type: type,
                 amount: amount,
@@ -1588,6 +1893,11 @@
                 note: document.getElementById('input-tx-note').value,
                 date: isoToDisplay(isoDate)
             };
+            const stamp = actorStamp();
+            if (stamp.by) {
+                if (oldTx) { txData.editedBy = stamp.by; txData.editedById = stamp.byId; txData.editedAt = stamp.at; }
+                else Object.assign(txData, stamp);
+            }
 
             const apply = (list) => {
                 const arr = [...(list || [])];
@@ -1599,6 +1909,7 @@
             try {
                 if (db) {
                     await commitTransactions(section, person, apply);
+                    logActivity(oldTx ? 'edit_tx' : 'add_tx', section, person, oldTx ? `${txDesc(oldTx)} ← ${txDesc(txData)}` : txDesc(txData));
                 } else {
                     person.transactions = apply(person.transactions);
                     localStorage.setItem(`app_${section}`, JSON.stringify(state[section]));
@@ -1651,7 +1962,9 @@
                     docType: String(t.docType || 'فاتورة'),
                     invoice: String(t.invoice || ''),
                     note: String(t.note || ''),
-                    date: String(t.date || '')
+                    date: String(t.date || ''),
+                    ...(t.by ? { by: String(t.by), byId: String(t.byId || ''), at: Number(t.at) || 0 } : {}),
+                    ...(t.editedBy ? { editedBy: String(t.editedBy), editedAt: Number(t.editedAt) || 0 } : {})
                 }))
             };
         }
@@ -1696,6 +2009,7 @@
                     updateHomeTotals();
                     if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
                 }
+                logActivity('import', '', null, `استيراد ${customers.length} عميل و ${suppliers.length} مورد`);
                 alert('تم الاستيراد بنجاح.');
             } catch (err) {
                 console.error(err);
