@@ -310,6 +310,18 @@
                 </div>
 
                 <div class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
+                    <div class="text-sm font-bold text-slate-700 dark:text-slate-300">☁️ نسخة Google Sheets الحية</div>
+                    <input type="url" id="mirror-url" dir="ltr" placeholder="رابط Web app (ينتهي بـ /exec)" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="mirror-token" dir="ltr" placeholder="الرمز السري (نفس الموجود في السكربت)" autocomplete="off" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveMirrorConfig()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition">حفظ</button>
+                        <button type="button" onclick="testMirror()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded-xl transition">اختبار</button>
+                        <button type="button" onclick="mirrorSnapshotNow()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition">لقطة الآن</button>
+                    </div>
+                    <div id="mirror-status" class="text-[11px] text-slate-500 dark:text-slate-400"></div>
+                </div>
+
+                <div class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">النسخ الاحتياطي</div>
                     <button type="button" onclick="exportExcel()" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition">📊 تصدير إلى Excel (للقراءة والمحاسبة)</button>
                     <div id="last-backup-label" class="text-[11px] text-slate-500 dark:text-slate-400"></div>
@@ -1182,16 +1194,192 @@
         }
 
         function logActivity(action, section, person, details) {
-            if (!db || !me || me.legacy) return;
-            try {
-                const p = db.collection('activity').add({
-                    at: Date.now(), uid: me.uid, by: me.name, role: me.role, action,
-                    section: section || '', personId: person ? person.id : '', personName: person ? person.name : '',
-                    details: details || ''
-                });
-                if (p && p.catch) p.catch(() => {});
-            } catch (e) { /* السجل لا يوقف العمل */ }
+            const entry = {
+                id: 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), at: Date.now(),
+                uid: me ? me.uid : '', by: me ? me.name : 'محلي', role: me ? me.role : 'owner', action,
+                section: section || '', personId: person ? person.id : '', personName: person ? person.name : '',
+                details: details || ''
+            };
+            if (db && me && !me.legacy) {
+                try {
+                    const p = db.collection('activity').add({ ...entry });
+                    if (p && p.catch) p.catch(() => {});
+                } catch (e) { /* السجل لا يوقف العمل */ }
+            }
+            mirrorEnqueue(entry);
+            markBalancesDirty();
         }
+
+        // --- نسخة Google Sheets الحية (كتابة فقط، لا يقرأ التطبيق منها) ---
+        const MIRROR_QUEUE_KEY = 'app_mirror_queue';
+        const MIRROR_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
+        let mirrorBusy = false, balancesDirty = false, balancesTimer = null;
+
+        function mirrorCfg() {
+            try {
+                const c = JSON.parse(localStorage.getItem('app_mirror_cfg') || 'null');
+                return c && MIRROR_URL_RE.test(c.url || '') && c.token ? c : null;
+            } catch (e) { return null; }
+        }
+
+        function mirrorQueue() { try { return JSON.parse(localStorage.getItem(MIRROR_QUEUE_KEY) || '[]'); } catch (e) { return []; } }
+        function mirrorSaveQueue(q) { try { localStorage.setItem(MIRROR_QUEUE_KEY, JSON.stringify(q.slice(-500))); } catch (e) {} }
+
+        function setMirrorStatus() {
+            const el = document.getElementById('mirror-status');
+            if (!el) return;
+            if (!mirrorCfg()) { el.innerText = 'غير مفعّل.'; return; }
+            const ok = Number(localStorage.getItem('app_mirror_ok')) || 0;
+            const err = localStorage.getItem('app_mirror_err') || '';
+            const pending = mirrorQueue().length;
+            el.innerText = `مفعّل • ${ok ? 'آخر إرسال ناجح: ' + new Date(ok).toLocaleString('en-GB', { hour12: false }).slice(0, 17) : 'لم يُرسل شيء بعد'} • بانتظار الإرسال: ${pending}${err ? ' • ⚠️ ' + err : ''}`;
+        }
+
+        function mirrorOk() {
+            try { localStorage.setItem('app_mirror_ok', String(Date.now())); localStorage.removeItem('app_mirror_err'); } catch (e) {}
+            setMirrorStatus();
+        }
+        function mirrorErr(m) { try { localStorage.setItem('app_mirror_err', m); } catch (e) {} setMirrorStatus(); }
+
+        // يرسل إلى Apps Script؛ يعيد { ok, readable }
+        async function mirrorPost(payload) {
+            const cfg = mirrorCfg();
+            if (!cfg) return { ok: false, error: 'not-configured' };
+            const body = JSON.stringify({ token: cfg.token, ...payload });
+            try {
+                const r = await fetch(cfg.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+                const j = await r.json();
+                return { ok: !!j.ok, readable: true, error: j.error };
+            } catch (e) {
+                if (!navigator.onLine) return { ok: false, error: 'offline' };
+                try {   // قد يمنع المتصفح قراءة الرد لكن الطلب يصل؛ إعادة الإرسال آمنة لأن كل سطر له معرّف
+                    await fetch(cfg.url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+                    return { ok: true, readable: false };
+                } catch (e2) { return { ok: false, error: 'network' }; }
+            }
+        }
+
+        function mirrorRow(en) {
+            const t = new Date(en.at);
+            const pad = (n) => String(n).padStart(2, '0');
+            const when = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+            return [en.id, when, en.by, ROLE_LABEL[en.role] || '', ACTION_LABEL[en.action] || en.action, en.section === 'suppliers' ? 'مورد' : (en.section === 'customers' ? 'عميل' : ''), en.personName || '', en.details || ''];
+        }
+
+        function mirrorEnqueue(entry) {
+            if (!mirrorCfg()) return;
+            const q = mirrorQueue(); q.push(mirrorRow(entry)); mirrorSaveQueue(q);
+            setMirrorStatus();
+            flushMirror();
+        }
+
+        async function flushMirror() {
+            if (mirrorBusy || !mirrorCfg() || !navigator.onLine) return;
+            mirrorBusy = true;
+            try {
+                while (mirrorQueue().length) {
+                    const batch = mirrorQueue().slice(0, 50);
+                    const r = await mirrorPost({ action: 'log', rows: batch });
+                    if (!r.ok) { if (r.error === 'token') mirrorErr('الرمز السري غير صحيح'); else if (r.error && r.error !== 'offline' && r.error !== 'network') mirrorErr('رفض الخادم: ' + r.error); break; }
+                    const q = mirrorQueue(); q.splice(0, batch.length); mirrorSaveQueue(q);
+                    mirrorOk();
+                }
+            } finally { mirrorBusy = false; setMirrorStatus(); }
+        }
+
+        function mirrorBalanceRows() {
+            const rows = [];
+            [['customers', 'عميل'], ['suppliers', 'مورد']].forEach(([sec, label]) => state[sec].forEach(p => {
+                const start = parseFloat(p.initialBalance) || 0;
+                const adds = (p.transactions || []).filter(t => t.type === 'add').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+                const pays = (p.transactions || []).filter(t => t.type === 'pay').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+                rows.push([label, p.name || '', p.phone || '', start, adds, pays, start + adds - pays, (p.transactions || []).length]);
+            }));
+            return rows;
+        }
+
+        function mirrorTxRows() {
+            const rows = [];
+            [['customers', 'عميل'], ['suppliers', 'مورد']].forEach(([sec, label]) => state[sec].forEach(p => {
+                let run = parseFloat(p.initialBalance) || 0;
+                sortedTransactions(p).forEach(t => {
+                    run += t.type === 'add' ? t.amount : -t.amount;
+                    rows.push([label, p.name || '', t.date || '', t.type === 'add' ? 'دين (إضافة)' : 'تسديد', Number(t.amount) || 0, t.docType || '', t.invoice || '', t.note || '', run,
+                        t.by || '', t.at ? new Date(t.at).toLocaleString('en-GB', { hour12: false }).replace(',', '') : '', t.editedBy || '']);
+                });
+            }));
+            return rows;
+        }
+
+        function markBalancesDirty() {
+            if (!mirrorCfg()) return;
+            balancesDirty = true;
+            clearTimeout(balancesTimer);
+            balancesTimer = setTimeout(sendBalances, 20000);
+        }
+
+        async function sendBalances() {
+            if (!balancesDirty || !mirrorCfg() || !navigator.onLine) return;
+            const r = await mirrorPost({ action: 'balances', rows: mirrorBalanceRows() });
+            if (r.ok) { balancesDirty = false; mirrorOk(); }
+        }
+
+        function todayISO() { return toISODate(new Date()); }
+
+        async function sendSnapshot(force) {
+            if (!mirrorCfg() || !navigator.onLine || !isOwner()) return false;
+            if (!force && localStorage.getItem('app_mirror_snap') === todayISO()) return false;
+            if (!state.customers.length && !state.suppliers.length) return false;
+            const r1 = await mirrorPost({ action: 'balances', rows: mirrorBalanceRows() });
+            const r2 = await mirrorPost({ action: 'snapshot', date: todayISO(), rows: mirrorTxRows() });
+            if (r1.ok && r2.ok) { try { localStorage.setItem('app_mirror_snap', todayISO()); } catch (e) {} balancesDirty = false; mirrorOk(); return true; }
+            if (r2.error === 'token') mirrorErr('الرمز السري غير صحيح');
+            return false;
+        }
+
+        function fillMirrorForm() {
+            const c = (() => { try { return JSON.parse(localStorage.getItem('app_mirror_cfg') || 'null'); } catch (e) { return null; } })() || {};
+            document.getElementById('mirror-url').value = c.url || '';
+            document.getElementById('mirror-token').value = c.token || '';
+            setMirrorStatus();
+        }
+
+        function saveMirrorConfig() {
+            if (!isOwner()) return;
+            const url = document.getElementById('mirror-url').value.trim();
+            const token = document.getElementById('mirror-token').value.trim();
+            if (!url && !token) {   // إيقاف الميزة
+                localStorage.removeItem('app_mirror_cfg');
+                if (db && me && !me.legacy) { try { const p = db.collection('settings').doc('mirror').set({ url: '', token: '' }); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+                setMirrorStatus(); alert('تم إيقاف النسخة الحية.'); return;
+            }
+            if (!MIRROR_URL_RE.test(url)) { alert('الرابط غير صحيح. يجب أن يكون رابط Web app من Google ويبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec'); return; }
+            if (token.length < 6) { alert('الرمز السري قصير جداً (6 أحرف على الأقل).'); return; }
+            localStorage.setItem('app_mirror_cfg', JSON.stringify({ url, token }));
+            if (db && me && !me.legacy) { try { const p = db.collection('settings').doc('mirror').set({ url, token }); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+            setMirrorStatus();
+            alert('تم الحفظ. اضغط «اختبار» للتأكد من الاتصال.');
+        }
+
+        async function testMirror() {
+            if (!mirrorCfg()) { alert('احفظ الرابط والرمز السري أولاً.'); return; }
+            if (!navigator.onLine) { alert('لا يوجد اتصال بالإنترنت.'); return; }
+            const r = await mirrorPost({ action: 'ping' });
+            if (r.ok && r.readable) { mirrorOk(); alert('✅ نجح الاتصال. تحقق من ورقة «السجل» في ملف Google Sheets.'); }
+            else if (r.ok) { alert('أُرسل الطلب لكن المتصفح لم يسمح بقراءة الرد. افتح ورقة «السجل» في Google Sheets: إن ظهر سطر «اختبار الاتصال» فكل شيء سليم.'); }
+            else if (r.error === 'token') { mirrorErr('الرمز السري غير صحيح'); alert('❌ الرمز السري لا يطابق الموجود في السكربت.'); }
+            else alert('❌ تعذّر الاتصال (' + (r.error || 'خطأ') + '). تأكد من الرابط ومن أن النشر على Anyone.');
+        }
+
+        async function mirrorSnapshotNow() {
+            if (!mirrorCfg()) { alert('احفظ الرابط والرمز السري أولاً.'); return; }
+            const ok = await sendSnapshot(true);
+            alert(ok ? '✅ أُرسلت لقطة اليوم وتحديث الأرصدة.' : 'تعذّر إرسال اللقطة. تحقق من الاتصال والإعدادات.');
+        }
+
+        // محاولات دورية: إعادة إرسال ما تعثّر + لقطة يومية + تحديث الأرصدة
+        setInterval(() => { flushMirror(); sendBalances(); if (cloudStarted || !db) sendSnapshot(false); }, 60000);
+        window.addEventListener('online', () => { flushMirror(); sendBalances(); });
 
         function txDesc(tx) {
             return `${tx.type === 'add' ? 'إضافة دين' : 'تسديد'} ${moneyMsg(tx.amount)}${tx.invoice ? ` — ${tx.docType || 'وثيقة'} ${tx.invoice}` : ''} (${tx.date})`;
@@ -1254,6 +1442,18 @@
                     }
                 }, () => {});
                 unsubs.push(unsub);
+            } catch (e) { /* غير متاح */ }
+            try {
+                const unsub2 = db.collection('settings').doc('mirror').onSnapshot((snap) => {
+                    if (snap.exists) {
+                        const d = snap.data() || {};
+                        if (d.url && d.token) localStorage.setItem('app_mirror_cfg', JSON.stringify({ url: d.url, token: d.token }));
+                        else localStorage.removeItem('app_mirror_cfg');
+                        setMirrorStatus();
+                        if (mirrorCfg()) { flushMirror(); }
+                    }
+                }, () => {});
+                unsubs.push(unsub2);
             } catch (e) { /* غير متاح */ }
         }
 
@@ -1533,6 +1733,7 @@
             document.getElementById('input-shop-name').value = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             document.getElementById('input-shop-info').value = localStorage.getItem('app_shop_info') || '';
             updateLastBackupLabel();
+            fillMirrorForm();
             document.getElementById('input-dark-mode').checked = localStorage.getItem('app_dark_mode') === 'true';
             document.getElementById('input-show-currency').checked = state.showCurrency;
             document.getElementById('modal-settings').classList.remove('hidden');
