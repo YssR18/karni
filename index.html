@@ -766,8 +766,8 @@
 
         function pdfText(c, text, x, y, size, opt) {
             opt = opt || {};
-            c.font = `${opt.bold ? '700' : '400'} ${size}px ${PFONT}`;
-            c.fillStyle = opt.color || '#111827';
+            c.font = `${opt.bold === false ? '600' : '700'} ${size}px ${PFONT}`;
+            c.fillStyle = opt.color || '#000000';
             c.textAlign = opt.align || 'right';
             c.textBaseline = 'middle';
             let t = String(text == null ? '' : text);
@@ -778,11 +778,21 @@
             return c.measureText(t).width;
         }
 
+        function pdfWrap(c, text, x, y, size, maxW, lineH, opt) {
+            c.font = `700 ${size}px ${PFONT}`;
+            const words = String(text).split(' '); let line = '', ly = y;
+            words.forEach(w => {
+                const t = line ? line + ' ' + w : w;
+                if (c.measureText(t).width > maxW && line) { pdfText(c, line, x, ly, size, opt); ly += lineH; line = w; } else line = t;
+            });
+            if (line) pdfText(c, line, x, ly, size, opt);
+        }
+
         // مبلغ + وحدة (الرقم على اليمين والوحدة على يساره)
         function pdfMoney(c, n, x, y, size, opt) {
             opt = opt || {};
             const w = pdfText(c, pdfNum(n), x, y, size, opt);
-            if (state.showCurrency) pdfText(c, 'د.ج', x - w - 8, y, size * 0.8, opt);
+            if (state.showCurrency) pdfText(c, 'د.ج', x - w - 8, y, size * 0.85, opt);
         }
 
         function pdfBuildRows(section, person, kind, txId) {
@@ -815,7 +825,7 @@
             }
             let run = start, debit = 0, credit = 0;
             const rows = [];
-            if (start) { rows.push(carried(start, 'رصيد افتتاحي (منقول من الدفتر)')); debit += start > 0 ? start : 0; credit += start < 0 ? -start : 0; }
+            if (start) { rows.push(carried(start, 'رصيد افتتاحي')); debit += start > 0 ? start : 0; credit += start < 0 ? -start : 0; }
             list.forEach(tx => {
                 run += tx.type === 'add' ? tx.amount : -tx.amount;
                 if (tx.type === 'add') debit += tx.amount; else credit += tx.amount;
@@ -841,50 +851,50 @@
             if (first) {
                 const shop = (localStorage.getItem('app_shop_name') || '').trim();
                 const info = (localStorage.getItem('app_shop_info') || '').trim();
-                pdfText(c, shop && shop !== 'إسم المحل أو النشاط' ? shop : 'دفتر الحسابات', R, 105, 56, { bold: true });
-                if (info) pdfText(c, info, R, 160, 24, { color: '#374151', maxW: 1120 });
-                pdfRRect(c, L, 70, 260, 58, 10, '#f3f4f6', '#111827', 2.5);
-                pdfText(c, d.title, L + 130, 100, 27, { bold: true, align: 'center' });
-                c.fillStyle = '#111827'; c.fillRect(L, 190, PW - 2 * PM, 4);
+                pdfText(c, shop && shop !== 'إسم المحل أو النشاط' ? shop : 'دفتر الحسابات', R, 105, 68, { bold: true });
+                if (info) pdfText(c, info, R, 162, 29, { color: '#111827', maxW: 1120 });
+                pdfRRect(c, L, 66, 320, 66, 10, '#f3f4f6', '#000000', 3);
+                pdfText(c, d.title, L + 160, 100, 34, { bold: true, align: 'center' });
+                c.fillStyle = '#000000'; c.fillRect(L, 195, PW - 2 * PM, 5);
                 // صندوق المعلومات
-                pdfRRect(c, L, 225, PW - 2 * PM, 120, 16, null, '#374151', 1.5);
-                pdfText(c, `${isCust ? 'اسم العميل' : 'اسم المورد'}: ${person.name}`, R - 28, 262, 26, { bold: true, maxW: 520 });
-                pdfText(c, `${isCust ? 'رقم هاتف العميل' : 'رقم هاتف المورد'}: ${person.phone || 'غير مدون'}`, R - 28, 314, 24, { color: '#374151' });
-                pdfText(c, `تاريخ التقرير: ${new Date().toLocaleDateString('en-GB')}`, 640, 262, 24, { bold: true });
-                if (d.period) pdfText(c, `الفترة المالية: ${d.period}`, 640, 314, 24, { color: '#374151' });
-                y = 385;
+                pdfRRect(c, L, 225, PW - 2 * PM, 140, 16, null, '#111827', 2);
+                pdfText(c, `${isCust ? 'اسم العميل' : 'اسم المورد'}: ${person.name}`, R - 28, 267, 33, { bold: true, maxW: 520 });
+                pdfText(c, `${isCust ? 'رقم هاتف العميل' : 'رقم هاتف المورد'}: ${person.phone || 'غير مدون'}`, R - 28, 327, 30, { color: '#111827' });
+                pdfText(c, `تاريخ التقرير: ${new Date().toLocaleDateString('en-GB')}`, 640, 267, 30, { bold: true });
+                if (d.period) pdfText(c, `الفترة: ${d.period}`, 700, 327, 28, { color: '#111827', maxW: 640 });
+                y = 405;
             } else {
                 y = 90;
             }
             // الجدول
             if (rows.length) {
-                const cols = [['التاريخ', 150], ['رقم الفاتورة / السند', 190], ['ملاحظة / بيان', 320], ['مدين (+)', 140], ['دائن (-)', 140], ['الرصيد المتراكم', 180]];
+                const cols = [['التاريخ', 175], ['الفاتورة / السند', 185], ['بيان', 250], ['مدين (+)', 150], ['دائن (-)', 150], ['الرصيد', 210]];
                 const xr = []; let cx = R;
                 cols.forEach(cl => { xr.push([cx, cx - cl[1]]); cx -= cl[1]; });
-                c.fillStyle = '#111111'; c.fillRect(L, y, PW - 2 * PM, 56);
-                cols.forEach((cl, i) => pdfText(c, cl[0], (xr[i][0] + xr[i][1]) / 2, y + 29, 21, { bold: true, color: '#fff', align: 'center' }));
-                y += 56;
+                c.fillStyle = '#000000'; c.fillRect(L, y, PW - 2 * PM, 66);
+                cols.forEach((cl, i) => pdfText(c, cl[0], (xr[i][0] + xr[i][1]) / 2, y + 34, 27, { bold: true, color: '#fff', align: 'center' }));
+                y += 66;
                 rows.forEach((r, ri) => {
-                    c.fillStyle = ri % 2 ? '#f8fafc' : '#ffffff'; c.fillRect(L, y, PW - 2 * PM, 52);
-                    c.strokeStyle = '#cfd4dc'; c.lineWidth = 1; c.strokeRect(L, y, PW - 2 * PM, 52);
-                    xr.forEach(p => { c.beginPath(); c.moveTo(p[1], y); c.lineTo(p[1], y + 52); c.stroke(); });
-                    const mid = i => (xr[i][0] + xr[i][1]) / 2, cy = y + 27;
-                    pdfText(c, r.date, mid(0), cy, 22, { align: 'center' });
-                    pdfText(c, r.ref, mid(1), cy, 22, { align: 'center', maxW: 170 });
+                    c.fillStyle = ri % 2 ? '#f8fafc' : '#ffffff'; c.fillRect(L, y, PW - 2 * PM, 64);
+                    c.strokeStyle = '#9ca3af'; c.lineWidth = 1.5; c.strokeRect(L, y, PW - 2 * PM, 64);
+                    xr.forEach(p => { c.beginPath(); c.moveTo(p[1], y); c.lineTo(p[1], y + 64); c.stroke(); });
+                    const mid = i => (xr[i][0] + xr[i][1]) / 2, cy = y + 33;
+                    pdfText(c, r.date, mid(0), cy, 27, { align: 'center' });
+                    pdfText(c, r.ref, mid(1), cy, 27, { align: 'center', maxW: 170 });
                     // البيان + شارة نوع الوثيقة
-                    let noteMax = 320 - 28;
+                    let noteMax = 250 - 20;
                     if (r.badge) {
-                        c.font = `700 17px ${PFONT}`;
-                        const bw = Math.min(c.measureText(r.badge).width + 22, 110);
-                        pdfRRect(c, xr[2][1] + 10, y + 12, bw, 28, 7, null, '#111827', 1.5);
-                        pdfText(c, r.badge, xr[2][1] + 10 + bw / 2, cy, 17, { bold: true, align: 'center', maxW: bw - 8 });
+                        c.font = `700 20px ${PFONT}`;
+                        const bw = Math.min(c.measureText(r.badge).width + 20, 96);
+                        pdfRRect(c, xr[2][1] + 8, y + 17, bw, 31, 7, null, '#000000', 2);
+                        pdfText(c, r.badge, xr[2][1] + 8 + bw / 2, cy, 20, { bold: true, align: 'center', maxW: bw - 6 });
                         noteMax -= bw + 8;
                     }
-                    pdfText(c, r.note, xr[2][0] - 14, cy, 21, { maxW: noteMax });
-                    pdfText(c, pdfNum(r.debit), mid(3), cy, 22, { align: 'center', color: r.debit ? '#111827' : '#6b7280' });
-                    pdfText(c, pdfNum(r.credit), mid(4), cy, 22, { align: 'center', color: r.credit ? '#111827' : '#6b7280' });
-                    pdfMoney(c, r.bal, xr[5][0] - 14, cy, 22, { bold: true });
-                    y += 52;
+                    pdfText(c, r.note, xr[2][0] - 10, cy, 25, { maxW: noteMax });
+                    pdfText(c, pdfNum(r.debit), mid(3), cy, 26, { align: 'center', color: r.debit ? '#000000' : '#6b7280' });
+                    pdfText(c, pdfNum(r.credit), mid(4), cy, 26, { align: 'center', color: r.credit ? '#000000' : '#6b7280' });
+                    pdfMoney(c, r.bal, xr[5][0] - 12, cy, 26, { bold: true });
+                    y += 64;
                 });
                 y += 30;
             }
@@ -893,19 +903,19 @@
                 const n = d.boxes.length, gap = 30, bw = d.boxes[0].wide ? PW - 2 * PM : (PW - 2 * PM - gap * (n - 1)) / n;
                 d.boxes.forEach((b, i) => {
                     const bx = R - bw - i * (bw + gap);
-                    pdfRRect(c, bx, y, bw, 130, 14, null, b.strong ? '#111827' : '#6b7280', b.strong ? 4 : 1.5);
-                    pdfText(c, b.label, bx + bw - 24, y + 36, 22, { bold: true, color: '#374151' });
-                    pdfMoney(c, b.value, bx + bw - 24, y + 88, 42, { bold: true, color: b.color });
+                    pdfRRect(c, bx, y, bw, 150, 14, null, b.strong ? '#000000' : '#4b5563', b.strong ? 5 : 2);
+                    pdfText(c, b.label, bx + bw - 22, y + 38, 27, { bold: true, color: '#111827', maxW: bw - 40 });
+                    pdfMoney(c, b.value, bx + bw - 22, y + 100, 46, { bold: true, color: b.color });
                 });
-                y += 130 + 30;
-                pdfRRect(c, L, y, PW - 2 * PM, 100, 14, null, '#6b7280', 1.5);
-                pdfText(c, 'ملاحظة هامة:', R - 24, y + 30, 22, { bold: true, color: '#b91c1c' });
-                pdfText(c, 'يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ في حسابك أو أي استفسار التواصل معنا على رقم المحل.', R - 24, y + 70, 20, { maxW: PW - 2 * PM - 48 });
+                y += 150 + 30;
+                pdfRRect(c, L, y, PW - 2 * PM, 150, 14, null, '#4b5563', 2);
+                pdfText(c, 'ملاحظة هامة:', R - 24, y + 36, 29, { bold: true, color: '#b91c1c' });
+                pdfWrap(c, 'يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ في حسابك أو أي استفسار التواصل معنا على رقم المحل.', R - 24, y + 84, 26, PW - 2 * PM - 48, 40, {});
             }
             // التذييل
-            c.fillStyle = '#9ca3af'; c.fillRect(L, PH - 100, PW - 2 * PM, 1.5);
-            pdfText(c, `${(localStorage.getItem('app_shop_name') || '').trim() || 'دفتر الحسابات'} - ${d.title}`, R, PH - 65, 20, { bold: true, color: '#374151', maxW: 800 });
-            pdfText(c, `الصفحة ${pageIdx + 1} من ${pages}`, L, PH - 65, 20, { color: '#374151', align: 'left' });
+            c.fillStyle = '#4b5563'; c.fillRect(L, PH - 100, PW - 2 * PM, 2);
+            pdfText(c, `${(localStorage.getItem('app_shop_name') || '').trim() || 'دفتر الحسابات'} - ${d.title}`, R, PH - 62, 25, { bold: true, color: '#111827', maxW: 800 });
+            pdfText(c, `الصفحة ${pageIdx + 1} من ${pages}`, L, PH - 62, 25, { color: '#111827', align: 'left' });
         }
 
         async function pdfJoin(jpegs) {
@@ -935,16 +945,16 @@
         }
 
         async function buildPdfBlob(section, person, kind, txId) {
-            try { await document.fonts.load(`700 24px ${PFONT}`); await document.fonts.load(`400 24px ${PFONT}`); } catch (e) { /* خط بديل */ }
+            try { await document.fonts.load(`700 24px ${PFONT}`); await document.fonts.load(`600 24px ${PFONT}`); } catch (e) { /* خط بديل */ }
             const d = pdfBuildRows(section, person, kind, txId);
             // توزيع الصفوف على الصفحات
-            const ROW = 52, cap1 = 22, capN = 28, tail = 330;
+            const ROW = 64, cap1 = 17, capN = 23, tail = 360;
             const chunks = [];
             let rest = d.rows.slice();
             let cap = cap1;
             do { chunks.push(rest.slice(0, cap)); rest = rest.slice(cap); cap = capN; } while (rest.length);
             const lastRows = chunks[chunks.length - 1].length;
-            const usedY = (chunks.length === 1 ? 385 : 90) + (lastRows ? 56 + lastRows * ROW + 30 : 0);
+            const usedY = (chunks.length === 1 ? 405 : 90) + (lastRows ? 66 + lastRows * ROW + 30 : 0);
             if (usedY + tail > PH - 110) chunks.push([]);
             const jpegs = [];
             for (let i = 0; i < chunks.length; i++) {
