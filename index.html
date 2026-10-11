@@ -85,6 +85,16 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 no-print">
 
+        <!-- تذكير النسخ الاحتياطي (للمالك) -->
+        <div id="backup-reminder" class="owner-only hidden mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 space-y-2 no-print">
+            <div id="backup-reminder-text" class="text-sm font-bold text-amber-800 dark:text-amber-200"></div>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition">📊 تنزيل Excel</button>
+                <button type="button" onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition">⬇️ تنزيل ملف الاستعادة (JSON)</button>
+                <button type="button" onclick="snoozeBackupReminder()" class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold px-3 py-2 rounded-xl border dark:border-slate-700 transition">لاحقاً</button>
+            </div>
+        </div>
+
         <!-- 1. الشاشة الرئيسية -->
         <section id="screen-home" class="space-y-6">
             <div class="text-center py-4">
@@ -301,12 +311,14 @@
 
                 <div class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">النسخ الاحتياطي</div>
+                    <button type="button" onclick="exportExcel()" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition">📊 تصدير إلى Excel (للقراءة والمحاسبة)</button>
+                    <div id="last-backup-label" class="text-[11px] text-slate-500 dark:text-slate-400"></div>
                     <div class="flex gap-2">
                         <button type="button" onclick="exportData()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬇️ تصدير البيانات</button>
                         <button type="button" onclick="document.getElementById('input-import-file').click()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬆️ استيراد بيانات</button>
                         <input type="file" id="input-import-file" accept=".json,application/json" class="hidden" onchange="importData(event)">
                     </div>
-                    <p class="text-xs text-slate-400">الاستيراد يضيف الحسابات ويستبدل ما يحمل نفس المعرّف، ولا يحذف أي حساب موجود.</p>
+                    <p class="text-xs text-slate-400">ملف JSON هو الذي يُستعاد منه (استيراد)، أما Excel فللقراءة والمحاسبة. الاستيراد يضيف الحسابات ويستبدل ما يحمل نفس المعرّف، ولا يحذف أي حساب موجود.</p>
                 </div>
 
                 <div class="flex gap-2 pt-2">
@@ -1155,6 +1167,7 @@
             document.querySelectorAll('.owner-only').forEach(el => el.classList.toggle('hidden', !owner));
             const sn = document.getElementById('input-shop-name');
             if (sn) sn.required = owner;
+            updateBackupReminder();
             const badge = document.getElementById('user-badge');
             if (badge) {
                 if (me && !me.legacy) {
@@ -1519,6 +1532,7 @@
         function openSettingsModal() {
             document.getElementById('input-shop-name').value = localStorage.getItem('app_shop_name') || 'إسم المحل أو النشاط';
             document.getElementById('input-shop-info').value = localStorage.getItem('app_shop_info') || '';
+            updateLastBackupLabel();
             document.getElementById('input-dark-mode').checked = localStorage.getItem('app_dark_mode') === 'true';
             document.getElementById('input-show-currency').checked = state.showCurrency;
             document.getElementById('modal-settings').classList.remove('hidden');
@@ -1924,6 +1938,160 @@
         }
 
         // --- 10. النسخ الاحتياطي ---
+        // --- النسخ الاحتياطي: Excel + تذكير ---
+        const BACKUP_DAYS = 7;
+
+        function daysSinceBackup() {
+            const t = Number(localStorage.getItem('app_last_backup')) || 0;
+            return t ? Math.floor((Date.now() - t) / 86400000) : null;
+        }
+
+        function markBackupDone() {
+            try { localStorage.setItem('app_last_backup', String(Date.now())); localStorage.removeItem('app_backup_snooze'); } catch (e) {}
+            updateBackupReminder();
+            updateLastBackupLabel();
+        }
+
+        function updateLastBackupLabel() {
+            const el = document.getElementById('last-backup-label');
+            if (!el) return;
+            const d = daysSinceBackup();
+            el.innerText = d === null ? 'لم تؤخذ نسخة احتياطية من هذا الجهاز بعد.' : (d === 0 ? 'آخر نسخة احتياطية: اليوم.' : `آخر نسخة احتياطية: قبل ${d} يوم.`);
+        }
+
+        function updateBackupReminder() {
+            const box = document.getElementById('backup-reminder');
+            if (!box) return;
+            const d = daysSinceBackup();
+            const snooze = Number(localStorage.getItem('app_backup_snooze')) || 0;
+            const due = isOwner() && (!!me || !db) && (d === null || d >= BACKUP_DAYS) && Date.now() > snooze;
+            box.classList.toggle('hidden', !due);
+            if (due) {
+                document.getElementById('backup-reminder-text').innerText = d === null
+                    ? '⚠️ لم تأخذ نسخة احتياطية بعد. نزّل نسخة الآن وانقلها لمكان آمن.'
+                    : `⚠️ مرّ ${d} يوماً على آخر نسخة احتياطية. نزّل نسخة جديدة.`;
+            }
+        }
+
+        function snoozeBackupReminder() {
+            try { localStorage.setItem('app_backup_snooze', String(Date.now() + 86400000)); } catch (e) {}
+            updateBackupReminder();
+        }
+
+        // كتابة ملف xlsx بدون أي مكتبة (zip بدون ضغط)
+        const CRC_TABLE = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+        function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+
+        function zipStore(files) {   // files: [{name, data: Uint8Array}]
+            const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+            const u16 = (n) => [n & 255, (n >> 8) & 255], u32 = (n) => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+            files.forEach(f => {
+                const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+                const local = new Uint8Array([0x50, 0x4b, 3, 4, ...u16(20), ...u16(0), ...u16(0), ...u16(0x21), ...u16(0), ...u32(crc), ...u32(size), ...u32(size), ...u16(name.length), ...u16(0)]);
+                parts.push(local, name, f.data);
+                central.push(new Uint8Array([0x50, 0x4b, 1, 2, ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(size), ...u32(size), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), name);
+                offset += local.length + name.length + size;
+            });
+            const cdSize = central.reduce((a, b) => a + b.length, 0);
+            const end = new Uint8Array([0x50, 0x4b, 5, 6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(offset), ...u16(0)]);
+            return new Blob([...parts, ...central, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        }
+
+        function xmlEsc(v) {
+            return String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        }
+
+        function colName(i) { let n = '', x = i + 1; while (x > 0) { const m = (x - 1) % 26; n = String.fromCharCode(65 + m) + n; x = Math.floor((x - 1) / 26); } return n; }
+
+        // خلية: نص | رقم | {d: رقم تسلسلي لتاريخ} | {n: مبلغ}
+        function sheetXml(rows, widths) {
+            const lastCol = colName(Math.max(0, (rows[0] || []).length - 1));
+            let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+            x += '<sheetViews><sheetView rightToLeft="1" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
+            x += '<sheetFormatPr defaultRowHeight="18"/><cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('') + '</cols><sheetData>';
+            rows.forEach((row, r) => {
+                x += `<row r="${r + 1}">`;
+                row.forEach((v, c) => {
+                    const ref = colName(c) + (r + 1);
+                    if (r === 0) x += `<c r="${ref}" t="inlineStr" s="1"><is><t>${xmlEsc(v)}</t></is></c>`;
+                    else if (v && typeof v === 'object' && 'd' in v) x += v.d ? `<c r="${ref}" s="3"><v>${v.d}</v></c>` : '';
+                    else if (v && typeof v === 'object' && 'n' in v) x += `<c r="${ref}" s="2"><v>${Number(v.n) || 0}</v></c>`;
+                    else if (typeof v === 'number') x += `<c r="${ref}"><v>${v}</v></c>`;
+                    else if (v === '' || v == null) x += '';
+                    else x += `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+                });
+                x += '</row>';
+            });
+            x += '</sheetData>';
+            if (rows.length > 1) x += `<autoFilter ref="A1:${lastCol}${rows.length}"/>`;
+            return x + '</worksheet>';
+        }
+
+        function dateSerial(display) {   // dd/mm/yyyy -> رقم تسلسلي لإكسل
+            const iso = displayToISO(display);
+            if (!iso) return 0;
+            return Math.round(Date.parse(iso + 'T00:00:00Z') / 86400000) + 25569;
+        }
+
+        function buildXlsxBlob(sheets) {
+            const enc = new TextEncoder();
+            const n = sheets.length;
+            const files = [
+                { name: '[Content_Types].xml', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>' },
+                { name: '_rels/.rels', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+                { name: 'xl/workbook.xml', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map((sh, i) => `<sheet name="${xmlEsc(sh.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>' },
+                { name: 'xl/_rels/workbook.xml.rels', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') + `<Relationship Id="rId${n + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+                { name: 'xl/styles.xml', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1E293B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
+            ].map(f => ({ name: f.name, data: enc.encode(f.xml) }));
+            sheets.forEach((sh, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: enc.encode(sheetXml(sh.rows, sh.widths)) }));
+            return zipStore(files);
+        }
+
+        function buildExcelSheets() {
+            const peopleRows = (list) => [['الاسم', 'الهاتف', 'العنوان', 'الرصيد الافتتاحي', 'إجمالي الديون', 'إجمالي المدفوع', 'الرصيد المتبقي', 'عدد الحركات']].concat(
+                list.map(p => {
+                    const start = parseFloat(p.initialBalance) || 0;
+                    const adds = (p.transactions || []).filter(t => t.type === 'add').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+                    const pays = (p.transactions || []).filter(t => t.type === 'pay').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+                    return [p.name || '', p.phone || '', p.address || '', { n: start }, { n: adds }, { n: pays }, { n: start + adds - pays }, (p.transactions || []).length];
+                }));
+            const tx = [['الفئة', 'الاسم', 'التاريخ', 'نوع الحركة', 'المبلغ', 'نوع الوثيقة', 'رقم الوثيقة', 'البيان', 'الرصيد بعد الحركة', 'سجّلها', 'وقت التسجيل', 'عدّلها']];
+            [['customers', 'عميل'], ['suppliers', 'مورد']].forEach(([sec, label]) => {
+                state[sec].forEach(p => {
+                    let run = parseFloat(p.initialBalance) || 0;
+                    sortedTransactions(p).forEach(t => {
+                        run += t.type === 'add' ? t.amount : -t.amount;
+                        tx.push([label, p.name || '', { d: dateSerial(t.date) }, t.type === 'add' ? 'دين (إضافة)' : 'تسديد', { n: t.amount }, t.docType || '', t.invoice || '', t.note || '', { n: run },
+                            t.by || '', t.at ? new Date(t.at).toLocaleString('en-GB', { hour12: false }).replace(',', '') : '', t.editedBy || '']);
+                    });
+                });
+            });
+            const sum = (list) => list.reduce((a, p) => a + getPersonBalance(p), 0);
+            const info = [['البند', 'القيمة'],
+                ['المحل', getShopName() || '-'], ['تاريخ التصدير', new Date().toLocaleString('en-GB', { hour12: false }).replace(',', '')],
+                ['صدّره', me && !me.legacy ? me.name : '-'], ['عدد العملاء', state.customers.length], ['عدد الموردين', state.suppliers.length],
+                ['إجمالي ما على العملاء', { n: sum(state.customers) }], ['إجمالي ما للموردين', { n: sum(state.suppliers) }]];
+            return [
+                { name: 'العملاء', rows: peopleRows(state.customers), widths: [28, 16, 28, 18, 16, 16, 18, 12] },
+                { name: 'الموردين', rows: peopleRows(state.suppliers), widths: [28, 16, 28, 18, 16, 16, 18, 12] },
+                { name: 'الحركات', rows: tx, widths: [9, 26, 13, 14, 16, 12, 14, 34, 18, 16, 18, 16] },
+                { name: 'معلومات', rows: info, widths: [26, 30] }
+            ];
+        }
+
+        function exportExcel() {
+            const blob = buildXlsxBlob(buildExcelSheets());
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `daftar-${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            markBackupDone();
+        }
+
         function exportData() {
             const data = {
                 app: 'daftar-alhisabat',
@@ -1942,6 +2110,7 @@
             a.click();
             a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
+            markBackupDone();
         }
 
         function sanitizePerson(p) {
