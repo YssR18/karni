@@ -746,7 +746,7 @@
         }
 
         // --- ملف PDF بتصميم كشف الحساب (يُرسم بدون أي مكتبة خارجية) ---
-        const PW = 1240, PH = 1754, PM = 60;
+        const PW = 1240, PH = 1754, PM = 60, PS = 0.88;   // PS: مقياس حجم الخط
         const PFONT = "Cairo, 'Segoe UI', Arial, sans-serif";
 
         function pdfNum(n) {
@@ -766,7 +766,7 @@
 
         function pdfText(c, text, x, y, size, opt) {
             opt = opt || {};
-            c.font = `${opt.bold === false ? '600' : '700'} ${size}px ${PFONT}`;
+            c.font = `${opt.bold === false ? '600' : '700'} ${Math.round(size * PS)}px ${PFONT}`;
             c.fillStyle = opt.color || '#000000';
             c.textAlign = opt.align || 'right';
             c.textBaseline = 'middle';
@@ -779,7 +779,7 @@
         }
 
         function pdfWrap(c, text, x, y, size, maxW, lineH, opt) {
-            c.font = `700 ${size}px ${PFONT}`;
+            c.font = `700 ${Math.round(size * PS)}px ${PFONT}`;
             const words = String(text).split(' '); let line = '', ly = y;
             words.forEach(w => {
                 const t = line ? line + ' ' + w : w;
@@ -802,25 +802,11 @@
             const list = sortedTransactions(person);
             const mk = (tx, run, before) => ({
                 date: tx.date || '-', ref: tx.invoice || '-', note: tx.note || (tx.type === 'add' ? 'إضافة دين' : 'تسديد'),
-                badge: tx.docType || '', debit: tx.type === 'add' ? tx.amount : 0, credit: tx.type === 'pay' ? tx.amount : 0, bal: run
+                id: tx.id, badge: tx.docType || '', debit: tx.type === 'add' ? tx.amount : 0, credit: tx.type === 'pay' ? tx.amount : 0, bal: run
             });
             const carried = (bal, label) => ({ date: '-', ref: '-', note: label, badge: '', debit: bal > 0 ? bal : 0, credit: bal < 0 ? -bal : 0, bal });
             const remaining = getPersonBalance(person);
-            if (kind === 'detail') {
-                const info = balanceAround(person, txId);
-                if (info) {
-                    const tx = info.tx;
-                    return {
-                        title: 'إشعار حركة', period: null,
-                        rows: [carried(info.before, 'الرصيد قبل هذه الحركة'), mk(tx, info.after)],
-                        boxes: [
-                            { label: 'الرصيد قبل الحركة', value: info.before, color: '#111827' },
-                            { label: tx.type === 'add' ? 'مبلغ الحركة (دين)' : 'مبلغ الحركة (تسديد)', value: tx.amount, color: tx.type === 'add' ? '#b91c1c' : '#15803d' },
-                            { label: 'الرصيد المتبقي (المستحق)', value: remaining, color: '#111827', strong: true }]
-                    };
-                }
-            }
-            if (kind === 'total' || kind === 'detail') {
+            if (kind === 'total') {
                 return { title: 'وصل رصيد', period: null, rows: [], boxes: [{ label: 'الرصيد المتبقي (المستحق)', value: remaining, color: '#111827', strong: true, wide: true }] };
             }
             let run = start, debit = 0, credit = 0;
@@ -831,6 +817,7 @@
                 if (tx.type === 'add') debit += tx.amount; else credit += tx.amount;
                 rows.push(mk(tx, run));
             });
+            if (kind === 'detail') rows.forEach(r => { if (r.id != null && r.id == txId) r.hl = true; });
             const period = list.length ? `من ${list[0].date} إلى ${list[list.length - 1].date}` : null;
             return {
                 title: isCust ? 'كشف حساب عميل' : 'كشف حساب مورد', period, rows,
@@ -871,22 +858,22 @@
                 const cols = [['التاريخ', 175], ['الفاتورة / السند', 185], ['بيان', 250], ['مدين (+)', 150], ['دائن (-)', 150], ['الرصيد', 210]];
                 const xr = []; let cx = R;
                 cols.forEach(cl => { xr.push([cx, cx - cl[1]]); cx -= cl[1]; });
-                c.fillStyle = '#000000'; c.fillRect(L, y, PW - 2 * PM, 66);
-                cols.forEach((cl, i) => pdfText(c, cl[0], (xr[i][0] + xr[i][1]) / 2, y + 34, 27, { bold: true, color: '#fff', align: 'center' }));
-                y += 66;
+                c.fillStyle = '#000000'; c.fillRect(L, y, PW - 2 * PM, 60);
+                cols.forEach((cl, i) => pdfText(c, cl[0], (xr[i][0] + xr[i][1]) / 2, y + 31, 27, { bold: true, color: '#fff', align: 'center' }));
+                y += 60;
                 rows.forEach((r, ri) => {
-                    c.fillStyle = ri % 2 ? '#f8fafc' : '#ffffff'; c.fillRect(L, y, PW - 2 * PM, 64);
-                    c.strokeStyle = '#9ca3af'; c.lineWidth = 1.5; c.strokeRect(L, y, PW - 2 * PM, 64);
-                    xr.forEach(p => { c.beginPath(); c.moveTo(p[1], y); c.lineTo(p[1], y + 64); c.stroke(); });
-                    const mid = i => (xr[i][0] + xr[i][1]) / 2, cy = y + 33;
+                    c.fillStyle = r.hl ? '#fef08a' : (ri % 2 ? '#f8fafc' : '#ffffff'); c.fillRect(L, y, PW - 2 * PM, 58);
+                    c.strokeStyle = '#9ca3af'; c.lineWidth = 1.5; c.strokeRect(L, y, PW - 2 * PM, 58);
+                    xr.forEach(p => { c.beginPath(); c.moveTo(p[1], y); c.lineTo(p[1], y + 58); c.stroke(); });
+                    const mid = i => (xr[i][0] + xr[i][1]) / 2, cy = y + 30;
                     pdfText(c, r.date, mid(0), cy, 27, { align: 'center' });
                     pdfText(c, r.ref, mid(1), cy, 27, { align: 'center', maxW: 170 });
                     // البيان + شارة نوع الوثيقة
                     let noteMax = 250 - 20;
                     if (r.badge) {
-                        c.font = `700 20px ${PFONT}`;
+                        c.font = `700 ${Math.round(20 * PS)}px ${PFONT}`;
                         const bw = Math.min(c.measureText(r.badge).width + 20, 96);
-                        pdfRRect(c, xr[2][1] + 8, y + 17, bw, 31, 7, null, '#000000', 2);
+                        pdfRRect(c, xr[2][1] + 8, y + 15, bw, 29, 7, null, '#000000', 2);
                         pdfText(c, r.badge, xr[2][1] + 8 + bw / 2, cy, 20, { bold: true, align: 'center', maxW: bw - 6 });
                         noteMax -= bw + 8;
                     }
@@ -894,7 +881,7 @@
                     pdfText(c, pdfNum(r.debit), mid(3), cy, 26, { align: 'center', color: r.debit ? '#000000' : '#6b7280' });
                     pdfText(c, pdfNum(r.credit), mid(4), cy, 26, { align: 'center', color: r.credit ? '#000000' : '#6b7280' });
                     pdfMoney(c, r.bal, xr[5][0] - 12, cy, 26, { bold: true });
-                    y += 64;
+                    y += 58;
                 });
                 y += 30;
             }
@@ -948,13 +935,13 @@
             try { await document.fonts.load(`700 24px ${PFONT}`); await document.fonts.load(`600 24px ${PFONT}`); } catch (e) { /* خط بديل */ }
             const d = pdfBuildRows(section, person, kind, txId);
             // توزيع الصفوف على الصفحات
-            const ROW = 64, cap1 = 17, capN = 23, tail = 360;
+            const ROW = 58, cap1 = 20, capN = 25, tail = 360;
             const chunks = [];
             let rest = d.rows.slice();
             let cap = cap1;
             do { chunks.push(rest.slice(0, cap)); rest = rest.slice(cap); cap = capN; } while (rest.length);
             const lastRows = chunks[chunks.length - 1].length;
-            const usedY = (chunks.length === 1 ? 405 : 90) + (lastRows ? 66 + lastRows * ROW + 30 : 0);
+            const usedY = (chunks.length === 1 ? 405 : 90) + (lastRows ? 60 + lastRows * ROW + 30 : 0);
             if (usedY + tail > PH - 110) chunks.push([]);
             const jpegs = [];
             for (let i = 0; i < chunks.length; i++) {
@@ -975,7 +962,7 @@
             btn.disabled = true; btn.innerText = '⏳ جارٍ تجهيز الملف...';
             try {
                 const blob = await buildPdfBlob(sendCtx.section, person, kind, sendCtx.txId);
-                const base = (kind === 'detail' ? 'إشعار-حركة-' : kind === 'total' ? 'وصل-رصيد-' : 'كشف-حساب-') + person.name.replace(/[\\/:*?"<>|]+/g, ' ').trim();
+                const base = (kind === 'total' ? 'وصل-رصيد-' : 'كشف-حساب-') + person.name.replace(/[\\/:*?"<>|]+/g, ' ').trim();
                 const file = new File([blob], base + '.pdf', { type: 'application/pdf' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
