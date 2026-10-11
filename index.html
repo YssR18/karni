@@ -788,6 +788,28 @@
             if (line) pdfText(c, line, x, ly, size, opt);
         }
 
+        function pdfLines(c, text, size, maxW, maxLines) {
+            c.font = `700 ${Math.round(size * PS)}px ${PFONT}`;
+            const words = String(text == null ? '' : text).split(/\s+/).filter(Boolean);
+            const out = []; let line = '';
+            for (let i = 0; i < words.length; i++) {
+                let w = words[i];
+                while (c.measureText(w).width > maxW && w.length > 1) w = w.slice(0, -1);   // كلمة أطول من العمود
+                const t = line ? line + ' ' + w : w;
+                if (c.measureText(t).width > maxW && line) {
+                    out.push(line); line = w;
+                    if (out.length === maxLines) { line = ''; break; }
+                } else line = t;
+            }
+            if (line && out.length < maxLines) out.push(line);
+            if (words.join(' ').length > out.join(' ').length + 1 && out.length) {
+                let last = out[out.length - 1];
+                while (last.length > 1 && c.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+                out[out.length - 1] = last + '…';
+            }
+            return out.length ? out : [''];
+        }
+
         // مبلغ + وحدة (الرقم على اليمين والوحدة على يساره)
         function pdfMoney(c, n, x, y, size, opt) {
             opt = opt || {};
@@ -855,7 +877,7 @@
             }
             // الجدول
             if (rows.length) {
-                const cols = [['التاريخ', 175], ['الفاتورة / السند', 185], ['بيان', 250], ['مدين (+)', 150], ['دائن (-)', 150], ['الرصيد', 210]];
+                const cols = [['التاريخ', 150], ['الفاتورة / السند', 215], ['بيان', 250], ['مدين (+)', 155], ['دائن (-)', 155], ['الرصيد', 195]];
                 const xr = []; let cx = R;
                 cols.forEach(cl => { xr.push([cx, cx - cl[1]]); cx -= cl[1]; });
                 c.fillStyle = '#000000'; c.fillRect(L, y, PW - 2 * PM, 60);
@@ -866,21 +888,24 @@
                     c.strokeStyle = '#9ca3af'; c.lineWidth = 1.5; c.strokeRect(L, y, PW - 2 * PM, 58);
                     xr.forEach(p => { c.beginPath(); c.moveTo(p[1], y); c.lineTo(p[1], y + 58); c.stroke(); });
                     const mid = i => (xr[i][0] + xr[i][1]) / 2, cy = y + 30;
-                    pdfText(c, r.date, mid(0), cy, 27, { align: 'center' });
-                    pdfText(c, r.ref, mid(1), cy, 27, { align: 'center', maxW: 170 });
-                    // البيان + شارة نوع الوثيقة
-                    let noteMax = 250 - 20;
+                    pdfText(c, r.date, mid(0), cy, 25, { align: 'center' });
+                    // الفاتورة / السند: شارة نوع الوثيقة + الرقم
+                    let refRight = xr[1][0] - 8, refW = xr[1][0] - xr[1][1] - 16;
                     if (r.badge) {
                         c.font = `700 ${Math.round(20 * PS)}px ${PFONT}`;
-                        const bw = Math.min(c.measureText(r.badge).width + 20, 96);
-                        pdfRRect(c, xr[2][1] + 8, y + 15, bw, 29, 7, null, '#000000', 2);
-                        pdfText(c, r.badge, xr[2][1] + 8 + bw / 2, cy, 20, { bold: true, align: 'center', maxW: bw - 6 });
-                        noteMax -= bw + 8;
+                        const bw = Math.min(c.measureText(r.badge).width + 20, 100);
+                        pdfRRect(c, refRight - bw, y + 15, bw, 29, 7, null, '#000000', 2);
+                        pdfText(c, r.badge, refRight - bw / 2, cy, 20, { bold: true, align: 'center', maxW: bw - 6 });
+                        refRight -= bw + 6; refW -= bw + 6;
                     }
-                    pdfText(c, r.note, xr[2][0] - 10, cy, 25, { maxW: noteMax });
-                    pdfText(c, pdfNum(r.debit), mid(3), cy, 26, { align: 'center', color: r.debit ? '#000000' : '#6b7280' });
-                    pdfText(c, pdfNum(r.credit), mid(4), cy, 26, { align: 'center', color: r.credit ? '#000000' : '#6b7280' });
-                    pdfMoney(c, r.bal, xr[5][0] - 12, cy, 26, { bold: true });
+                    pdfText(c, r.ref, refRight - refW / 2, cy, 26, { align: 'center', maxW: refW });
+                    // البيان: خط أصغر ويلتف على سطرين للملاحظات الطويلة
+                    const lines = pdfLines(c, r.note, 20, xr[2][0] - xr[2][1] - 20, 2);
+                    const lh = 22, top = cy - (lines.length - 1) * lh / 2;
+                    lines.forEach((ln, li) => pdfText(c, ln, xr[2][0] - 10, top + li * lh, 20, {}));
+                    pdfText(c, pdfNum(r.debit), mid(3), cy, 24, { align: 'center', color: r.debit ? '#000000' : '#6b7280' });
+                    pdfText(c, pdfNum(r.credit), mid(4), cy, 24, { align: 'center', color: r.credit ? '#000000' : '#6b7280' });
+                    pdfMoney(c, r.bal, xr[5][0] - 10, cy, 24, { bold: true });
                     y += 58;
                 });
                 y += 30;
