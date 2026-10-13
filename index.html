@@ -102,7 +102,7 @@
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">إدارة الديون والعملاء والموردين بمزامنة سحابية آمنة</p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- بطاقة العملاء -->
                 <div onclick="openSection('customers')" class="bg-white dark:bg-slate-800 border-2 border-blue-500/20 hover:border-blue-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
@@ -142,6 +142,22 @@
                             </button>
                         </div>
                         <div id="total-suppliers-balance" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">****</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة مرتبات العمال (للمالك فقط) -->
+                <div onclick="openWorkersSection()" class="owner-only bg-white dark:bg-slate-800 border-2 border-violet-500/20 hover:border-violet-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-violet-100 dark:bg-violet-900/50 text-violet-800 dark:text-violet-300 rounded-full text-xs font-bold mb-2">قسم العمال</span>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">مرتبات العمال</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(الرواتب، السلف، التسديد)</p>
+                        </div>
+                        <div class="text-3xl bg-violet-50 dark:bg-slate-700 p-3 rounded-xl text-violet-600 dark:text-violet-400">👷</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">عدد العمال المسجلين:</div>
+                        <div id="home-workers-count" class="text-2xl font-bold text-violet-600 dark:text-violet-400">0</div>
                     </div>
                 </div>
 
@@ -225,6 +241,61 @@
             <div id="transactions-container" class="space-y-2">
                 <!-- تعبئة السجل -->
             </div>
+        </section>
+
+        <!-- 4. شاشة قائمة العمال -->
+        <section id="screen-workers" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('home')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← العودة</button>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">مرتبات العمال</h2>
+                </div>
+                <button onclick="openWorkerModal()" class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2"><span>+</span> <span>إضافة عامل</span></button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">المبالغ والرواتب لا تظهر في القائمة؛ تظهر داخل ملف كل عامل بعد إدخال كلمة السر.</p>
+            <input type="search" id="input-w-search" oninput="renderWorkersList()" placeholder="🔍 ابحث بالاسم أو رقم الهاتف..." class="w-full border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+            <div id="workers-container" class="grid gap-3"></div>
+        </section>
+
+        <!-- 5. شاشة ملف العامل -->
+        <section id="screen-worker" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
+                <button onclick="showScreen('workers')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← رجوع للعمال</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openWorkerModal(wkCurrentId)" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition shadow">✏️ تعديل الملف</button>
+                    <button onclick="deleteCurrentWorker()" class="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-xl transition">🗑️ حذف</button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-1">
+                <h2 id="worker-name" class="text-xl font-bold text-slate-800 dark:text-slate-100">---</h2>
+                <p id="worker-info" class="text-xs text-slate-500 dark:text-slate-400">---</p>
+                <p id="worker-join" class="text-xs text-slate-500 dark:text-slate-400">---</p>
+                <p id="worker-notes" class="text-xs text-slate-500 dark:text-slate-400"></p>
+                <div class="flex items-center justify-between pt-3 mt-2 border-t dark:border-slate-700">
+                    <div>
+                        <div class="text-xs text-slate-400">الراتب</div>
+                        <div id="worker-salary" class="font-bold text-slate-800 dark:text-slate-100">••••••</div>
+                    </div>
+                    <button id="worker-reveal-btn" onclick="toggleWorkerReveal()" class="bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 text-xs font-bold px-3 py-2 rounded-xl transition">👁️ إظهار المبالغ</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-2xl p-5 shadow-lg space-y-3">
+                <div>
+                    <div id="worker-net-label" class="text-xs text-slate-400">صافي المستحق للعامل:</div>
+                    <div id="worker-net" class="text-3xl font-bold mt-0.5">••••••</div>
+                </div>
+                <div id="worker-breakdown" class="text-xs text-slate-300 space-y-1"></div>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <button onclick="openWorkerTxModal('debt')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">💸 سلفة / دين</button>
+                    <button onclick="openWorkerTxModal('repay')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">💰 تسديد دين</button>
+                    <button onclick="openWorkerTxModal('payout')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">🧾 صرف الراتب</button>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-slate-700 dark:text-slate-300 mt-6">سجل حركات العامل:</h3>
+            <div id="worker-tx-container" class="space-y-2"></div>
         </section>
 
     </main>
@@ -421,6 +492,101 @@
         </div>
     </div>
 
+    <!-- Modal: ملف العامل -->
+    <div id="modal-worker" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <h3 id="modal-worker-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">إضافة عامل جديد</h3>
+            <form id="form-worker" onsubmit="handleSaveWorker(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">الاسم الكامل *</label>
+                    <input type="text" id="input-w-name" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رقم الهاتف</label>
+                        <input type="text" id="input-w-phone" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">الوظيفة</label>
+                        <input type="text" id="input-w-job" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">العنوان</label>
+                    <input type="text" id="input-w-address" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ الالتحاق * (يبدأ منه احتساب الراتب)</label>
+                    <input type="date" id="input-w-join" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نوع السداد *</label>
+                        <select id="input-w-paytype" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
+                            <option value="monthly">شهري</option>
+                            <option value="daily">يومي</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">قيمة الراتب (الشهري) *</label>
+                        <input type="number" step="any" min="0" id="input-w-salary" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
+                    </div>
+                </div>
+                <p id="w-salary-hint" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظات</label>
+                    <input type="text" id="input-w-notes" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
+                    <button type="button" onclick="closeModal('modal-worker')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: حركة عامل (سلفة / تسديد / صرف راتب) -->
+    <div id="modal-wtx" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modal-wtx-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">حركة</h3>
+            <p id="wtx-hint" class="text-xs text-slate-500 dark:text-slate-400"></p>
+            <form id="form-wtx" onsubmit="handleSaveWorkerTx(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">المبلغ *</label>
+                    <input type="number" step="any" min="0" id="input-wtx-amount" required placeholder="0.00" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">التاريخ</label>
+                    <input type="date" id="input-wtx-date" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظة / بيان</label>
+                    <input type="text" id="input-wtx-note" placeholder="مثال: سلفة، بضاعة من المحل..." class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl transition">حفظ</button>
+                    <button type="button" onclick="closeModal('modal-wtx')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: كلمة السر لإظهار المبالغ -->
+    <div id="modal-wpass" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">🔒 التحقق من الصلاحية</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">أدخل كلمة سر حسابك لإظهار الرواتب والمبالغ. تُخفى تلقائياً بعد دقيقتين أو عند مغادرة الملف.</p>
+            <form id="form-wpass" onsubmit="handleWorkerPassword(event)" class="space-y-3">
+                <input type="password" id="input-w-pass" required autocomplete="current-password" placeholder="كلمة السر" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                <div id="wpass-error" class="hidden text-xs font-bold text-red-600"></div>
+                <div class="flex gap-2">
+                    <button type="submit" id="btn-wpass" class="flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-2.5 rounded-xl transition">تأكيد</button>
+                    <button type="button" onclick="closeModal('modal-wpass')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: إرسال عبر واتساب -->
     <div id="modal-send" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
@@ -550,7 +716,9 @@
             hideBalance: true,
             showCurrency: localStorage.getItem('app_show_currency') !== 'false',
             customers: JSON.parse(localStorage.getItem('app_customers') || '[]'),
-            suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]')
+            suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]'),
+            workers: db ? [] : JSON.parse(localStorage.getItem('app_workers') || '[]'),
+            workerRevealUntil: 0
         };
 
         function initThemeAndConfig() {
@@ -1142,6 +1310,12 @@
                 }, onSyncError);
                 unsubs.push(unsub);
             });
+            if (isOwner()) {
+                unsubs.push(db.collection('workers').onSnapshot((snapshot) => {
+                    state.workers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    refreshWorkerScreens();
+                }, onSyncError));
+            }
         }
 
         // --- 4.1 تسجيل الدخول ---
@@ -1169,7 +1343,11 @@
             applyRole();
             localStorage.removeItem('app_customers');
             localStorage.removeItem('app_suppliers');
-            ['modal-settings', 'modal-add', 'modal-transaction', 'modal-send', 'modal-users', 'modal-activity'].forEach(id => closeModal(id));
+            localStorage.removeItem('app_workers');
+            state.workers = [];
+            wkCurrentId = null;
+            lockWorkerSalaries();
+            ['modal-settings', 'modal-add', 'modal-transaction', 'modal-send', 'modal-users', 'modal-activity', 'modal-worker', 'modal-wtx', 'modal-wpass'].forEach(id => closeModal(id));
             showScreen('home');
             updateHomeTotals();
         }
@@ -1273,7 +1451,7 @@
         }
 
         function mirrorEnqueue(entry) {
-            if (!mirrorCfg()) return;
+            if (!mirrorCfg() || entry.section === 'workers') return;   // بيانات العمال لا تُرسل إلى Google Sheets
             const q = mirrorQueue(); q.push(mirrorRow(entry)); mirrorSaveQueue(q);
             setMirrorStatus();
             flushMirror();
@@ -1634,7 +1812,9 @@
         const ACTION_LABEL = {
             add_tx: '➕ حركة جديدة', edit_tx: '✏️ تعديل حركة', delete_tx: '🗑️ حذف حركة',
             add_person: '👤 إضافة حساب', edit_person: '✏️ تعديل حساب', delete_person: '🗑️ حذف حساب',
-            import: '⬆️ استيراد', user_add: '👥 إضافة مستخدم', user_edit: '👥 تعديل مستخدم'
+            import: '⬆️ استيراد', user_add: '👥 إضافة مستخدم', user_edit: '👥 تعديل مستخدم',
+            worker_add: '👷 إضافة عامل', worker_edit: '✏️ تعديل ملف عامل', worker_delete: '🗑️ حذف عامل',
+            worker_debt: '💸 سلفة / دين عامل', worker_repay: '💰 تسديد دين عامل', worker_payout: '🧾 صرف راتب', worker_tx_delete: '🗑️ حذف حركة عامل'
         };
 
         async function openActivityModal() {
@@ -1647,7 +1827,7 @@
                 const rows = snap.docs.map(d => d.data());
                 box.innerHTML = rows.length ? rows.map(a => `<div class="border dark:border-slate-700 rounded-xl p-2.5">
                     <div class="flex justify-between gap-2"><span class="font-bold">${ACTION_LABEL[a.action] || esc(a.action)}</span><span class="text-slate-400" dir="ltr">${esc(new Date(a.at).toLocaleString('en-GB', { hour12: false }).slice(0, 17))}</span></div>
-                    <div class="text-slate-600 dark:text-slate-300 mt-0.5">👤 ${esc(a.by)}${a.personName ? ` · ${a.section === 'suppliers' ? 'مورد' : 'عميل'}: ${esc(a.personName)}` : ''}</div>
+                    <div class="text-slate-600 dark:text-slate-300 mt-0.5">👤 ${esc(a.by)}${a.personName ? ` · ${a.section === 'suppliers' ? 'مورد' : (a.section === 'workers' ? 'عامل' : 'عميل')}: ${esc(a.personName)}` : ''}</div>
                     ${a.details ? `<div class="text-slate-500 dark:text-slate-400 mt-0.5">${esc(a.details)}</div>` : ''}
                 </div>`).join('') : '<div class="text-slate-500">لا توجد عمليات مسجلة بعد.</div>';
             } catch (err) {
@@ -1709,7 +1889,8 @@
 
         // --- 6. التنقل الشاشات ---
         function showScreen(screenId) {
-            ['home', 'list', 'detail'].forEach(id => {
+            if (screenId !== 'worker') lockWorkerSalaries();
+            ['home', 'list', 'detail', 'workers', 'worker'].forEach(id => {
                 const el = document.getElementById(`screen-${id}`);
                 if (el) el.classList.add('hidden');
             });
@@ -1939,6 +2120,338 @@
                 console.error(err);
                 alert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
+        }
+
+        // --- 7.5 مرتبات العمال (للمالك فقط) ---
+        const WK_PAY = { daily: 'يومي', monthly: 'شهري' };
+        const WK_TX = { debt: 'سلفة / دين', repay: 'تسديد دين', payout: 'صرف راتب' };
+        const WK_REVEAL_MS = 120000;
+        let wkCurrentId = null, wkRevealTimer = null, wkEditingId = null, wkTxKind = null;
+
+        function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+        function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
+        function daysInMonthOf(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
+        function workerById(id) { return (state.workers || []).find(w => w.id === id); }
+        function workersPersist() { if (!db) localStorage.setItem('app_workers', JSON.stringify(state.workers)); }
+
+        // الراتب الساري في يوم معيّن (سجل الراتب يحفظ كل تعديل بتاريخ سريانه فلا تتغير الأيام السابقة)
+        function workerSalaryAt(w, iso) {
+            const hist = (w.salaryHistory || []).slice().sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+            if (!hist.length) return null;
+            let cur = hist[0];
+            hist.forEach(h => { if (h.from <= iso) cur = h; });
+            return cur;
+        }
+
+        // الراتب المتراكم حتى اليوم: اليومي = الراتب ÷ عدد أيام الشهر عن كل يوم منذ الالتحاق، الشهري = الراتب كاملاً في آخر يوم من كل شهر
+        function workerEarned(w, todayIso) {
+            if (!w.joinDate || !(w.salaryHistory || []).length) return 0;
+            const end = parseISO(todayIso);
+            let total = 0;
+            for (let d = parseISO(w.joinDate); d <= end; d.setDate(d.getDate() + 1)) {
+                const s = workerSalaryAt(w, toISODate(d));
+                if (!s) continue;
+                const amount = Number(s.amount) || 0;
+                if (s.payType === 'monthly') { if (d.getDate() === daysInMonthOf(d)) total += amount; }
+                else total += amount / daysInMonthOf(d);
+            }
+            return round2(total);
+        }
+
+        function workerTotals(w, todayIso) {
+            const sum = (type) => (w.transactions || []).filter(t => t.type === type).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+            const earned = workerEarned(w, todayIso || todayISO());
+            const debts = sum('debt'), repaid = sum('repay'), paid = sum('payout');
+            const outstanding = round2(debts - repaid);
+            return { earned, paid: round2(paid), debts: round2(debts), repaid: round2(repaid), outstanding, net: round2(earned - paid - outstanding) };
+        }
+
+        function workerRevealed() { return Date.now() < (state.workerRevealUntil || 0); }
+        function lockWorkerSalaries() { state.workerRevealUntil = 0; clearTimeout(wkRevealTimer); wkRevealTimer = null; }
+        function wMoney(n) { return workerRevealed() ? formatAmount(round2(n)) : '••••••'; }
+
+        function refreshWorkerScreens() {
+            const c = document.getElementById('home-workers-count');
+            if (c) c.innerText = String((state.workers || []).length);
+            if (!document.getElementById('screen-workers').classList.contains('hidden')) renderWorkersList();
+            if (!document.getElementById('screen-worker').classList.contains('hidden') && wkCurrentId) {
+                if (workerById(wkCurrentId)) renderWorkerDetail();
+            }
+        }
+
+        function openWorkersSection() {
+            if (!isOwner()) return;
+            const s = document.getElementById('input-w-search'); if (s) s.value = '';
+            renderWorkersList();
+            showScreen('workers');
+        }
+
+        function renderWorkersList() {
+            const box = document.getElementById('workers-container');
+            const q = ((document.getElementById('input-w-search') || {}).value || '').trim().toLowerCase();
+            const all = state.workers || [];
+            const c = document.getElementById('home-workers-count'); if (c) c.innerText = String(all.length);
+            if (!all.length) { box.innerHTML = '<div class="text-center py-12 text-slate-400">لا يوجد عمال مسجلون حالياً</div>'; return; }
+            const list = all.filter(w => !q || (w.name || '').toLowerCase().includes(q) || (w.phone || '').includes(q))
+                .sort((x, y) => (x.name || '').localeCompare(y.name || '', 'ar'));
+            if (!list.length) { box.innerHTML = '<div class="text-center py-12 text-slate-400">لا توجد نتائج مطابقة للبحث</div>'; return; }
+            box.innerHTML = list.map(w => `
+                <div onclick="openWorkerDetail('${esc(w.id)}')" class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 shadow-sm flex justify-between items-center cursor-pointer transition">
+                    <div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100">${esc(w.name)}</div>
+                        <div class="text-xs text-slate-400">${esc(w.job) || 'بدون وظيفة'} - ${esc(w.phone) || 'بدون هاتف'}</div>
+                    </div>
+                    <div class="text-left text-xs text-slate-500 dark:text-slate-400">
+                        <div>الدفع: <span class="font-bold">${WK_PAY[w.payType] || WK_PAY[(workerSalaryAt(w, todayISO()) || {}).payType] || '-'}</span></div>
+                        <div>منذ: <span dir="ltr">${esc(isoToDisplay(w.joinDate))}</span></div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function openWorkerDetail(id) {
+            if (!isOwner() || !workerById(id)) return;
+            wkCurrentId = id;
+            lockWorkerSalaries();
+            renderWorkerDetail();
+            showScreen('worker');
+        }
+
+        function renderWorkerDetail() {
+            const w = workerById(wkCurrentId);
+            if (!w) return;
+            const t = workerTotals(w);
+            const cur = workerSalaryAt(w, todayISO());
+            document.getElementById('worker-name').innerText = w.name;
+            document.getElementById('worker-info').innerText = `${w.job || 'بدون وظيفة'} | هاتف: ${w.phone || 'غير مدون'} | عنوان: ${w.address || 'غير مدون'}`;
+            document.getElementById('worker-join').innerText = `تاريخ الالتحاق: ${isoToDisplay(w.joinDate) || '-'} | نوع السداد: ${WK_PAY[cur && cur.payType] || '-'}`;
+            document.getElementById('worker-notes').innerText = w.notes ? `ملاحظات: ${w.notes}` : '';
+            document.getElementById('worker-salary').innerText = cur ? `${wMoney(cur.amount)}${cur.payType === 'daily' ? ' (شهرياً، يُقسَّم على أيام الشهر)' : ' / شهر'}` : '-';
+            document.getElementById('worker-reveal-btn').innerText = workerRevealed() ? '🙈 إخفاء المبالغ' : '👁️ إظهار المبالغ';
+            document.getElementById('worker-net-label').innerText = (workerRevealed() && t.net < 0) ? 'الرصيد سالب (العامل مدين للمحل):' : 'صافي المستحق للعامل:';
+            document.getElementById('worker-net').innerText = wMoney(t.net);
+            document.getElementById('worker-breakdown').innerHTML = [
+                ['الراتب المتراكم حتى اليوم', t.earned],
+                ['ما صُرف له من الراتب', t.paid],
+                ['ديون متبقية عليه (تُخصم من الراتب)', t.outstanding]
+            ].map(([l, v]) => `<div class="flex justify-between"><span>${l}</span><span class="font-bold">${wMoney(v)}</span></div>`).join('');
+
+            const txs = (w.transactions || []).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.at || 0) - (b.at || 0)));
+            const box = document.getElementById('worker-tx-container');
+            box.innerHTML = txs.length ? txs.map(tx => {
+                const cls = tx.type === 'debt' ? 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400'
+                    : tx.type === 'repay' ? 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-400'
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200';
+                return `<div class="p-3 rounded-xl border flex justify-between items-center text-sm ${cls}">
+                    <div>
+                        <div class="font-bold">${WK_TX[tx.type] || ''}</div>
+                        <div class="text-xs opacity-75 mt-0.5">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(isoToDisplay(tx.date))}</div>
+                        ${tx.by ? `<div class="text-[11px] opacity-60 mt-0.5">👤 ${esc(tx.by)}</div>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-base">${wMoney(tx.amount)}</span>
+                        <button onclick="deleteWorkerTx('${esc(tx.id)}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="حذف">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('') : '<div class="text-center text-slate-400 py-6">لا توجد حركات بعد</div>';
+        }
+
+        function toggleWorkerReveal() {
+            if (workerRevealed()) { lockWorkerSalaries(); renderWorkerDetail(); return; }
+            document.getElementById('input-w-pass').value = '';
+            document.getElementById('wpass-error').classList.add('hidden');
+            document.getElementById('modal-wpass').classList.remove('hidden');
+            setTimeout(() => { const i = document.getElementById('input-w-pass'); if (i) i.focus(); }, 50);
+        }
+
+        async function handleWorkerPassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-wpass');
+            const err = document.getElementById('wpass-error');
+            btn.disabled = true; err.classList.add('hidden');
+            try {
+                if (auth) {   // بدون حساب (وضع محلي) لا يوجد ما يُتحقق منه
+                    const u = auth.currentUser;
+                    if (!u || !u.email) throw { code: 'no-user' };
+                    await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, document.getElementById('input-w-pass').value));
+                }
+                state.workerRevealUntil = Date.now() + WK_REVEAL_MS;
+                clearTimeout(wkRevealTimer);
+                wkRevealTimer = setTimeout(() => {
+                    lockWorkerSalaries();
+                    if (!document.getElementById('screen-worker').classList.contains('hidden')) renderWorkerDetail();
+                }, WK_REVEAL_MS);
+                document.getElementById('input-w-pass').value = '';
+                closeModal('modal-wpass');
+                renderWorkerDetail();
+            } catch (e2) {
+                const code = (e2 && e2.code) || '';
+                err.innerText = /wrong-password|invalid-credential|invalid-login/.test(code) ? 'كلمة السر غير صحيحة.'
+                    : code === 'auth/too-many-requests' ? 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة.'
+                    : navigator.onLine ? 'تعذّر التحقق من كلمة السر.' : 'يلزم الاتصال بالإنترنت للتحقق من كلمة السر.';
+                err.classList.remove('hidden');
+            } finally { btn.disabled = false; }
+        }
+
+        function openWorkerModal(editId) {
+            if (!isOwner()) return;
+            wkEditingId = editId || null;
+            const w = editId ? workerById(editId) : null;
+            const cur = w ? workerSalaryAt(w, todayISO()) : null;
+            const canSalary = !w || workerRevealed();
+            document.getElementById('modal-worker-title').innerText = w ? 'تعديل ملف العامل' : 'إضافة عامل جديد';
+            document.getElementById('input-w-name').value = w ? w.name : '';
+            document.getElementById('input-w-phone').value = w ? (w.phone || '') : '';
+            document.getElementById('input-w-job').value = w ? (w.job || '') : '';
+            document.getElementById('input-w-address').value = w ? (w.address || '') : '';
+            document.getElementById('input-w-join').value = w ? w.joinDate : todayISO();
+            document.getElementById('input-w-notes').value = w ? (w.notes || '') : '';
+            const pt = document.getElementById('input-w-paytype'), sal = document.getElementById('input-w-salary');
+            pt.value = cur ? cur.payType : 'monthly';
+            sal.value = canSalary && cur ? cur.amount : '';
+            pt.disabled = sal.disabled = !canSalary;
+            sal.required = canSalary;
+            sal.placeholder = canSalary ? '0' : '••••••';
+            document.getElementById('w-salary-hint').innerText = !w ? 'الشهري: يُضاف الراتب في نهاية كل شهر. اليومي: يُقسَّم الراتب الشهري على أيام الشهر ويُضاف كل يوم.'
+                : (canSalary ? 'تغيير الراتب أو نوع السداد يسري من اليوم ولا يغيّر ما احتُسب سابقاً.' : 'لتعديل الراتب أو نوع السداد: أغلق النافذة، اضغط «إظهار المبالغ» ثم أعد فتح التعديل.');
+            document.getElementById('modal-worker').classList.remove('hidden');
+        }
+
+        function workerUpdate(w, patch) {
+            Object.assign(w, patch);
+            if (db) dbWrite(db.collection('workers').doc(w.id).update(patch));
+            else workersPersist();
+        }
+
+        function handleSaveWorker(e) {
+            e.preventDefault();
+            if (!isOwner()) return;
+            const v = (id) => document.getElementById(id).value.trim();
+            const name = v('input-w-name');
+            const join = document.getElementById('input-w-join').value;
+            if (!name) return;
+            if (!join) { alert('أدخل تاريخ الالتحاق.'); return; }
+            const data = { name, phone: v('input-w-phone'), job: v('input-w-job'), address: v('input-w-address'), notes: v('input-w-notes'), joinDate: join };
+            const salEl = document.getElementById('input-w-salary'), ptEl = document.getElementById('input-w-paytype');
+            const today = todayISO();
+            const editing = wkEditingId ? workerById(wkEditingId) : null;
+
+            if (!editing) {
+                const amount = parseFloat(salEl.value) || 0;
+                if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
+                const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data,
+                    salaryHistory: [{ from: join, amount, payType: ptEl.value }], transactions: [] };
+                const st = actorStamp();
+                if (st.by) { w.createdBy = st.by; w.createdAt = st.at; }
+                logActivity('worker_add', 'workers', w, `${WK_PAY[ptEl.value]} • راتب ${moneyMsg(amount)}`);
+                if (db) dbWrite(db.collection('workers').doc(w.id).set(w));
+                else { state.workers.push(w); workersPersist(); renderWorkersList(); }
+                closeModal('modal-worker');
+                return;
+            }
+
+            const patch = { ...data };
+            const notes = [];
+            if (!salEl.disabled) {
+                const amount = parseFloat(salEl.value) || 0;
+                if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
+                const old = workerSalaryAt(editing, today);
+                if (!old || Number(old.amount) !== amount || old.payType !== ptEl.value) {
+                    patch.salaryHistory = (editing.salaryHistory || []).filter(h => h.from !== today).concat({ from: today, amount, payType: ptEl.value });
+                    notes.push(`تعديل الراتب من ${old ? moneyMsg(old.amount) + ' ' + WK_PAY[old.payType] : '-'} إلى ${moneyMsg(amount)} ${WK_PAY[ptEl.value]} (يسري من اليوم)`);
+                }
+            }
+            const infoChanged = ['name', 'phone', 'job', 'address', 'notes', 'joinDate'].some(k => (editing[k] || '') !== data[k]);
+            if (infoChanged) notes.unshift('تعديل بيانات الملف');
+            if (notes.length) logActivity('worker_edit', 'workers', editing, notes.join(' • '));
+            workerUpdate(editing, patch);
+            closeModal('modal-worker');
+            renderWorkerDetail();
+        }
+
+        function openWorkerTxModal(kind) {
+            const w = workerById(wkCurrentId);
+            if (!w || !isOwner()) return;
+            wkTxKind = kind;
+            const t = workerTotals(w);
+            document.getElementById('modal-wtx-title').innerText = WK_TX[kind];
+            document.getElementById('wtx-hint').innerText = {
+                debt: 'سلفة أو قرض أو أغراض أخذها العامل من حساب المحل. تُخصم من راتبه المتراكم، وإن تجاوزته يظهر تنبيه يمكنك تجاوزه ليصبح الرصيد سالباً.',
+                repay: 'مبلغ يسدده العامل من دينه في غير يوم صب الراتب.',
+                payout: 'صرف الراتب: المبلغ المقترح هو الصافي بعد خصم الديون المتبقية تلقائياً، ويمكنك تعديله.'
+            }[kind];
+            document.getElementById('input-wtx-amount').value = kind === 'payout' && workerRevealed() && t.net > 0 ? t.net : '';
+            document.getElementById('input-wtx-date').value = todayISO();
+            document.getElementById('input-wtx-note').value = '';
+            document.getElementById('modal-wtx').classList.remove('hidden');
+        }
+
+        async function handleSaveWorkerTx(e) {
+            e.preventDefault();
+            const w = workerById(wkCurrentId);
+            if (!w || !isOwner() || !wkTxKind) return;
+            const kind = wkTxKind;
+            const amount = round2(parseFloat(document.getElementById('input-wtx-amount').value) || 0);
+            if (amount <= 0) { alert('أدخل مبلغاً أكبر من صفر.'); return; }
+            const date = document.getElementById('input-wtx-date').value || todayISO();
+            const note = document.getElementById('input-wtx-note').value.trim();
+            if (kind !== 'repay' && workerTotals(w).net - amount < 0) {
+                if (!confirm('تنبيه: هذا المبلغ يتجاوز الراتب المتراكم المتاح للعامل.\nإذا تابعت سيصبح رصيده سالباً (يصبح مديناً للمحل).\nهل تريد المتابعة؟')) return;
+            }
+            const tx = { id: 'wt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: kind, amount, date, note, ...actorStamp() };
+            try {
+                if (db) await commitTransactions('workers', w, (list) => [...(list || []), tx]);
+                else { w.transactions = [...(w.transactions || []), tx]; workersPersist(); }
+                logActivity('worker_' + kind, 'workers', w, `${WK_TX[kind]} ${moneyMsg(amount)}${note ? ' — ' + note : ''}`);
+                closeModal('modal-wtx');
+                renderWorkerDetail();
+            } catch (err) {
+                console.error(err);
+                alert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+            }
+        }
+
+        async function deleteWorkerTx(txId) {
+            const w = workerById(wkCurrentId);
+            if (!w || !isOwner()) return;
+            const tx = (w.transactions || []).find(t => t.id == txId);
+            if (!tx || !confirm('هل أنت متأكد من حذف هذه الحركة؟')) return;
+            const without = (list) => (list || []).filter(t => t.id != txId);
+            try {
+                if (db) await commitTransactions('workers', w, without);
+                else { w.transactions = without(w.transactions); workersPersist(); }
+                logActivity('worker_tx_delete', 'workers', w, `حذف ${WK_TX[tx.type]} ${moneyMsg(tx.amount)} (${isoToDisplay(tx.date)})`);
+                renderWorkerDetail();
+            } catch (err) {
+                console.error(err);
+                alert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+            }
+        }
+
+        function deleteCurrentWorker() {
+            const w = workerById(wkCurrentId);
+            if (!w || !isOwner()) return;
+            if (!confirm('هل أنت متأكد من حذف ملف هذا العامل نهائياً مع كل حركاته؟')) return;
+            logActivity('worker_delete', 'workers', w, `حذف ملف عامل و${(w.transactions || []).length} حركة`);
+            if (db) dbWrite(db.collection('workers').doc(w.id).delete());
+            else { state.workers = state.workers.filter(x => x.id !== w.id); workersPersist(); }
+            wkCurrentId = null;
+            openWorkersSection();
+        }
+
+        function sanitizeWorker(w) {
+            if (!w || typeof w !== 'object' || !w.name) return null;
+            let id = String(w.id || ('W_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7))).replace(/\//g, '_');
+            if (/^\.+$/.test(id) || /^__.*__$/.test(id)) id = 'imp_' + id;
+            return {
+                id, name: String(w.name), phone: String(w.phone || ''), address: String(w.address || ''),
+                job: String(w.job || ''), notes: String(w.notes || ''), joinDate: String(w.joinDate || ''),
+                salaryHistory: (Array.isArray(w.salaryHistory) ? w.salaryHistory : []).filter(h => h && h.from)
+                    .map(h => ({ from: String(h.from), amount: parseFloat(h.amount) || 0, payType: h.payType === 'daily' ? 'daily' : 'monthly' })),
+                transactions: (Array.isArray(w.transactions) ? w.transactions : []).filter(t => t && WK_TX[t.type])
+                    .map(t => ({ id: String(t.id || ('wt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6))), type: t.type,
+                        amount: round2(parseFloat(t.amount) || 0), date: String(t.date || ''), note: String(t.note || ''),
+                        ...(t.by ? { by: String(t.by), byId: String(t.byId || ''), at: Number(t.at) || 0 } : {}) }))
+            };
         }
 
         // --- 8. طباعة التقرير ---
@@ -2308,7 +2821,8 @@
                 exportedAt: new Date().toISOString(),
                 shopName: localStorage.getItem('app_shop_name') || '',
                 customers: state.customers,
-                suppliers: state.suppliers
+                suppliers: state.suppliers,
+                workers: isOwner() ? state.workers : []
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -2359,17 +2873,19 @@
                 const data = JSON.parse(await file.text());
                 const customers = (Array.isArray(data.customers) ? data.customers : []).map(sanitizePerson).filter(Boolean);
                 const suppliers = (Array.isArray(data.suppliers) ? data.suppliers : []).map(sanitizePerson).filter(Boolean);
-                if (!customers.length && !suppliers.length) {
+                const workers = isOwner() ? (Array.isArray(data.workers) ? data.workers : []).map(sanitizeWorker).filter(Boolean) : [];
+                if (!customers.length && !suppliers.length && !workers.length) {
                     alert('الملف لا يحتوي على بيانات صالحة.');
                     return;
                 }
-                const msg = `سيتم استيراد ${customers.length} عميل و ${suppliers.length} مورد.\nالحسابات التي لها نفس المعرّف سيتم استبدالها، ولن يُحذف أي حساب موجود.\nهل تريد المتابعة؟`;
+                const msg = `سيتم استيراد ${customers.length} عميل و ${suppliers.length} مورد${workers.length ? ' و ' + workers.length + ' عامل' : ''}.\nالحسابات التي لها نفس المعرّف سيتم استبدالها، ولن يُحذف أي حساب موجود.\nهل تريد المتابعة؟`;
                 if (!confirm(msg)) return;
 
                 if (db) {
                     const ops = [
                         ...customers.map(p => ['customers', p]),
-                        ...suppliers.map(p => ['suppliers', p])
+                        ...suppliers.map(p => ['suppliers', p]),
+                        ...workers.map(p => ['workers', p])
                     ];
                     for (let i = 0; i < ops.length; i += 400) {
                         const batch = db.batch();
@@ -2377,7 +2893,7 @@
                         await batch.commit();
                     }
                 } else {
-                    [['customers', customers], ['suppliers', suppliers]].forEach(([col, items]) => {
+                    [['customers', customers], ['suppliers', suppliers], ['workers', workers]].forEach(([col, items]) => {
                         items.forEach(p => {
                             const idx = state[col].findIndex(x => x.id === p.id);
                             if (idx >= 0) state[col][idx] = p; else state[col].push(p);
