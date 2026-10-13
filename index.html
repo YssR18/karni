@@ -291,6 +291,7 @@
                     <button onclick="openWorkerTxModal('debt')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">💸 سلفة / دين</button>
                     <button onclick="openWorkerTxModal('repay')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">💰 تسديد دين</button>
                     <button onclick="openWorkerTxModal('payout')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">🧾 صرف الراتب</button>
+                    <button onclick="openSendModal(null, wkCurrentId)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">📤 إرسال كشف</button>
                 </div>
             </div>
 
@@ -947,12 +948,16 @@
         }
 
         function buildSendMessage(kind, section, person, txId) {
+            if (section === 'workers') return buildWorkerMessage(kind, person);
             if (kind === 'detail') return buildDetailMessage(section, person, txId);
             if (kind === 'statement') return buildStatementMessage(section, person);
             return buildTotalMessage(section, person);
         }
 
-        function sendOptionsFor(hasTx) {
+        function sendOptionsFor(hasTx, isW) {
+            if (isW) return [
+                { v: 'statement', t: '📋 كشف حساب العامل (مفصل)', d: 'الراتب المتراكم والسلف والتسديد والصرف مع الصافي بعد كل حركة' },
+                { v: 'total', t: '💰 وصل بالصافي المستحق فقط', d: 'الاسم والصافي بدون تفاصيل' }];
             const total = { v: 'total', t: '💰 وصل بالمبلغ الإجمالي المتبقي فقط', d: 'الاسم والمبلغ المتبقي بدون تفاصيل' };
             return hasTx
                 ? [{ v: 'detail', t: '🧾 فاتورة مفصلة لهذه الحركة', d: 'نوع الحركة والمبلغ والبيان والرصيد قبلها وبعدها' }, total]
@@ -970,20 +975,22 @@
             document.getElementById('send-text').value = buildSendMessage(checked ? checked.value : 'total', sendCtx.section, person, sendCtx.txId);
         }
 
-        function openSendModal(txId) {
-            const person = currentPerson();
+        function openSendModal(txId, workerId) {
+            const isW = !!workerId;
+            if (isW && !workerRevealed()) { alert('أظهر المبالغ أولاً (زر «إظهار المبالغ») ثم أعد المحاولة.'); return; }
+            const person = isW ? workerById(workerId) : currentPerson();
             if (!person) return;
             const hasTx = txId !== undefined && txId !== null;
-            sendCtx = { section: state.activeSection, personId: person.id, txId: hasTx ? txId : null };
+            sendCtx = { section: isW ? 'workers' : state.activeSection, personId: person.id, txId: hasTx ? txId : null };
             const box = document.getElementById('send-options');
             box.innerHTML = '';
-            sendOptionsFor(hasTx).forEach((o, i) => {
+            sendOptionsFor(hasTx, isW).forEach((o, i) => {
                 const label = document.createElement('label');
                 label.className = 'flex items-start gap-3 border dark:border-slate-700 rounded-xl p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50';
                 label.innerHTML = `<input type="radio" name="send-kind" value="${o.v}" ${i === 0 ? 'checked' : ''} class="mt-1 accent-emerald-600" onchange="refreshSendText()"><span><span class="block text-sm font-bold">${o.t}</span><span class="block text-xs text-slate-500 dark:text-slate-400">${o.d}</span></span>`;
                 box.appendChild(label);
             });
-            document.getElementById('send-title').innerText = hasTx ? 'إرسال حركة عبر واتساب' : 'إرسال الحساب عبر واتساب';
+            document.getElementById('send-title').innerText = isW ? 'إرسال كشف العامل عبر واتساب' : (hasTx ? 'إرسال حركة عبر واتساب' : 'إرسال الحساب عبر واتساب');
             document.getElementById('send-person').innerText = person.name;
             document.getElementById('send-phone').value = person.phone || '';
             refreshSendText();
@@ -1078,6 +1085,7 @@
 
         function pdfBuildRows(section, person, kind, txId) {
             // يعيد { rows, boxes, title, period }
+            if (section === 'workers') return workerPdfData(person, kind);
             const isCust = section === 'customers';
             const start = parseFloat(person.initialBalance) || 0;
             const list = sortedTransactions(person);
@@ -1126,8 +1134,8 @@
                 c.fillStyle = '#000000'; c.fillRect(L, 195, PW - 2 * PM, 5);
                 // صندوق المعلومات
                 pdfRRect(c, L, 225, PW - 2 * PM, 140, 16, null, '#111827', 2);
-                pdfText(c, `${isCust ? 'اسم العميل' : 'اسم المورد'}: ${person.name}`, R - 28, 267, 33, { bold: true, maxW: 520 });
-                pdfText(c, `${isCust ? 'رقم هاتف العميل' : 'رقم هاتف المورد'}: ${person.phone || 'غير مدون'}`, R - 28, 327, 30, { color: '#111827' });
+                pdfText(c, `${d.nameLabel || (isCust ? 'اسم العميل' : 'اسم المورد')}: ${person.name}`, R - 28, 267, 33, { bold: true, maxW: 520 });
+                pdfText(c, `${d.phoneLabel || (isCust ? 'رقم هاتف العميل' : 'رقم هاتف المورد')}: ${person.phone || 'غير مدون'}`, R - 28, 327, 30, { color: '#111827' });
                 pdfText(c, `تاريخ التقرير: ${new Date().toLocaleDateString('en-GB')}`, 640, 267, 30, { bold: true });
                 if (d.period) pdfText(c, `الفترة: ${d.period}`, 700, 327, 28, { color: '#111827', maxW: 640 });
                 y = 405;
@@ -1137,6 +1145,7 @@
             // الجدول
             if (rows.length) {
                 const cols = [['التاريخ', 150], ['الفاتورة / السند', 215], ['بيان', 250], ['مدين (+)', 155], ['دائن (-)', 155], ['الرصيد', 195]];
+                if (d.colNames) cols.forEach((cl, i) => { cl[0] = d.colNames[i]; });
                 const xr = []; let cx = R;
                 cols.forEach(cl => { xr.push([cx, cx - cl[1]]); cx -= cl[1]; });
                 c.fillStyle = '#000000'; c.fillRect(L, y, PW - 2 * PM, 60);
@@ -1181,7 +1190,7 @@
                 y += 150 + 30;
                 pdfRRect(c, L, y, PW - 2 * PM, 150, 14, null, '#4b5563', 2);
                 pdfText(c, 'ملاحظة هامة:', R - 24, y + 36, 29, { bold: true, color: '#b91c1c' });
-                pdfWrap(c, 'يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ في حسابك أو أي استفسار التواصل معنا على رقم المحل.', R - 24, y + 84, 26, PW - 2 * PM - 48, 40, {});
+                pdfWrap(c, d.footNote || 'يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ في حسابك أو أي استفسار التواصل معنا على رقم المحل.', R - 24, y + 84, 26, PW - 2 * PM - 48, 40, {});
             }
             // التذييل
             c.fillStyle = '#4b5563'; c.fillRect(L, PH - 100, PW - 2 * PM, 2);
@@ -2177,18 +2186,92 @@
         }
 
         // الراتب المتراكم حتى اليوم: اليومي = الراتب ÷ عدد أيام الشهر عن كل يوم منذ الالتحاق، الشهري = الراتب كاملاً في آخر يوم من كل شهر
-        function workerEarned(w, todayIso) {
-            if (!w.accrualStart || !(w.salaryHistory || []).length) return 0;
-            const end = parseISO(todayIso);
-            let total = 0;
+        // استحقاق الراتب مجمّعاً بالشهر (لكل شهر: آخر يوم احتُسب فيه ومجموعه)
+        function workerAccrualByMonth(w, todayIso) {
+            if (!w.accrualStart || !(w.salaryHistory || []).length) return [];
+            const end = parseISO(todayIso), map = {};
             for (let d = parseISO(w.accrualStart); d <= end; d.setDate(d.getDate() + 1)) {
                 const s = workerSalaryAt(w, toISODate(d));
                 if (!s) continue;
                 const amount = Number(s.amount) || 0;
-                if (s.payType === 'monthly') { if (d.getDate() === daysInMonthOf(d)) total += amount; }
-                else total += amount / daysInMonthOf(d);
+                const add = s.payType === 'monthly' ? (d.getDate() === daysInMonthOf(d) ? amount : 0) : amount / daysInMonthOf(d);
+                if (!add) continue;
+                const iso = toISODate(d), key = iso.slice(0, 7);
+                const e = map[key] || (map[key] = { key, amount: 0, date: iso });
+                e.amount += add; e.date = iso;
             }
-            return round2(total);
+            return Object.values(map).map(e => ({ key: e.key, date: e.date, amount: round2(e.amount) }));
+        }
+
+        function workerEarned(w, todayIso) {
+            return round2(workerAccrualByMonth(w, todayIso).reduce((a, m) => a + m.amount, 0));
+        }
+
+        // دفتر العامل: رصيد افتتاحي + استحقاق كل شهر + الحركات، مع الصافي بعد كل سطر
+        function workerLedger(w) {
+            const today = todayISO(), td = parseISO(today);
+            const items = [];
+            const opening = round2(parseFloat(w.openingBalance) || 0);
+            if (opening) items.push({ date: w.accrualStart || '', ord: 0, label: 'رصيد افتتاحي', note: 'منقول من الدفتر السابق', plus: opening > 0 ? opening : 0, minus: opening < 0 ? -opening : 0 });
+            workerAccrualByMonth(w, today).forEach(m => {
+                const partial = m.date === today && td.getDate() !== daysInMonthOf(td);
+                items.push({ date: m.date, ord: 1, label: 'راتب', note: `راتب شهر ${m.key.slice(5)}/${m.key.slice(0, 4)}${partial ? ' (حتى اليوم)' : ''}`, plus: m.amount, minus: 0 });
+            });
+            (w.transactions || []).forEach(t => items.push({ date: t.date || '', ord: 2, label: WK_TX[t.type] || '', note: t.note || '', by: t.by || '',
+                plus: t.type === 'repay' ? (Number(t.amount) || 0) : 0, minus: t.type === 'repay' ? 0 : (Number(t.amount) || 0) }));
+            items.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || a.ord - b.ord);
+            let run = 0, plus = 0, minus = 0;
+            items.forEach(i => { run = round2(run + i.plus - i.minus); i.bal = run; plus += i.plus; minus += i.minus; });
+            return { items, plus: round2(plus), minus: round2(minus), net: run };
+        }
+
+        function workerPdfData(w, kind) {
+            const L = workerLedger(w);
+            const base = { nameLabel: 'اسم العامل', phoneLabel: 'رقم هاتف العامل',
+                footNote: 'يرجى مراجعة كشف الحساب جيداً، وفي حال وجود أي خطأ أو استفسار التواصل مع إدارة المحل.' };
+            if (kind === 'total') return { ...base, title: 'وصل رصيد عامل', period: null, rows: [], boxes: [{ label: 'الصافي المستحق', value: L.net, color: '#111827', strong: true, wide: true }] };
+            const dates = L.items.map(i => i.date).filter(Boolean);
+            return { ...base, title: 'كشف حساب عامل', colNames: ['التاريخ', 'النوع', 'بيان', 'له (+)', 'عليه (-)', 'الصافي'],
+                period: dates.length ? `من ${isoToDisplay(dates[0])} إلى ${isoToDisplay(dates[dates.length - 1])}` : null,
+                rows: L.items.map(i => ({ date: isoToDisplay(i.date) || '-', ref: i.label, note: i.note || i.label, badge: '', debit: i.plus, credit: i.minus, bal: i.bal })),
+                boxes: [
+                    { label: 'إجمالي المستحق له', value: L.plus, color: '#15803d' },
+                    { label: 'إجمالي المخصوم والمصروف', value: L.minus, color: '#b91c1c' },
+                    { label: 'الصافي المستحق', value: L.net, color: '#111827', strong: true }]
+            };
+        }
+
+        function workerNetLine(net) {
+            return net > 0 ? `المستحق لك عندنا: *${moneyMsg(net)}*` : net < 0 ? `المبلغ المتبقي عليك: *${moneyMsg(-net)}*` : 'الحساب مصفّى ✅';
+        }
+
+        function buildWorkerMessage(kind, w) {
+            const L = workerLedger(w), date = new Date().toLocaleDateString('en-GB');
+            if (kind === 'total') return [...msgHeader(w, '🧾 *وصل رصيد عامل*', date), SEP, workerNetLine(L.net)].join('\n');
+            const rows = L.items.map(i => `• ${isoToDisplay(i.date) || '-'} | ${i.label} ${moneyMsg(i.plus || i.minus)} ${i.plus ? '(+)' : '(-)'} ← ${moneyMsg(i.bal)}`);
+            const head = [...msgHeader(w, '📋 *كشف حساب عامل*', date), SEP], tail = [SEP, workerNetLine(L.net)];
+            const make = (count) => {
+                const omitted = rows.length - count;
+                return [...head, ...(omitted > 0 ? [`… (${omitted} سطر أقدم غير معروض)`] : []), ...rows.slice(rows.length - count), ...tail].join('\n');
+            };
+            let n = Math.min(rows.length, 40), text = make(n);
+            while (n > 0 && encodeURIComponent(text).length > SEND_URL_MAX) { n--; text = make(n); }
+            return text;
+        }
+
+        function workerExcelSheets() {
+            const sum = [['الاسم', 'الهاتف', 'الوظيفة', 'تاريخ الالتحاق', 'بدء الاحتساب', 'نوع السداد', 'الراتب الحالي', 'رصيد افتتاحي', 'الراتب المتراكم', 'ما صُرف', 'ديون متبقية', 'الصافي المستحق']];
+            const mv = [['العامل', 'التاريخ', 'النوع', 'البيان', 'له (+)', 'عليه (-)', 'الصافي بعد السطر', 'سجّلها']];
+            (state.workers || []).slice().sort((x, y) => (x.name || '').localeCompare(y.name || '', 'ar')).forEach(w => {
+                const t = workerTotals(w), cur = workerSalaryAt(w, todayISO());
+                sum.push([w.name || '', w.phone || '', w.job || '', { d: dateSerial(isoToDisplay(w.joinDate)) }, { d: dateSerial(isoToDisplay(w.accrualStart)) },
+                    WK_PAY[cur && cur.payType] || '', { n: cur ? cur.amount : 0 }, { n: t.opening }, { n: t.earned }, { n: t.paid }, { n: t.outstanding }, { n: t.net }]);
+                workerLedger(w).items.forEach(i => mv.push([w.name || '', { d: dateSerial(isoToDisplay(i.date)) }, i.label, i.note || '', { n: i.plus }, { n: i.minus }, { n: i.bal }, i.by || '']));
+            });
+            return [
+                { name: 'العمال', rows: sum, widths: [26, 16, 16, 14, 14, 12, 14, 14, 16, 14, 14, 16] },
+                { name: 'حركات العمال', rows: mv, widths: [26, 13, 14, 34, 14, 14, 18, 16] }
+            ];
         }
 
         function workerTotals(w, todayIso) {
@@ -2872,7 +2955,7 @@
                 { name: 'الموردين', rows: peopleRows(state.suppliers), widths: [28, 16, 28, 18, 16, 16, 18, 12] },
                 { name: 'الحركات', rows: tx, widths: [9, 26, 13, 14, 16, 12, 14, 34, 18, 16, 18, 16] },
                 { name: 'معلومات', rows: info, widths: [26, 30] }
-            ];
+            ].concat(hasPayroll() ? workerExcelSheets() : []);
         }
 
         function exportExcel() {
