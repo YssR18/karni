@@ -541,14 +541,14 @@
                 <div class="flex gap-2">
                     <div class="flex-1">
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رصيد افتتاحي</label>
-                        <input type="number" step="any" id="input-w-opening" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
+                        <div class="flex gap-2"><select id="input-w-opening-sign" class="w-24 border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50"><option value="pos">له عندك</option><option value="neg">عليه</option></select><input type="number" step="any" min="0" id="input-w-opening" placeholder="0" class="flex-1 min-w-0 border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50"></div>
                     </div>
                     <div class="flex-1">
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">بدء احتساب الراتب *</label>
                         <input type="date" id="input-w-accrual" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">الرصيد الافتتاحي = ما يستحقه العامل من راتب − ديونه حتى يوم البدء (موجب = له عندك، سالب = عليه). يحتسب البرنامج الراتب من «بدء احتساب الراتب» فقط.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">الرصيد الافتتاحي = ما يستحقه العامل من راتب − ديونه حتى يوم البدء: اكتب المبلغ واختر «له عندك» أو «عليه». يحتسب البرنامج الراتب من «بدء احتساب الراتب» فقط.</p>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظات</label>
                     <input type="text" id="input-w-notes" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
@@ -2328,6 +2328,11 @@
         function addWorkerHistRow(h) {
             document.getElementById('w-hist-rows').insertAdjacentHTML('beforeend', workerHistRowHtml(h || { from: todayISO(), amount: '', payType: 'monthly' }));
         }
+        // الرصيد الافتتاحي: مبلغ موجب + اختيار «له عندك / عليه» (بدون كتابة علامة الناقص)
+        function readOpening() {
+            const amt = Math.abs(parseFloat(document.getElementById('input-w-opening').value) || 0);
+            return round2(document.getElementById('input-w-opening-sign').value === 'neg' ? -amt : amt);
+        }
         function readWorkerHist() {
             const rows = [...document.querySelectorAll('#w-hist-rows [data-hist]')].map(r => ({
                 from: r.querySelector('.hist-from').value, amount: parseFloat(r.querySelector('.hist-amount').value) || 0, payType: r.querySelector('.hist-type').value }));
@@ -2351,8 +2356,10 @@
             document.getElementById('input-w-notes').value = w ? (w.notes || '') : '';
             document.getElementById('input-w-accrual').value = w ? (w.accrualStart || '') : todayISO();
             const op = document.getElementById('input-w-opening');
-            op.value = canSalary && w && w.openingBalance ? w.openingBalance : '';
-            op.disabled = !canSalary;
+            const ob = canSalary && w ? (parseFloat(w.openingBalance) || 0) : 0;
+            op.value = ob ? Math.abs(ob) : '';
+            document.getElementById('input-w-opening-sign').value = ob < 0 ? 'neg' : 'pos';
+            document.getElementById('input-w-opening-sign').disabled = op.disabled = !canSalary;
             op.placeholder = canSalary ? '0' : '••••••';
             const pt = document.getElementById('input-w-paytype'), sal = document.getElementById('input-w-salary');
             pt.value = cur ? cur.payType : 'monthly';
@@ -2391,7 +2398,7 @@
             if (!editing) {
                 const amount = parseFloat(salEl.value) || 0;
                 if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
-                const opening = round2(parseFloat(opEl.value) || 0);
+                const opening = readOpening();
                 const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data, openingBalance: opening,
                     salaryHistory: [{ from: accrual, amount, payType: ptEl.value }], transactions: [] };
                 const st = actorStamp();
@@ -2406,7 +2413,7 @@
             const patch = { ...data };
             const notes = [];
             if (!opEl.disabled) {
-                const opening = round2(parseFloat(opEl.value) || 0);
+                const opening = readOpening();
                 if (opening !== round2(parseFloat(editing.openingBalance) || 0)) {
                     patch.openingBalance = opening;
                     notes.push(`الرصيد الافتتاحي من ${moneyMsg(parseFloat(editing.openingBalance) || 0)} إلى ${moneyMsg(opening)}`);
