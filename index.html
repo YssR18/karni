@@ -516,8 +516,8 @@
                     <input type="text" id="input-w-address" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ الالتحاق * (يبدأ منه احتساب الراتب)</label>
-                    <input type="date" id="input-w-join" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ الالتحاق (للعلم فقط، لا يدخل في الحساب)</label>
+                    <input type="date" id="input-w-join" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                 </div>
                 <div id="w-single-salary" class="flex gap-2">
                     <div class="flex-1">
@@ -544,11 +544,11 @@
                         <input type="number" step="any" id="input-w-opening" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
                     </div>
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">بدء الاحتساب من</label>
-                        <input type="date" id="input-w-accrual" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">بدء احتساب الراتب *</label>
+                        <input type="date" id="input-w-accrual" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">للنقل من الدفتر الورقي: الرصيد الافتتاحي موجب = مستحق للعامل عندك، وسالب = ديون عليه. اترك «بدء الاحتساب» فارغاً ليبدأ من تاريخ الالتحاق.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">الرصيد الافتتاحي = ما يستحقه العامل من راتب − ديونه حتى يوم البدء (موجب = له عندك، سالب = عليه). يحتسب البرنامج الراتب من «بدء احتساب الراتب» فقط.</p>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظات</label>
                     <input type="text" id="input-w-notes" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
@@ -2167,10 +2167,10 @@
 
         // الراتب المتراكم حتى اليوم: اليومي = الراتب ÷ عدد أيام الشهر عن كل يوم منذ الالتحاق، الشهري = الراتب كاملاً في آخر يوم من كل شهر
         function workerEarned(w, todayIso) {
-            if (!w.joinDate || !(w.salaryHistory || []).length) return 0;
+            if (!w.accrualStart || !(w.salaryHistory || []).length) return 0;
             const end = parseISO(todayIso);
             let total = 0;
-            for (let d = parseISO(w.accrualStart || w.joinDate); d <= end; d.setDate(d.getDate() + 1)) {
+            for (let d = parseISO(w.accrualStart); d <= end; d.setDate(d.getDate() + 1)) {
                 const s = workerSalaryAt(w, toISODate(d));
                 if (!s) continue;
                 const amount = Number(s.amount) || 0;
@@ -2246,7 +2246,7 @@
             const cur = workerSalaryAt(w, todayISO());
             document.getElementById('worker-name').innerText = w.name;
             document.getElementById('worker-info').innerText = `${w.job || 'بدون وظيفة'} | هاتف: ${w.phone || 'غير مدون'} | عنوان: ${w.address || 'غير مدون'}`;
-            document.getElementById('worker-join').innerText = `تاريخ الالتحاق: ${isoToDisplay(w.joinDate) || '-'} | نوع السداد: ${WK_PAY[cur && cur.payType] || '-'}`;
+            document.getElementById('worker-join').innerText = `تاريخ الالتحاق: ${isoToDisplay(w.joinDate) || '-'} | بدء احتساب الراتب: ${isoToDisplay(w.accrualStart) || 'غير محدد'} | نوع السداد: ${WK_PAY[cur && cur.payType] || '-'}`;
             document.getElementById('worker-notes').innerText = w.notes ? `ملاحظات: ${w.notes}` : '';
             document.getElementById('worker-salary').innerText = cur ? `${wMoney(cur.amount)}${cur.payType === 'daily' ? ' (شهرياً، يُقسَّم على أيام الشهر)' : ' / شهر'}` : '-';
             document.getElementById('worker-reveal-btn').innerText = workerRevealed() ? '🙈 إخفاء المبالغ' : '👁️ إظهار المبالغ';
@@ -2347,9 +2347,9 @@
             document.getElementById('input-w-phone').value = w ? (w.phone || '') : '';
             document.getElementById('input-w-job').value = w ? (w.job || '') : '';
             document.getElementById('input-w-address').value = w ? (w.address || '') : '';
-            document.getElementById('input-w-join').value = w ? w.joinDate : todayISO();
+            document.getElementById('input-w-join').value = w ? (w.joinDate || '') : '';
             document.getElementById('input-w-notes').value = w ? (w.notes || '') : '';
-            document.getElementById('input-w-accrual').value = w ? (w.accrualStart || '') : '';
+            document.getElementById('input-w-accrual').value = w ? (w.accrualStart || '') : todayISO();
             const op = document.getElementById('input-w-opening');
             op.value = canSalary && w && w.openingBalance ? w.openingBalance : '';
             op.disabled = !canSalary;
@@ -2379,10 +2379,10 @@
             if (!isOwner()) return;
             const v = (id) => document.getElementById(id).value.trim();
             const name = v('input-w-name');
-            const join = document.getElementById('input-w-join').value;
+            const join = document.getElementById('input-w-join').value || '';
             if (!name) return;
-            if (!join) { alert('أدخل تاريخ الالتحاق.'); return; }
             const accrual = document.getElementById('input-w-accrual').value || '';
+            if (!accrual) { alert('أدخل تاريخ بدء احتساب الراتب.'); return; }
             const data = { name, phone: v('input-w-phone'), job: v('input-w-job'), address: v('input-w-address'), notes: v('input-w-notes'), joinDate: join, accrualStart: accrual };
             const opEl = document.getElementById('input-w-opening');
             const salEl = document.getElementById('input-w-salary'), ptEl = document.getElementById('input-w-paytype');
@@ -2393,7 +2393,7 @@
                 if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
                 const opening = round2(parseFloat(opEl.value) || 0);
                 const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data, openingBalance: opening,
-                    salaryHistory: [{ from: join, amount, payType: ptEl.value }], transactions: [] };
+                    salaryHistory: [{ from: accrual, amount, payType: ptEl.value }], transactions: [] };
                 const st = actorStamp();
                 if (st.by) { w.createdBy = st.by; w.createdAt = st.at; }
                 logActivity('worker_add', 'workers', w, `${WK_PAY[ptEl.value]} • راتب ${moneyMsg(amount)}${opening ? ' • رصيد افتتاحي ' + moneyMsg(opening) : ''}`);
