@@ -85,7 +85,7 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 no-print">
 
-        <!-- تذكير النسخ الاحتياطي (للمالك) -->
+        <!-- تذكير النسخ الاحتياطي (للمدير) -->
         <div id="backup-reminder" class="owner-only hidden mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 space-y-2 no-print">
             <div id="backup-reminder-text" class="text-sm font-bold text-amber-800 dark:text-amber-200"></div>
             <div class="flex flex-wrap gap-2">
@@ -145,8 +145,8 @@
                     </div>
                 </div>
 
-                <!-- بطاقة مرتبات العمال (للمالك فقط) -->
-                <div onclick="openWorkersSection()" class="owner-only bg-white dark:bg-slate-800 border-2 border-violet-500/20 hover:border-violet-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
+                <!-- بطاقة مرتبات العمال (للمدير فقط) -->
+                <div onclick="openWorkersSection()" class="payroll-only bg-white dark:bg-slate-800 border-2 border-violet-500/20 hover:border-violet-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between h-56 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <span class="inline-block px-3 py-1 bg-violet-100 dark:bg-violet-900/50 text-violet-800 dark:text-violet-300 rounded-full text-xs font-bold mb-2">قسم العمال</span>
@@ -591,7 +591,7 @@
     <div id="modal-wpass" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">🔒 التحقق من الصلاحية</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">أدخل كلمة سر حسابك لإظهار الرواتب والمبالغ. تُخفى تلقائياً بعد دقيقتين أو عند مغادرة الملف.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">أدخل كلمة سر حسابك لإظهار الرواتب والمبالغ. تُخفى عند الخروج من ملف العامل.</p>
             <form id="form-wpass" onsubmit="handleWorkerPassword(event)" class="space-y-3">
                 <input type="password" id="input-w-pass" required autocomplete="current-password" placeholder="كلمة السر" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                 <div id="wpass-error" class="hidden text-xs font-bold text-red-600"></div>
@@ -645,8 +645,9 @@
                 <input type="text" id="nu-pass" required dir="ltr" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                 <select id="nu-role" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-sm outline-none">
                     <option value="accountant">محاسب (يضيف ويسدد، بدون حذف)</option>
-                    <option value="owner">مالك (كل الصلاحيات)</option>
+                    <option value="owner">مدير (كل الصلاحيات، والرواتب تُمنح بشكل منفصل)</option>
                 </select>
+                <label class="owner-only flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold"><input type="checkbox" id="nu-payroll"> 💰 صلاحية رؤية وإدارة مرتبات العمال</label>
                 <div id="nu-error" class="hidden text-xs text-red-600 dark:text-red-400 font-bold"></div>
                 <div class="flex gap-2">
                     <button type="submit" id="nu-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition disabled:opacity-60">إضافة</button>
@@ -1326,7 +1327,7 @@
                 }, onSyncError);
                 unsubs.push(unsub);
             });
-            if (isOwner()) {
+            if (hasPayroll()) {
                 unsubs.push(db.collection('workers').onSnapshot((snapshot) => {
                     state.workers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshWorkerScreens();
@@ -1370,13 +1371,16 @@
 
         // --- المستخدمون والصلاحيات ---
         let me = null;   // { uid, name, role: 'owner'|'accountant', legacy? }
-        const ROLE_LABEL = { owner: 'مالك', accountant: 'محاسب' };
+        const ROLE_LABEL = { owner: 'مدير', accountant: 'محاسب' };
 
         function isOwner() { return !me || me.role === 'owner'; }
+        // صلاحية الرواتب منفصلة عن الدور: لا يراها إلا من مُنحها صراحة (تُمنح من إدارة المستخدمين)
+        function hasPayroll() { return !me || !!me.legacy || me.payroll === true; }
 
         function applyRole() {
             const owner = isOwner();
             document.querySelectorAll('.owner-only').forEach(el => el.classList.toggle('hidden', !owner));
+            document.querySelectorAll('.payroll-only').forEach(el => el.classList.toggle('hidden', !hasPayroll()));
             const sn = document.getElementById('input-shop-name');
             if (sn) sn.required = owner;
             updateBackupReminder();
@@ -1595,13 +1599,13 @@
                 const snap = await ref.get();
                 if (snap.exists) {
                     const d = snap.data() || {};
-                    prof = { uid, name: d.name || nameFrom(), role: d.role === 'owner' ? 'owner' : 'accountant', active: d.active !== false };
+                    prof = { uid, name: d.name || nameFrom(), role: d.role === 'owner' ? 'owner' : 'accountant', active: d.active !== false, payroll: d.payroll === true };
                 } else {
                     const any = await db.collection('users').limit(1).get();
-                    if (any.empty) {      // أول دخول للنظام: هذا الحساب يصبح المالك
-                        const d = { name: nameFrom(), role: 'owner', active: true, email: user.email || '', createdAt: Date.now() };
+                    if (any.empty) {      // أول دخول للنظام: هذا الحساب يصبح المدير
+                        const d = { name: nameFrom(), role: 'owner', active: true, payroll: true, email: user.email || '', createdAt: Date.now() };
                         await ref.set(d);
-                        prof = { uid, name: d.name, role: 'owner', active: true };
+                        prof = { uid, name: d.name, role: 'owner', active: true, payroll: true };
                     } else {
                         prof = { blocked: true };
                     }
@@ -1613,7 +1617,7 @@
                 else { legacy = true; console.warn('نظام المستخدمين غير متاح (راجع قواعد Firebase):', err && (err.code || err.message)); }
             }
             if (!legacy && prof && (prof.blocked || prof.active === false)) {
-                alert(prof.blocked ? 'حسابك غير مفعّل في النظام. تواصل مع المالك.' : 'تم تعطيل هذا الحساب. تواصل مع المالك.');
+                alert(prof.blocked ? 'حسابك غير مفعّل في النظام. تواصل مع المدير.' : 'تم تعطيل هذا الحساب. تواصل مع المدير.');
                 auth.signOut();
                 return false;
             }
@@ -1638,7 +1642,7 @@
                         if (typeof d.info === 'string') localStorage.setItem('app_shop_info', d.info);
                         updateHomeShopNameDisplay();
                     } else if (isOwner() && me && !me.legacy && localStorage.getItem('app_shop_name')) {
-                        pushShopSettings();   // أول مرة: ارفع إعدادات المالك الحالية
+                        pushShopSettings();   // أول مرة: ارفع إعدادات المدير الحالية
                     }
                 }, () => {});
                 unsubs.push(unsub);
@@ -1724,7 +1728,7 @@
             }
         }
 
-        // --- إدارة المستخدمين (للمالك) ---
+        // --- إدارة المستخدمين (للمدير) ---
         async function openUsersModal() {
             if (!isOwner()) return;
             const note = document.getElementById('users-note');
@@ -1751,10 +1755,11 @@
                     return `<div class="border dark:border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2 ${active ? '' : 'opacity-50'}">
                         <div class="min-w-0">
                             <div class="font-bold truncate">${esc(u.name)} ${self ? '<span class="text-[11px] text-slate-400">(أنت)</span>' : ''}</div>
-                            <div class="text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">${esc(u.username || u.email || '')} · ${ROLE_LABEL[u.role === 'owner' ? 'owner' : 'accountant']}${active ? '' : ' · معطّل'}</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">${esc(u.username || u.email || '')} · ${ROLE_LABEL[u.role === 'owner' ? 'owner' : 'accountant']}${u.payroll === true ? ' · 💰 الرواتب' : ''}${active ? '' : ' · معطّل'}</div>
                         </div>
                         <div class="flex gap-1 shrink-0">
                             <button type="button" onclick="renameUser('${esc(u.id)}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تغيير الاسم">✏️</button>
+                            ${isOwner() ? `<button type="button" onclick="togglePayroll('${esc(u.id)}',${u.payroll === true ? 'false' : 'true'})" class="text-xs ${u.payroll === true ? 'bg-violet-100 dark:bg-violet-900/40' : 'bg-slate-100 dark:bg-slate-700'} px-2 py-1 rounded-lg" title="${u.payroll === true ? 'سحب صلاحية الرواتب' : 'منح صلاحية الرواتب'}">💰</button>` : ''}
                             ${self ? '' : `<button type="button" onclick="toggleUserRole('${esc(u.id)}','${u.role === 'owner' ? 'accountant' : 'owner'}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تبديل الصلاحية">🔁</button>
                             <button type="button" onclick="toggleUserActive('${esc(u.id)}',${active ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="${active ? 'تعطيل' : 'تفعيل'}">${active ? '🚫' : '✅'}</button>`}
                         </div>
@@ -1783,6 +1788,13 @@
             if (confirm(`تغيير الصلاحية إلى «${ROLE_LABEL[role]}»؟`)) userUpdate(id, { role }, 'user_edit', `تغيير صلاحية مستخدم إلى ${ROLE_LABEL[role]}`);
         }
 
+        function togglePayroll(id, on) {
+            if (!isOwner()) return;
+            if (confirm(on ? 'منح هذا المستخدم صلاحية رؤية وإدارة مرتبات العمال؟' : 'سحب صلاحية الرواتب من هذا المستخدم؟')) {
+                userUpdate(id, { payroll: on }, 'user_edit', on ? 'منح صلاحية الرواتب' : 'سحب صلاحية الرواتب');
+            }
+        }
+
         function toggleUserActive(id, active) {
             if (confirm(active ? 'تفعيل هذا الحساب؟' : 'تعطيل هذا الحساب؟ لن يستطيع الدخول للتطبيق.')) {
                 userUpdate(id, { active }, 'user_edit', active ? 'تفعيل مستخدم' : 'تعطيل مستخدم');
@@ -1809,7 +1821,7 @@
                 try { sec = firebase.app('secondary'); } catch (x) { sec = firebase.initializeApp(firebaseConfig, 'secondary'); }
                 const cred = await sec.auth().createUserWithEmailAndPassword(email, pass);
                 await db.collection('users').doc(cred.user.uid).set({
-                    name, username, email, role, active: true, createdBy: me ? me.name : '', createdAt: Date.now()
+                    name, username, email, role, active: true, ...(isOwner() && document.getElementById('nu-payroll').checked ? { payroll: true } : {}), createdBy: me ? me.name : '', createdAt: Date.now()
                 });
                 try { await sec.auth().signOut(); } catch (x) {}
                 logActivity('user_add', '', null, `إضافة مستخدم ${name} (${username}) كـ ${ROLE_LABEL[role]}`);
@@ -1824,7 +1836,7 @@
             }
         }
 
-        // --- سجل النشاط (للمالك) ---
+        // --- سجل النشاط (للمدير) ---
         const ACTION_LABEL = {
             add_tx: '➕ حركة جديدة', edit_tx: '✏️ تعديل حركة', delete_tx: '🗑️ حذف حركة',
             add_person: '👤 إضافة حساب', edit_person: '✏️ تعديل حساب', delete_person: '🗑️ حذف حساب',
@@ -2075,7 +2087,7 @@
         }
 
         async function deleteCurrentPerson() {
-            if (!isOwner()) { alert('حذف الحسابات للمالك فقط.'); return; }
+            if (!isOwner()) { alert('حذف الحسابات للمدير فقط.'); return; }
             if (!confirm('هل أنت متأكد من حذف هذا الحساب نهائياً مع كل معاملاته؟')) return;
 
             const personId = state.currentPersonId;
@@ -2112,7 +2124,7 @@
         }
 
         async function deleteTransaction(txId) {
-            if (!isOwner()) { alert('حذف الحركات للمالك فقط.'); return; }
+            if (!isOwner()) { alert('حذف الحركات للمدير فقط.'); return; }
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
             const section = state.activeSection;
@@ -2144,11 +2156,10 @@
             if (a && a.tagName === 'INPUT' && a.type === 'number' && a === e.target) a.blur();
         }, { passive: true });
 
-        // --- 7.5 مرتبات العمال (للمالك فقط) ---
+        // --- 7.5 مرتبات العمال (للمدير فقط) ---
         const WK_PAY = { daily: 'يومي', monthly: 'شهري' };
         const WK_TX = { debt: 'سلفة / دين', repay: 'تسديد دين', payout: 'صرف راتب' };
-        const WK_REVEAL_MS = 120000;
-        let wkCurrentId = null, wkRevealTimer = null, wkEditingId = null, wkTxKind = null;
+                let wkCurrentId = null, wkRevealTimer = null, wkEditingId = null, wkTxKind = null;
 
         function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
         function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
@@ -2203,7 +2214,7 @@
         }
 
         function openWorkersSection() {
-            if (!isOwner()) return;
+            if (!hasPayroll()) return;
             const s = document.getElementById('input-w-search'); if (s) s.value = '';
             renderWorkersList();
             showScreen('workers');
@@ -2232,7 +2243,7 @@
         }
 
         function openWorkerDetail(id) {
-            if (!isOwner() || !workerById(id)) return;
+            if (!hasPayroll() || !workerById(id)) return;
             wkCurrentId = id;
             lockWorkerSalaries();
             renderWorkerDetail();
@@ -2298,12 +2309,7 @@
                     if (!u || !u.email) throw { code: 'no-user' };
                     await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, document.getElementById('input-w-pass').value));
                 }
-                state.workerRevealUntil = Date.now() + WK_REVEAL_MS;
-                clearTimeout(wkRevealTimer);
-                wkRevealTimer = setTimeout(() => {
-                    lockWorkerSalaries();
-                    if (!document.getElementById('screen-worker').classList.contains('hidden')) renderWorkerDetail();
-                }, WK_REVEAL_MS);
+                state.workerRevealUntil = Infinity;   // تبقى ظاهرة حتى الخروج من ملف العامل
                 document.getElementById('input-w-pass').value = '';
                 closeModal('modal-wpass');
                 renderWorkerDetail();
@@ -2342,7 +2348,7 @@
         }
 
         function openWorkerModal(editId) {
-            if (!isOwner()) return;
+            if (!hasPayroll()) return;
             wkEditingId = editId || null;
             const w = editId ? workerById(editId) : null;
             const cur = w ? workerSalaryAt(w, todayISO()) : null;
@@ -2383,7 +2389,7 @@
 
         function handleSaveWorker(e) {
             e.preventDefault();
-            if (!isOwner()) return;
+            if (!hasPayroll()) return;
             const v = (id) => document.getElementById(id).value.trim();
             const name = v('input-w-name');
             const join = document.getElementById('input-w-join').value || '';
@@ -2403,7 +2409,7 @@
                     salaryHistory: [{ from: accrual, amount, payType: ptEl.value }], transactions: [] };
                 const st = actorStamp();
                 if (st.by) { w.createdBy = st.by; w.createdAt = st.at; }
-                logActivity('worker_add', 'workers', w, `${WK_PAY[ptEl.value]} • راتب ${moneyMsg(amount)}${opening ? ' • رصيد افتتاحي ' + moneyMsg(opening) : ''}`);
+                logActivity('worker_add', 'workers', w, `إضافة ملف عامل (${WK_PAY[ptEl.value]})`);
                 if (db) dbWrite(db.collection('workers').doc(w.id).set(w));
                 else { state.workers.push(w); workersPersist(); renderWorkersList(); }
                 closeModal('modal-worker');
@@ -2416,7 +2422,7 @@
                 const opening = readOpening();
                 if (opening !== round2(parseFloat(editing.openingBalance) || 0)) {
                     patch.openingBalance = opening;
-                    notes.push(`الرصيد الافتتاحي من ${moneyMsg(parseFloat(editing.openingBalance) || 0)} إلى ${moneyMsg(opening)}`);
+                    notes.push('تعديل الرصيد الافتتاحي');
                 }
             }
             if (!document.getElementById('w-hist-wrap').classList.contains('hidden')) {
@@ -2424,7 +2430,7 @@
                 if (!hist) { alert('سجل الراتب: أدخل تاريخاً ومبلغاً أكبر من صفر في كل سطر، ولا تتركه فارغاً.'); return; }
                 if (JSON.stringify(hist) !== JSON.stringify((editing.salaryHistory || []).slice().sort((x, y) => (x.from < y.from ? -1 : 1)))) {
                     patch.salaryHistory = hist;
-                    notes.push('تعديل سجل الراتب (' + hist.map(h => `${isoToDisplay(h.from)}: ${moneyMsg(h.amount)} ${WK_PAY[h.payType]}`).join('، ') + ')');
+                    notes.push('تعديل سجل الراتب');
                 }
             }
             const infoChanged = ['name', 'phone', 'job', 'address', 'notes', 'joinDate', 'accrualStart'].some(k => (editing[k] || '') !== data[k]);
@@ -2437,7 +2443,7 @@
 
         function openWorkerTxModal(kind) {
             const w = workerById(wkCurrentId);
-            if (!w || !isOwner()) return;
+            if (!w || !hasPayroll()) return;
             wkTxKind = kind;
             const t = workerTotals(w);
             document.getElementById('modal-wtx-title').innerText = WK_TX[kind];
@@ -2455,7 +2461,7 @@
         async function handleSaveWorkerTx(e) {
             e.preventDefault();
             const w = workerById(wkCurrentId);
-            if (!w || !isOwner() || !wkTxKind) return;
+            if (!w || !hasPayroll() || !wkTxKind) return;
             const kind = wkTxKind;
             const amount = round2(parseFloat(document.getElementById('input-wtx-amount').value) || 0);
             if (amount <= 0) { alert('أدخل مبلغاً أكبر من صفر.'); return; }
@@ -2468,7 +2474,7 @@
             try {
                 if (db) await commitTransactions('workers', w, (list) => [...(list || []), tx]);
                 else { w.transactions = [...(w.transactions || []), tx]; workersPersist(); }
-                logActivity('worker_' + kind, 'workers', w, `${WK_TX[kind]} ${moneyMsg(amount)}${note ? ' — ' + note : ''}`);
+                logActivity('worker_' + kind, 'workers', w, `${WK_TX[kind]} (${isoToDisplay(date)})`);
                 closeModal('modal-wtx');
                 renderWorkerDetail();
             } catch (err) {
@@ -2479,14 +2485,14 @@
 
         async function deleteWorkerTx(txId) {
             const w = workerById(wkCurrentId);
-            if (!w || !isOwner()) return;
+            if (!w || !hasPayroll()) return;
             const tx = (w.transactions || []).find(t => t.id == txId);
             if (!tx || !confirm('هل أنت متأكد من حذف هذه الحركة؟')) return;
             const without = (list) => (list || []).filter(t => t.id != txId);
             try {
                 if (db) await commitTransactions('workers', w, without);
                 else { w.transactions = without(w.transactions); workersPersist(); }
-                logActivity('worker_tx_delete', 'workers', w, `حذف ${WK_TX[tx.type]} ${moneyMsg(tx.amount)} (${isoToDisplay(tx.date)})`);
+                logActivity('worker_tx_delete', 'workers', w, `حذف ${WK_TX[tx.type]} (${isoToDisplay(tx.date)})`);
                 renderWorkerDetail();
             } catch (err) {
                 console.error(err);
@@ -2496,7 +2502,7 @@
 
         function deleteCurrentWorker() {
             const w = workerById(wkCurrentId);
-            if (!w || !isOwner()) return;
+            if (!w || !hasPayroll()) return;
             if (!confirm('هل أنت متأكد من حذف ملف هذا العامل نهائياً مع كل حركاته؟')) return;
             logActivity('worker_delete', 'workers', w, `حذف ملف عامل و${(w.transactions || []).length} حركة`);
             if (db) dbWrite(db.collection('workers').doc(w.id).delete());
@@ -2890,7 +2896,7 @@
                 shopName: localStorage.getItem('app_shop_name') || '',
                 customers: state.customers,
                 suppliers: state.suppliers,
-                workers: isOwner() ? state.workers : []
+                workers: hasPayroll() ? state.workers : []
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -2941,7 +2947,7 @@
                 const data = JSON.parse(await file.text());
                 const customers = (Array.isArray(data.customers) ? data.customers : []).map(sanitizePerson).filter(Boolean);
                 const suppliers = (Array.isArray(data.suppliers) ? data.suppliers : []).map(sanitizePerson).filter(Boolean);
-                const workers = isOwner() ? (Array.isArray(data.workers) ? data.workers : []).map(sanitizeWorker).filter(Boolean) : [];
+                const workers = hasPayroll() ? (Array.isArray(data.workers) ? data.workers : []).map(sanitizeWorker).filter(Boolean) : [];
                 if (!customers.length && !suppliers.length && !workers.length) {
                     alert('الملف لا يحتوي على بيانات صالحة.');
                     return;
