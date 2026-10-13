@@ -519,7 +519,7 @@
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ الالتحاق * (يبدأ منه احتساب الراتب)</label>
                     <input type="date" id="input-w-join" required class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
                 </div>
-                <div class="flex gap-2">
+                <div id="w-single-salary" class="flex gap-2">
                     <div class="flex-1">
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نوع السداد *</label>
                         <select id="input-w-paytype" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
@@ -532,7 +532,23 @@
                         <input type="number" step="any" min="0" id="input-w-salary" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
                     </div>
                 </div>
+                <div id="w-hist-wrap" class="hidden space-y-2">
+                    <div class="text-xs font-bold text-slate-600 dark:text-slate-300">سجل الراتب (كل سطر: الراتب الشهري الساري من هذا التاريخ)</div>
+                    <div id="w-hist-rows" class="space-y-2"></div>
+                    <button type="button" onclick="addWorkerHistRow()" class="bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 text-xs font-bold px-3 py-2 rounded-xl transition">+ إضافة تغيير راتب</button>
+                </div>
                 <p id="w-salary-hint" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رصيد افتتاحي</label>
+                        <input type="number" step="any" id="input-w-opening" placeholder="0" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:opacity-50">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">بدء الاحتساب من</label>
+                        <input type="date" id="input-w-accrual" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">للنقل من الدفتر الورقي: الرصيد الافتتاحي موجب = مستحق للعامل عندك، وسالب = ديون عليه. اترك «بدء الاحتساب» فارغاً ليبدأ من تاريخ الالتحاق.</p>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظات</label>
                     <input type="text" id="input-w-notes" class="w-full border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
@@ -2122,6 +2138,12 @@
             }
         }
 
+        // منع تغيير قيمة الخانات الرقمية بعجلة الفأرة بالخطأ
+        document.addEventListener('wheel', (e) => {
+            const a = document.activeElement;
+            if (a && a.tagName === 'INPUT' && a.type === 'number' && a === e.target) a.blur();
+        }, { passive: true });
+
         // --- 7.5 مرتبات العمال (للمالك فقط) ---
         const WK_PAY = { daily: 'يومي', monthly: 'شهري' };
         const WK_TX = { debt: 'سلفة / دين', repay: 'تسديد دين', payout: 'صرف راتب' };
@@ -2148,7 +2170,7 @@
             if (!w.joinDate || !(w.salaryHistory || []).length) return 0;
             const end = parseISO(todayIso);
             let total = 0;
-            for (let d = parseISO(w.joinDate); d <= end; d.setDate(d.getDate() + 1)) {
+            for (let d = parseISO(w.accrualStart || w.joinDate); d <= end; d.setDate(d.getDate() + 1)) {
                 const s = workerSalaryAt(w, toISODate(d));
                 if (!s) continue;
                 const amount = Number(s.amount) || 0;
@@ -2163,7 +2185,8 @@
             const earned = workerEarned(w, todayIso || todayISO());
             const debts = sum('debt'), repaid = sum('repay'), paid = sum('payout');
             const outstanding = round2(debts - repaid);
-            return { earned, paid: round2(paid), debts: round2(debts), repaid: round2(repaid), outstanding, net: round2(earned - paid - outstanding) };
+            const opening = round2(parseFloat(w.openingBalance) || 0);
+            return { opening, earned, paid: round2(paid), debts: round2(debts), repaid: round2(repaid), outstanding, net: round2(opening + earned - paid - outstanding) };
         }
 
         function workerRevealed() { return Date.now() < (state.workerRevealUntil || 0); }
@@ -2230,6 +2253,7 @@
             document.getElementById('worker-net-label').innerText = (workerRevealed() && t.net < 0) ? 'الرصيد سالب (العامل مدين للمحل):' : 'صافي المستحق للعامل:';
             document.getElementById('worker-net').innerText = wMoney(t.net);
             document.getElementById('worker-breakdown').innerHTML = [
+                ...(t.opening ? [['رصيد افتتاحي (منقول)', t.opening]] : []),
                 ['الراتب المتراكم حتى اليوم', t.earned],
                 ['ما صُرف له من الراتب', t.paid],
                 ['ديون متبقية عليه (تُخصم من الراتب)', t.outstanding]
@@ -2292,6 +2316,26 @@
             } finally { btn.disabled = false; }
         }
 
+        function workerHistRowHtml(h) {
+            const cls = 'border dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2 text-xs outline-none';
+            return `<div class="flex gap-2 items-center" data-hist>
+                <input type="date" value="${esc(h.from || '')}" class="hist-from flex-1 min-w-0 ${cls}">
+                <input type="number" step="any" min="0" value="${esc(String(h.amount === undefined ? '' : h.amount))}" placeholder="الراتب" class="hist-amount w-24 ${cls}">
+                <select class="hist-type ${cls}"><option value="monthly" ${h.payType !== 'daily' ? 'selected' : ''}>شهري</option><option value="daily" ${h.payType === 'daily' ? 'selected' : ''}>يومي</option></select>
+                <button type="button" onclick="this.closest('[data-hist]').remove()" class="text-slate-400 hover:text-red-600 p-1" title="حذف">🗑️</button>
+            </div>`;
+        }
+        function addWorkerHistRow(h) {
+            document.getElementById('w-hist-rows').insertAdjacentHTML('beforeend', workerHistRowHtml(h || { from: todayISO(), amount: '', payType: 'monthly' }));
+        }
+        function readWorkerHist() {
+            const rows = [...document.querySelectorAll('#w-hist-rows [data-hist]')].map(r => ({
+                from: r.querySelector('.hist-from').value, amount: parseFloat(r.querySelector('.hist-amount').value) || 0, payType: r.querySelector('.hist-type').value }));
+            if (!rows.length || rows.some(r => !r.from || r.amount <= 0)) return null;
+            const m = {}; rows.forEach(r => { m[r.from] = r; });
+            return Object.values(m).sort((x, y) => (x.from < y.from ? -1 : 1));
+        }
+
         function openWorkerModal(editId) {
             if (!isOwner()) return;
             wkEditingId = editId || null;
@@ -2305,14 +2349,22 @@
             document.getElementById('input-w-address').value = w ? (w.address || '') : '';
             document.getElementById('input-w-join').value = w ? w.joinDate : todayISO();
             document.getElementById('input-w-notes').value = w ? (w.notes || '') : '';
+            document.getElementById('input-w-accrual').value = w ? (w.accrualStart || '') : '';
+            const op = document.getElementById('input-w-opening');
+            op.value = canSalary && w && w.openingBalance ? w.openingBalance : '';
+            op.disabled = !canSalary;
+            op.placeholder = canSalary ? '0' : '••••••';
             const pt = document.getElementById('input-w-paytype'), sal = document.getElementById('input-w-salary');
             pt.value = cur ? cur.payType : 'monthly';
-            sal.value = canSalary && cur ? cur.amount : '';
-            pt.disabled = sal.disabled = !canSalary;
-            sal.required = canSalary;
-            sal.placeholder = canSalary ? '0' : '••••••';
-            document.getElementById('w-salary-hint').innerText = !w ? 'الشهري: يُضاف الراتب في نهاية كل شهر. اليومي: يُقسَّم الراتب الشهري على أيام الشهر ويُضاف كل يوم.'
-                : (canSalary ? 'تغيير الراتب أو نوع السداد يسري من اليوم ولا يغيّر ما احتُسب سابقاً.' : 'لتعديل الراتب أو نوع السداد: أغلق النافذة، اضغط «إظهار المبالغ» ثم أعد فتح التعديل.');
+            sal.value = '';
+            sal.required = !w;
+            document.getElementById('w-single-salary').classList.toggle('hidden', !!w);
+            const hw = document.getElementById('w-hist-wrap');
+            document.getElementById('w-hist-rows').innerHTML = '';
+            hw.classList.toggle('hidden', !(w && canSalary));
+            if (w && canSalary) (w.salaryHistory || []).slice().sort((x, y) => (x.from < y.from ? -1 : 1)).forEach(h => addWorkerHistRow(h));
+            document.getElementById('w-salary-hint').innerText = !w ? 'الشهري: يُضاف الراتب في نهاية كل شهر. اليومي: يُقسَّم الراتب الشهري على أيام الشهر ويُضاف كل يوم. لاحقاً يمكنك إضافة تغييرات الراتب بتواريخها من «تعديل الملف».'
+                : (canSalary ? 'عدّل أو أضف أسطراً: كل سطر هو الراتب الساري من تاريخه، فلا تتغير الأيام السابقة لأول تاريخ.' : 'لتعديل الراتب والرصيد الافتتاحي: أغلق النافذة، اضغط «إظهار المبالغ» ثم أعد فتح التعديل.');
             document.getElementById('modal-worker').classList.remove('hidden');
         }
 
@@ -2330,19 +2382,21 @@
             const join = document.getElementById('input-w-join').value;
             if (!name) return;
             if (!join) { alert('أدخل تاريخ الالتحاق.'); return; }
-            const data = { name, phone: v('input-w-phone'), job: v('input-w-job'), address: v('input-w-address'), notes: v('input-w-notes'), joinDate: join };
+            const accrual = document.getElementById('input-w-accrual').value || '';
+            const data = { name, phone: v('input-w-phone'), job: v('input-w-job'), address: v('input-w-address'), notes: v('input-w-notes'), joinDate: join, accrualStart: accrual };
+            const opEl = document.getElementById('input-w-opening');
             const salEl = document.getElementById('input-w-salary'), ptEl = document.getElementById('input-w-paytype');
-            const today = todayISO();
             const editing = wkEditingId ? workerById(wkEditingId) : null;
 
             if (!editing) {
                 const amount = parseFloat(salEl.value) || 0;
                 if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
-                const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data,
+                const opening = round2(parseFloat(opEl.value) || 0);
+                const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data, openingBalance: opening,
                     salaryHistory: [{ from: join, amount, payType: ptEl.value }], transactions: [] };
                 const st = actorStamp();
                 if (st.by) { w.createdBy = st.by; w.createdAt = st.at; }
-                logActivity('worker_add', 'workers', w, `${WK_PAY[ptEl.value]} • راتب ${moneyMsg(amount)}`);
+                logActivity('worker_add', 'workers', w, `${WK_PAY[ptEl.value]} • راتب ${moneyMsg(amount)}${opening ? ' • رصيد افتتاحي ' + moneyMsg(opening) : ''}`);
                 if (db) dbWrite(db.collection('workers').doc(w.id).set(w));
                 else { state.workers.push(w); workersPersist(); renderWorkersList(); }
                 closeModal('modal-worker');
@@ -2351,16 +2405,22 @@
 
             const patch = { ...data };
             const notes = [];
-            if (!salEl.disabled) {
-                const amount = parseFloat(salEl.value) || 0;
-                if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
-                const old = workerSalaryAt(editing, today);
-                if (!old || Number(old.amount) !== amount || old.payType !== ptEl.value) {
-                    patch.salaryHistory = (editing.salaryHistory || []).filter(h => h.from !== today).concat({ from: today, amount, payType: ptEl.value });
-                    notes.push(`تعديل الراتب من ${old ? moneyMsg(old.amount) + ' ' + WK_PAY[old.payType] : '-'} إلى ${moneyMsg(amount)} ${WK_PAY[ptEl.value]} (يسري من اليوم)`);
+            if (!opEl.disabled) {
+                const opening = round2(parseFloat(opEl.value) || 0);
+                if (opening !== round2(parseFloat(editing.openingBalance) || 0)) {
+                    patch.openingBalance = opening;
+                    notes.push(`الرصيد الافتتاحي من ${moneyMsg(parseFloat(editing.openingBalance) || 0)} إلى ${moneyMsg(opening)}`);
                 }
             }
-            const infoChanged = ['name', 'phone', 'job', 'address', 'notes', 'joinDate'].some(k => (editing[k] || '') !== data[k]);
+            if (!document.getElementById('w-hist-wrap').classList.contains('hidden')) {
+                const hist = readWorkerHist();
+                if (!hist) { alert('سجل الراتب: أدخل تاريخاً ومبلغاً أكبر من صفر في كل سطر، ولا تتركه فارغاً.'); return; }
+                if (JSON.stringify(hist) !== JSON.stringify((editing.salaryHistory || []).slice().sort((x, y) => (x.from < y.from ? -1 : 1)))) {
+                    patch.salaryHistory = hist;
+                    notes.push('تعديل سجل الراتب (' + hist.map(h => `${isoToDisplay(h.from)}: ${moneyMsg(h.amount)} ${WK_PAY[h.payType]}`).join('، ') + ')');
+                }
+            }
+            const infoChanged = ['name', 'phone', 'job', 'address', 'notes', 'joinDate', 'accrualStart'].some(k => (editing[k] || '') !== data[k]);
             if (infoChanged) notes.unshift('تعديل بيانات الملف');
             if (notes.length) logActivity('worker_edit', 'workers', editing, notes.join(' • '));
             workerUpdate(editing, patch);
@@ -2445,6 +2505,7 @@
             return {
                 id, name: String(w.name), phone: String(w.phone || ''), address: String(w.address || ''),
                 job: String(w.job || ''), notes: String(w.notes || ''), joinDate: String(w.joinDate || ''),
+                accrualStart: String(w.accrualStart || ''), openingBalance: round2(parseFloat(w.openingBalance) || 0),
                 salaryHistory: (Array.isArray(w.salaryHistory) ? w.salaryHistory : []).filter(h => h && h.from)
                     .map(h => ({ from: String(h.from), amount: parseFloat(h.amount) || 0, payType: h.payType === 'daily' ? 'daily' : 'monthly' })),
                 transactions: (Array.isArray(w.transactions) ? w.transactions : []).filter(t => t && WK_TX[t.type])
