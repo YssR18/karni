@@ -256,6 +256,10 @@
                 </div>
                 <button onclick="openWorkerModal()" class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2"><span>+</span> <span>إضافة عامل</span></button>
             </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openWorkersGate('wsummary')" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition shadow">📊 ملخص شهري</button>
+                <button onclick="openWorkersGate('wpayout')" class="bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-2 rounded-xl transition shadow">💵 صرف الرواتب دفعة واحدة</button>
+            </div>
             <p class="text-xs text-slate-500 dark:text-slate-400">المبالغ والرواتب لا تظهر في القائمة؛ تظهر داخل ملف كل عامل بعد إدخال كلمة السر.</p>
             <input type="search" id="input-w-search" oninput="renderWorkersList()" placeholder="🔍 ابحث بالاسم أو رقم الهاتف..." class="w-full border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2.5 focus:ring-2 focus:ring-violet-500 outline-none text-sm">
             <div id="workers-container" class="grid gap-3"></div>
@@ -301,6 +305,49 @@
 
             <h3 class="font-bold text-slate-700 dark:text-slate-300 mt-6">سجل حركات العامل:</h3>
             <div id="worker-tx-container" class="space-y-2"></div>
+        </section>
+
+        <!-- 6. ملخص شهري للرواتب -->
+        <section id="screen-wsummary" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('workers')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← العودة</button>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">ملخص الرواتب الشهري</h2>
+                </div>
+                <input type="month" id="input-wsum-month" onchange="renderWorkersSummary()" class="border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2 text-sm outline-none">
+            </div>
+            <div class="overflow-x-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
+                <table class="w-full text-right text-sm">
+                    <thead id="wsum-head" class="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-xs"></thead>
+                    <tbody id="wsum-body"></tbody>
+                    <tfoot id="wsum-foot"></tfoot>
+                </table>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">«صافي نهاية الشهر» = الرصيد الافتتاحي + كل الرواتب المستحقة حتى نهاية الشهر − ما صُرف − الديون المتبقية، وهو ما يخص هذا الشهر وما قبله. للشهر الجاري يُحسب حتى اليوم.</p>
+        </section>
+
+        <!-- 7. صرف الرواتب دفعة واحدة -->
+        <section id="screen-wpayout" class="hidden space-y-4">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('workers')" class="p-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 transition">← العودة</button>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">صرف الرواتب دفعة واحدة</h2>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">المبلغ المقترح لكل عامل هو صافي مستحقه بعد خصم الديون المتبقية. عدّل أي مبلغ أو ألغِ تحديد من لا تريد صرفه الآن.</p>
+            <div class="flex flex-wrap items-center gap-2">
+                <label class="text-xs font-bold text-slate-600 dark:text-slate-300">تاريخ الصرف</label>
+                <input type="date" id="input-wpay-date" class="border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2 text-sm outline-none">
+                <input type="text" id="input-wpay-note" placeholder="ملاحظة (اختياري)" class="flex-1 min-w-0 border dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-xl p-2 text-sm outline-none">
+            </div>
+            <div id="wpay-list" class="space-y-2"></div>
+            <div class="bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-xs text-slate-400">إجمالي المحدد للصرف</div>
+                    <div id="wpay-total" class="text-2xl font-bold">••••••</div>
+                </div>
+                <button id="btn-wpay" onclick="handleBulkPayout()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl transition disabled:opacity-50">صرف المحدد</button>
+            </div>
         </section>
 
     </main>
@@ -1935,8 +1982,8 @@
 
         // --- 6. التنقل الشاشات ---
         function showScreen(screenId) {
-            if (screenId !== 'worker') lockWorkerSalaries();
-            ['home', 'list', 'detail', 'workers', 'worker'].forEach(id => {
+            if (!['worker', 'wsummary', 'wpayout'].includes(screenId)) lockWorkerSalaries();
+            ['home', 'list', 'detail', 'workers', 'worker', 'wsummary', 'wpayout'].forEach(id => {
                 const el = document.getElementById(`screen-${id}`);
                 if (el) el.classList.add('hidden');
             });
@@ -2177,7 +2224,7 @@
         // --- 7.5 مرتبات العمال (للمدير فقط) ---
         const WK_PAY = { daily: 'يومي', monthly: 'شهري' };
         const WK_TX = { debt: 'سلفة / دين', repay: 'تسديد دين', payout: 'صرف راتب' };
-                let wkCurrentId = null, wkRevealTimer = null, wkEditingId = null, wkTxKind = null;
+                let wkCurrentId = null, wkRevealTimer = null, wkEditingId = null, wkTxKind = null, wkAfterReveal = null;
 
         function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
         function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
@@ -2303,6 +2350,8 @@
             if (!document.getElementById('screen-worker').classList.contains('hidden') && wkCurrentId) {
                 if (workerById(wkCurrentId)) renderWorkerDetail();
             }
+            if (!document.getElementById('screen-wsummary').classList.contains('hidden')) renderWorkersSummary();
+            if (!document.getElementById('screen-wpayout').classList.contains('hidden')) renderBulkPayout(true);
         }
 
         function openWorkersSection() {
@@ -2404,7 +2453,8 @@
                 state.workerRevealUntil = Infinity;   // تبقى ظاهرة حتى الخروج من ملف العامل
                 document.getElementById('input-w-pass').value = '';
                 closeModal('modal-wpass');
-                renderWorkerDetail();
+                const after = wkAfterReveal; wkAfterReveal = null;
+                if (after) after(); else renderWorkerDetail();
             } catch (e2) {
                 const code = (e2 && e2.code) || '';
                 err.innerText = /wrong-password|invalid-credential|invalid-login/.test(code) ? 'كلمة السر غير صحيحة.'
@@ -2602,6 +2652,144 @@
             wkCurrentId = null;
             openWorkersSection();
         }
+
+        // دخول شاشات الملخص/الصرف الجماعي: تتطلب إظهار المبالغ بكلمة السر أولاً
+        function openWorkersGate(screen) {
+            if (!hasPayroll()) return;
+            const go = () => {
+                if (screen === 'wsummary') {
+                    const m = document.getElementById('input-wsum-month');
+                    if (!m.value) m.value = todayISO().slice(0, 7);
+                    renderWorkersSummary();
+                } else {
+                    document.getElementById('input-wpay-date').value = todayISO();
+                    document.getElementById('input-wpay-note').value = '';
+                    renderBulkPayout();
+                }
+                showScreen(screen);
+            };
+            if (workerRevealed()) { go(); return; }
+            wkAfterReveal = go;
+            document.getElementById('input-w-pass').value = '';
+            document.getElementById('wpass-error').classList.add('hidden');
+            document.getElementById('modal-wpass').classList.remove('hidden');
+            setTimeout(() => { const i = document.getElementById('input-w-pass'); if (i) i.focus(); }, 50);
+        }
+
+        // حالة العامل في يوم معيّن: يُحتسب الراتب والحركات حتى ذلك اليوم فقط
+        function workerTotalsAsOf(w, iso) {
+            if (!w.accrualStart || w.accrualStart > iso) return null;
+            const txs = (w.transactions || []).filter(t => (t.date || '') <= iso);
+            const sum = (type) => txs.filter(t => t.type === type).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+            const opening = round2(parseFloat(w.openingBalance) || 0);
+            const earned = workerEarned(w, iso);
+            const debts = sum('debt'), repaid = sum('repay'), paid = sum('payout');
+            return { opening, earned, net: round2(opening + earned - paid - (debts - repaid)) };
+        }
+
+        function renderWorkersSummary() {
+            const mEl = document.getElementById('input-wsum-month');
+            const month = /^\d{4}-\d{2}$/.test(mEl.value) ? mEl.value : todayISO().slice(0, 7);
+            const [yy, mm] = month.split('-').map(Number);
+            const monthEnd = toISODate(new Date(yy, mm, 0));
+            const today = todayISO();
+            const upTo = monthEnd < today ? monthEnd : today;       // الشهر الجاري يُحتسب حتى اليوم
+            const rows = [];
+            (state.workers || []).slice().sort((x, y) => (x.name || '').localeCompare(y.name || '', 'ar')).forEach(w => {
+                const tot = workerTotalsAsOf(w, upTo);
+                if (!tot) return;                                     // لم يبدأ احتسابه بعد
+                const inMonth = (t) => (t.date || '').slice(0, 7) === month;
+                const sum = (type) => round2((w.transactions || []).filter(t => t.type === type && inMonth(t)).reduce((a, t) => a + (Number(t.amount) || 0), 0));
+                const acc = workerAccrualByMonth(w, upTo).find(a => a.key === month);
+                rows.push({ name: w.name, earned: acc ? acc.amount : 0, debt: sum('debt'), repay: sum('repay'), paid: sum('payout'), net: tot.net });
+            });
+            const cols = ['العامل', 'راتب الشهر', 'سلف', 'تسديد', 'صُرف', 'صافي نهاية الشهر'];
+            document.getElementById('wsum-head').innerHTML = '<tr>' + cols.map(c => `<th class="p-3 font-bold whitespace-nowrap">${c}</th>`).join('') + '</tr>';
+            const td = (v, cls = '') => `<td class="p-3 whitespace-nowrap ${cls}">${wMoney(v)}</td>`;
+            document.getElementById('wsum-body').innerHTML = rows.length ? rows.map(r => `<tr class="border-t dark:border-slate-700">
+                <td class="p-3 font-bold text-slate-800 dark:text-slate-100">${esc(r.name)}</td>
+                ${td(r.earned)}${td(r.debt, 'text-red-600 dark:text-red-400')}${td(r.repay, 'text-green-600 dark:text-green-400')}${td(r.paid)}
+                <td class="p-3 whitespace-nowrap font-bold ${workerRevealed() && r.net < 0 ? 'text-red-600 dark:text-red-400' : ''}">${wMoney(r.net)}</td></tr>`).join('')
+                : `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا يوجد عمال بدأ احتساب رواتبهم حتى هذا الشهر</td></tr>`;
+            const tot = (k) => rows.reduce((a, r) => a + r[k], 0);
+            document.getElementById('wsum-foot').innerHTML = rows.length ? `<tr class="border-t-2 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 font-bold">
+                <td class="p-3">الإجمالي</td>${td(tot('earned'))}${td(tot('debt'))}${td(tot('repay'))}${td(tot('paid'))}${td(tot('net'))}</tr>` : '';
+        }
+
+        // الصرف الجماعي
+        function renderBulkPayout(keep) {
+            const box = document.getElementById('wpay-list');
+            const prev = {};
+            if (keep) box.querySelectorAll('[data-wid]').forEach(r => { prev[r.dataset.wid] = { on: r.querySelector('.wpay-chk').checked, val: r.querySelector('.wpay-amt').value }; });
+            const list = (state.workers || []).slice().sort((x, y) => (x.name || '').localeCompare(y.name || '', 'ar'));
+            if (!list.length) { box.innerHTML = '<div class="text-center py-10 text-slate-400">لا يوجد عمال</div>'; updateBulkTotal(); return; }
+            box.innerHTML = list.map(w => {
+                const net = workerTotals(w).net;
+                const can = workerRevealed() && net > 0;
+                const p = prev[w.id];
+                const on = p ? p.on : can, val = p ? p.val : (can ? net : '');
+                return `<div data-wid="${esc(w.id)}" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center gap-3 ${can ? '' : 'opacity-60'}">
+                    <input type="checkbox" class="wpay-chk w-5 h-5" ${on && can ? 'checked' : ''} ${can ? '' : 'disabled'} onchange="updateBulkTotal()">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${esc(w.name)}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">${can ? 'صافي المستحق: ' + wMoney(net) : (workerRevealed() ? 'لا يوجد مستحق للصرف (الصافي ' + wMoney(net) + ')' : 'المبالغ مخفية')}</div>
+                    </div>
+                    <input type="number" step="any" min="0" inputmode="decimal" class="wpay-amt w-28 border dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-xl p-2 text-sm outline-none" value="${can ? esc(String(val)) : ''}" ${can ? '' : 'disabled'} oninput="updateBulkTotal()">
+                </div>`;
+            }).join('');
+            updateBulkTotal();
+        }
+
+        function bulkSelection() {
+            return [...document.querySelectorAll('#wpay-list [data-wid]')].map(r => ({
+                id: r.dataset.wid, on: r.querySelector('.wpay-chk').checked && !r.querySelector('.wpay-chk').disabled,
+                amount: round2(parseFloat(r.querySelector('.wpay-amt').value) || 0)
+            })).filter(x => x.on && x.amount > 0);
+        }
+
+        function updateBulkTotal() {
+            const sel = bulkSelection();
+            document.getElementById('wpay-total').innerText = wMoney(sel.reduce((a, x) => a + x.amount, 0));
+            document.getElementById('btn-wpay').disabled = !sel.length || !workerRevealed();
+        }
+
+        async function handleBulkPayout() {
+            if (!hasPayroll() || !workerRevealed()) return;
+            const sel = bulkSelection();
+            if (!sel.length) return;
+            const date = document.getElementById('input-wpay-date').value || todayISO();
+            const note = document.getElementById('input-wpay-note').value.trim();
+            const over = sel.filter(x => { const w = workerById(x.id); return w && workerTotals(w).net - x.amount < 0; });
+            const total = sel.reduce((a, x) => a + x.amount, 0);
+            let msg = `سيتم تسجيل صرف راتب لـ ${sel.length} عامل بإجمالي ${formatAmount(round2(total))} بتاريخ ${isoToDisplay(date)}.`;
+            if (over.length) msg += `\n\nتنبيه: ${over.length} عامل يتجاوز المبلغ صافي مستحقه، فسيصبح رصيده سالباً.`;
+            if (!confirm(msg + '\n\nهل تريد المتابعة؟')) return;
+            const btn = document.getElementById('btn-wpay');
+            btn.disabled = true;
+            const failed = [];
+            for (const x of sel) {
+                const w = workerById(x.id);
+                if (!w) continue;
+                const tx = { id: 'wt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: 'payout', amount: x.amount, date, note, ...actorStamp() };
+                try {
+                    if (db) await commitTransactions('workers', w, (list) => [...(list || []), tx]);
+                    else { w.transactions = [...(w.transactions || []), tx]; workersPersist(); }
+                    logActivity('worker_payout', 'workers', w, `${WK_TX.payout} جماعي (${isoToDisplay(date)})`);
+                } catch (err) { console.error(err); failed.push(w.name); }
+            }
+            if (failed.length) alert('تعذّر صرف الراتب للعمال التالين، أعد المحاولة لهم:\n' + failed.join('، '));
+            renderBulkPayout();
+        }
+
+        // إخفاء المبالغ فور مغادرة التطبيق أو تبديل التبويب/التطبيق
+        function lockOnLeave() {
+            if (!workerRevealed()) return;
+            lockWorkerSalaries();
+            ['modal-wtx', 'modal-worker'].forEach(id => closeModal(id));   // قد تحوي مبالغ ظاهرة
+            refreshWorkerScreens();
+        }
+        document.addEventListener('visibilitychange', () => { if (document.hidden) lockOnLeave(); });
+        window.addEventListener('pagehide', lockOnLeave);
 
         function sanitizeWorker(w) {
             if (!w || typeof w !== 'object' || !w.name) return null;
