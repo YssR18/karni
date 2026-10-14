@@ -19,6 +19,31 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <style>
+        /* نوافذ التنبيه والتأكيد داخل التطبيق */
+        .dlg-back{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.6);animation:dlgFade .15s ease}
+        .dlg{width:100%;max-width:22rem;background:#fff;color:#1e293b;border-radius:1.25rem;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:1.25rem;text-align:center;animation:dlgPop .18s ease;max-height:90vh;overflow:auto}
+        .dark .dlg{background:#1e293b;color:#f1f5f9;border:1px solid #334155}
+        .dlg-ico{font-size:2rem;line-height:1;margin-bottom:.5rem}
+        .dlg-title{font-weight:700;font-size:1.05rem}
+        .dlg-msg{white-space:pre-line;font-size:.875rem;line-height:1.75;color:#475569;margin-top:.5rem}
+        .dark .dlg-msg{color:#cbd5e1}
+        .dlg-in{width:100%;margin-top:.75rem;border:1px solid #cbd5e1;border-radius:.75rem;padding:.6rem .75rem;background:transparent;color:inherit;outline:none;font:inherit;text-align:right}
+        .dlg-in:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.3)}
+        .dark .dlg-in{border-color:#475569}
+        .dlg-btns{display:flex;gap:.5rem;margin-top:1.1rem}
+        .dlg-btns.col{flex-direction:column}
+        .dlg-btn{flex:1;padding:.65rem 1rem;border-radius:.75rem;font-weight:700;font-size:.875rem;border:0;cursor:pointer;background:#e2e8f0;color:#334155;font-family:inherit;transition:filter .15s}
+        .dlg-btn:hover{filter:brightness(.95)}
+        .dlg-btn:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+        .dark .dlg-btn{background:#334155;color:#e2e8f0}
+        .dlg-btn.primary{background:#1e293b;color:#fff}
+        .dark .dlg-btn.primary{background:#3b82f6;color:#fff}
+        .dlg-btn.danger{background:#dc2626;color:#fff}
+        .app-toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);z-index:310;background:#0f172a;color:#fff;padding:.65rem 1.1rem;border-radius:999px;font-size:.85rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.35);animation:dlgFade .2s ease;max-width:90vw;text-align:center}
+        .dark .app-toast{background:#f1f5f9;color:#0f172a}
+        @keyframes dlgFade{from{opacity:0}to{opacity:1}}
+        @keyframes dlgPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+        @media print{.dlg-back,.app-toast{display:none!important}}
         /* مفاتيح التبديل (RTL): النقطة تبدأ يمين المسار وتنتقل يساره عند التفعيل */
         .tgl-track::after { transform: translateX(0); }
         input:checked + .tgl-track::after { transform: translateX(-20px); border-color: #fff; }
@@ -452,6 +477,14 @@
                   <div class="space-y-2 pt-2">
                     <button type="button" onclick="exportExcel()" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition">📊 تصدير إلى Excel (للقراءة والمحاسبة)</button>
                     <div id="last-backup-label" class="text-[11px] text-slate-500 dark:text-slate-400"></div>
+                    <label class="flex items-center justify-between gap-3 cursor-pointer pt-1">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🔔 تذكير يومي بالنسخ الاحتياطي عند الإغلاق</span>
+                        <span class="relative inline-flex items-center shrink-0">
+                            <input type="checkbox" id="input-backup-daily" onchange="setDailyBackup(this.checked)" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 tgl-track after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </span>
+                    </label>
+                    <p class="text-[11px] text-slate-400">إذا لم تأخذ نسخة اليوم: يظهر تنبيه أعلى الشاشة الرئيسية، وعند الضغط على زر الرجوع (أندرويد) تظهر نافذة تعرض عليك النسخ قبل الخروج. وعند إغلاق نافذة التطبيق على الحاسوب يعرض المتصفح تنبيهه العام.</p>
                     <div class="flex gap-2">
                         <button type="button" onclick="exportData()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬇️ تصدير البيانات</button>
                         <button type="button" onclick="document.getElementById('input-import-file').click()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition">⬆️ استيراد بيانات</button>
@@ -839,7 +872,7 @@
         function dbWrite(promise) {
             promise.catch((err) => {
                 console.error(err);
-                alert(err && err.code === 'permission-denied'
+                appAlert(err && err.code === 'permission-denied'
                     ? 'ليست لديك صلاحية حفظ هذا التعديل.'
                     : 'تعذّر رفع التعديل إلى السحابة: ' + ((err && err.message) || 'خطأ غير معروف'));
             });
@@ -1028,7 +1061,7 @@
 
         function openSendModal(txId, workerId) {
             const isW = !!workerId;
-            if (isW && !workerRevealed()) { alert('أظهر المبالغ أولاً (زر «إظهار المبالغ») ثم أعد المحاولة.'); return; }
+            if (isW && !workerRevealed()) { appAlert('أظهر المبالغ أولاً (زر «إظهار المبالغ») ثم أعد المحاولة.'); return; }
             const person = isW ? workerById(workerId) : currentPerson();
             if (!person) return;
             const hasTx = txId !== undefined && txId !== null;
@@ -1051,11 +1084,11 @@
         function sendWhatsApp() {
             const num = normalizePhone(document.getElementById('send-phone').value);
             const text = document.getElementById('send-text').value.trim();
-            if (num.length < 9) { alert('أدخل رقم واتساب صحيحاً.'); return; }
-            if (!text) { alert('نص الرسالة فارغ.'); return; }
+            if (num.length < 9) { appAlert('أدخل رقم واتساب صحيحاً.'); return; }
+            if (!text) { appAlert('نص الرسالة فارغ.'); return; }
             const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(text);
             if (url.length > 7500) {
-                alert('النص طويل جداً لواتساب. اختصره، أو استخدم زر "نسخ" ثم الصقه في المحادثة.');
+                appAlert('النص طويل جداً لواتساب. اختصره، أو استخدم زر "نسخ" ثم الصقه في المحادثة.');
                 return;
             }
             window.open(url, '_blank', 'noopener');
@@ -1326,11 +1359,11 @@
                     a.href = url; a.download = base.replace(/[\\/:*?"<>|]+/g, ' ') + '.pdf';   // على الحاسوب يبقى الاسم عربياً
                     document.body.appendChild(a); a.click(); a.remove();
                     setTimeout(() => URL.revokeObjectURL(url), 10000);
-                    alert('تم تحميل الملف. افتح واتساب وأرفقه في المحادثة (📎 ثم مستند).');
+                    appAlert('تم تحميل الملف. افتح واتساب وأرفقه في المحادثة (📎 ثم مستند).');
                 }
             } catch (e) {
                 console.error(e);
-                alert('تعذّر إنشاء ملف PDF.');
+                appAlert('تعذّر إنشاء ملف PDF.');
             } finally {
                 btn.disabled = false; btn.innerText = old;
             }
@@ -1368,7 +1401,7 @@
             console.error('Firestore error:', err);
             if (err && err.code === 'permission-denied' && !window.__permAlerted) {
                 window.__permAlerted = true;
-                alert('ليست لديك صلاحية قراءة البيانات. تأكد من تسجيل الدخول بالحساب الصحيح ومن قواعد Firestore.');
+                appAlert('ليست لديك صلاحية قراءة البيانات. تأكد من تسجيل الدخول بالحساب الصحيح ومن قواعد Firestore.');
             }
         }
 
@@ -1620,30 +1653,30 @@
             if (!url && !token) {   // إيقاف الميزة
                 localStorage.removeItem('app_mirror_cfg');
                 if (db && me && !me.legacy) { try { const p = db.collection('settings').doc('mirror').set({ url: '', token: '' }); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-                setMirrorStatus(); alert('تم إيقاف النسخة الحية.'); return;
+                setMirrorStatus(); appAlert('تم إيقاف النسخة الحية.'); return;
             }
-            if (!MIRROR_URL_RE.test(url)) { alert('الرابط غير صحيح. يجب أن يكون رابط Web app من Google ويبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec'); return; }
-            if (token.length < 6) { alert('الرمز السري قصير جداً (6 أحرف على الأقل).'); return; }
+            if (!MIRROR_URL_RE.test(url)) { appAlert('الرابط غير صحيح. يجب أن يكون رابط Web app من Google ويبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec'); return; }
+            if (token.length < 6) { appAlert('الرمز السري قصير جداً (6 أحرف على الأقل).'); return; }
             localStorage.setItem('app_mirror_cfg', JSON.stringify({ url, token }));
             if (db && me && !me.legacy) { try { const p = db.collection('settings').doc('mirror').set({ url, token }); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
             setMirrorStatus();
-            alert('تم الحفظ. اضغط «اختبار» للتأكد من الاتصال.');
+            appAlert('تم الحفظ. اضغط «اختبار» للتأكد من الاتصال.');
         }
 
         async function testMirror() {
-            if (!mirrorCfg()) { alert('احفظ الرابط والرمز السري أولاً.'); return; }
-            if (!navigator.onLine) { alert('لا يوجد اتصال بالإنترنت.'); return; }
+            if (!mirrorCfg()) { appAlert('احفظ الرابط والرمز السري أولاً.'); return; }
+            if (!navigator.onLine) { appAlert('لا يوجد اتصال بالإنترنت.'); return; }
             const r = await mirrorPost({ action: 'ping' });
-            if (r.ok && r.readable) { mirrorOk(); alert('✅ نجح الاتصال. تحقق من ورقة «السجل» في ملف Google Sheets.'); }
-            else if (r.ok) { alert('أُرسل الطلب لكن المتصفح لم يسمح بقراءة الرد. افتح ورقة «السجل» في Google Sheets: إن ظهر سطر «اختبار الاتصال» فكل شيء سليم.'); }
-            else if (r.error === 'token') { mirrorErr('الرمز السري غير صحيح'); alert('❌ الرمز السري لا يطابق الموجود في السكربت.'); }
-            else alert('❌ تعذّر الاتصال (' + (r.error || 'خطأ') + '). تأكد من الرابط ومن أن النشر على Anyone.');
+            if (r.ok && r.readable) { mirrorOk(); appAlert('✅ نجح الاتصال. تحقق من ورقة «السجل» في ملف Google Sheets.'); }
+            else if (r.ok) { appAlert('أُرسل الطلب لكن المتصفح لم يسمح بقراءة الرد. افتح ورقة «السجل» في Google Sheets: إن ظهر سطر «اختبار الاتصال» فكل شيء سليم.'); }
+            else if (r.error === 'token') { mirrorErr('الرمز السري غير صحيح'); appAlert('❌ الرمز السري لا يطابق الموجود في السكربت.'); }
+            else appAlert('❌ تعذّر الاتصال (' + (r.error || 'خطأ') + '). تأكد من الرابط ومن أن النشر على Anyone.');
         }
 
         async function mirrorSnapshotNow() {
-            if (!mirrorCfg()) { alert('احفظ الرابط والرمز السري أولاً.'); return; }
+            if (!mirrorCfg()) { appAlert('احفظ الرابط والرمز السري أولاً.'); return; }
             const ok = await sendSnapshot(true);
-            alert(ok ? '✅ أُرسلت لقطة اليوم وتحديث الأرصدة.' : 'تعذّر إرسال اللقطة. تحقق من الاتصال والإعدادات.');
+            appAlert(ok ? '✅ أُرسلت لقطة اليوم وتحديث الأرصدة.' : 'تعذّر إرسال اللقطة. تحقق من الاتصال والإعدادات.');
         }
 
         // محاولات دورية: إعادة إرسال ما تعثّر + لقطة يومية + تحديث الأرصدة
@@ -1682,7 +1715,7 @@
                 else { legacy = true; console.warn('نظام المستخدمين غير متاح (راجع قواعد Firebase):', err && (err.code || err.message)); }
             }
             if (!legacy && prof && (prof.blocked || prof.active === false)) {
-                alert(prof.blocked ? 'حسابك غير مفعّل في النظام. تواصل مع المدير.' : 'تم تعطيل هذا الحساب. تواصل مع المدير.');
+                appAlert(prof.blocked ? 'حسابك غير مفعّل في النظام. تواصل مع المدير.' : 'تم تعطيل هذا الحساب. تواصل مع المدير.');
                 auth.signOut();
                 return false;
             }
@@ -1841,27 +1874,27 @@
                 await db.collection('users').doc(id).update(data);
                 logActivity(action, '', null, details);
                 refreshUsers();
-            } catch (err) { console.error(err); alert('تعذّر حفظ التعديل.'); }
+            } catch (err) { console.error(err); appAlert('تعذّر حفظ التعديل.'); }
         }
 
-        function renameUser(id) {
-            const name = (prompt('الاسم الظاهر الجديد:') || '').trim();
+        async function renameUser(id) {
+            const name = (await appPrompt('الاسم الظاهر الجديد:') || '').trim();
             if (name) userUpdate(id, { name }, 'user_edit', `تغيير اسم مستخدم إلى ${name}`);
         }
 
-        function toggleUserRole(id, role) {
-            if (confirm(`تغيير الصلاحية إلى «${ROLE_LABEL[role]}»؟`)) userUpdate(id, { role }, 'user_edit', `تغيير صلاحية مستخدم إلى ${ROLE_LABEL[role]}`);
+        async function toggleUserRole(id, role) {
+            if (await appConfirm(`تغيير الصلاحية إلى «${ROLE_LABEL[role]}»؟`)) userUpdate(id, { role }, 'user_edit', `تغيير صلاحية مستخدم إلى ${ROLE_LABEL[role]}`);
         }
 
-        function togglePayroll(id, on) {
+        async function togglePayroll(id, on) {
             if (!isOwner()) return;
-            if (confirm(on ? 'منح هذا المستخدم صلاحية رؤية وإدارة مرتبات العمال؟' : 'سحب صلاحية الرواتب من هذا المستخدم؟')) {
+            if (await appConfirm(on ? 'منح هذا المستخدم صلاحية رؤية وإدارة مرتبات العمال؟' : 'سحب صلاحية الرواتب من هذا المستخدم؟')) {
                 userUpdate(id, { payroll: on }, 'user_edit', on ? 'منح صلاحية الرواتب' : 'سحب صلاحية الرواتب');
             }
         }
 
-        function toggleUserActive(id, active) {
-            if (confirm(active ? 'تفعيل هذا الحساب؟' : 'تعطيل هذا الحساب؟ لن يستطيع الدخول للتطبيق.')) {
+        async function toggleUserActive(id, active) {
+            if (await appConfirm(active ? 'تفعيل هذا الحساب؟' : 'تعطيل هذا الحساب؟ لن يستطيع الدخول للتطبيق.')) {
                 userUpdate(id, { active }, 'user_edit', active ? 'تفعيل مستخدم' : 'تعطيل مستخدم');
             }
         }
@@ -1929,8 +1962,8 @@
             }
         }
 
-        function handleLogout() {
-            if (auth && confirm('هل تريد تسجيل الخروج؟')) auth.signOut();
+        async function handleLogout() {
+            if (auth && await appConfirm('هل تريد تسجيل الخروج؟')) auth.signOut();
         }
 
         // --- 5. الساعة والتاريخ ---
@@ -2017,6 +2050,7 @@
             document.querySelectorAll('#modal-settings details').forEach(d => { d.open = false; });
             const sb = document.querySelector('#form-settings .overflow-y-auto'); if (sb) sb.scrollTop = 0;
             document.getElementById('input-dark-mode').checked = localStorage.getItem('app_dark_mode') === 'true';
+            const bd = document.getElementById('input-backup-daily'); if (bd) bd.checked = dailyBackupOn();
             document.getElementById('input-show-currency').checked = state.showCurrency;
             document.getElementById('modal-settings').classList.remove('hidden');
         }
@@ -2152,8 +2186,8 @@
         }
 
         async function deleteCurrentPerson() {
-            if (!isOwner()) { alert('حذف الحسابات للمدير فقط.'); return; }
-            if (!confirm('هل أنت متأكد من حذف هذا الحساب نهائياً مع كل معاملاته؟')) return;
+            if (!isOwner()) { appAlert('حذف الحسابات للمدير فقط.'); return; }
+            if (!await appConfirm('هل أنت متأكد من حذف هذا الحساب نهائياً مع كل معاملاته؟')) return;
 
             const personId = state.currentPersonId;
             const delP = state[state.activeSection].find(p => p.id === personId);
@@ -2189,8 +2223,8 @@
         }
 
         async function deleteTransaction(txId) {
-            if (!isOwner()) { alert('حذف الحركات للمدير فقط.'); return; }
-            if (!confirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
+            if (!isOwner()) { appAlert('حذف الحركات للمدير فقط.'); return; }
+            if (!await appConfirm('هل أنت متأكد من رغبتك في حذف هذه المعاملة؟')) return;
 
             const section = state.activeSection;
             const person = currentPerson();
@@ -2211,7 +2245,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+                appAlert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
         }
 
@@ -2537,7 +2571,7 @@
             const join = document.getElementById('input-w-join').value || '';
             if (!name) return;
             const accrual = document.getElementById('input-w-accrual').value || '';
-            if (!accrual) { alert('أدخل تاريخ بدء احتساب الراتب.'); return; }
+            if (!accrual) { appAlert('أدخل تاريخ بدء احتساب الراتب.'); return; }
             const data = { name, phone: v('input-w-phone'), job: v('input-w-job'), address: v('input-w-address'), notes: v('input-w-notes'), joinDate: join, accrualStart: accrual };
             const opEl = document.getElementById('input-w-opening');
             const salEl = document.getElementById('input-w-salary'), ptEl = document.getElementById('input-w-paytype');
@@ -2545,7 +2579,7 @@
 
             if (!editing) {
                 const amount = parseFloat(salEl.value) || 0;
-                if (amount <= 0) { alert('أدخل قيمة الراتب.'); return; }
+                if (amount <= 0) { appAlert('أدخل قيمة الراتب.'); return; }
                 const opening = readOpening();
                 const w = { id: 'W_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data, openingBalance: opening,
                     salaryHistory: [{ from: accrual, amount, payType: ptEl.value }], transactions: [] };
@@ -2569,7 +2603,7 @@
             }
             if (!document.getElementById('w-hist-wrap').classList.contains('hidden')) {
                 const hist = readWorkerHist();
-                if (!hist) { alert('سجل الراتب: أدخل تاريخاً ومبلغاً أكبر من صفر في كل سطر، ولا تتركه فارغاً.'); return; }
+                if (!hist) { appAlert('سجل الراتب: أدخل تاريخاً ومبلغاً أكبر من صفر في كل سطر، ولا تتركه فارغاً.'); return; }
                 if (JSON.stringify(hist) !== JSON.stringify((editing.salaryHistory || []).slice().sort((x, y) => (x.from < y.from ? -1 : 1)))) {
                     patch.salaryHistory = hist;
                     notes.push('تعديل سجل الراتب');
@@ -2606,11 +2640,11 @@
             if (!w || !hasPayroll() || !wkTxKind) return;
             const kind = wkTxKind;
             const amount = round2(parseFloat(document.getElementById('input-wtx-amount').value) || 0);
-            if (amount <= 0) { alert('أدخل مبلغاً أكبر من صفر.'); return; }
+            if (amount <= 0) { appAlert('أدخل مبلغاً أكبر من صفر.'); return; }
             const date = document.getElementById('input-wtx-date').value || todayISO();
             const note = document.getElementById('input-wtx-note').value.trim();
             if (kind !== 'repay' && workerTotals(w).net - amount < 0) {
-                if (!confirm('تنبيه: هذا المبلغ يتجاوز الراتب المتراكم المتاح للعامل.\nإذا تابعت سيصبح رصيده سالباً (يصبح مديناً للمحل).\nهل تريد المتابعة؟')) return;
+                if (!await appConfirm('تنبيه: هذا المبلغ يتجاوز الراتب المتراكم المتاح للعامل.\nإذا تابعت سيصبح رصيده سالباً (يصبح مديناً للمحل).\nهل تريد المتابعة؟')) return;
             }
             const tx = { id: 'wt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: kind, amount, date, note, ...actorStamp() };
             try {
@@ -2621,7 +2655,7 @@
                 renderWorkerDetail();
             } catch (err) {
                 console.error(err);
-                alert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+                appAlert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
         }
 
@@ -2629,7 +2663,7 @@
             const w = workerById(wkCurrentId);
             if (!w || !hasPayroll()) return;
             const tx = (w.transactions || []).find(t => t.id == txId);
-            if (!tx || !confirm('هل أنت متأكد من حذف هذه الحركة؟')) return;
+            if (!tx || !await appConfirm('هل أنت متأكد من حذف هذه الحركة؟')) return;
             const without = (list) => (list || []).filter(t => t.id != txId);
             try {
                 if (db) await commitTransactions('workers', w, without);
@@ -2638,14 +2672,14 @@
                 renderWorkerDetail();
             } catch (err) {
                 console.error(err);
-                alert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+                appAlert('تعذّر حذف الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
         }
 
-        function deleteCurrentWorker() {
+        async function deleteCurrentWorker() {
             const w = workerById(wkCurrentId);
             if (!w || !hasPayroll()) return;
-            if (!confirm('هل أنت متأكد من حذف ملف هذا العامل نهائياً مع كل حركاته؟')) return;
+            if (!await appConfirm('هل أنت متأكد من حذف ملف هذا العامل نهائياً مع كل حركاته؟')) return;
             logActivity('worker_delete', 'workers', w, `حذف ملف عامل و${(w.transactions || []).length} حركة`);
             if (db) dbWrite(db.collection('workers').doc(w.id).delete());
             else { state.workers = state.workers.filter(x => x.id !== w.id); workersPersist(); }
@@ -2763,7 +2797,7 @@
             const total = sel.reduce((a, x) => a + x.amount, 0);
             let msg = `سيتم تسجيل صرف راتب لـ ${sel.length} عامل بإجمالي ${formatAmount(round2(total))} بتاريخ ${isoToDisplay(date)}.`;
             if (over.length) msg += `\n\nتنبيه: ${over.length} عامل يتجاوز المبلغ صافي مستحقه، فسيصبح رصيده سالباً.`;
-            if (!confirm(msg + '\n\nهل تريد المتابعة؟')) return;
+            if (!await appConfirm(msg + '\n\nهل تريد المتابعة؟')) return;
             const btn = document.getElementById('btn-wpay');
             btn.disabled = true;
             const failed = [];
@@ -2777,7 +2811,7 @@
                     logActivity('worker_payout', 'workers', w, `${WK_TX.payout} جماعي (${isoToDisplay(date)})`);
                 } catch (err) { console.error(err); failed.push(w.name); }
             }
-            if (failed.length) alert('تعذّر صرف الراتب للعمال التالين، أعد المحاولة لهم:\n' + failed.join('، '));
+            if (failed.length) appAlert('تعذّر صرف الراتب للعمال التالين، أعد المحاولة لهم:\n' + failed.join('، '));
             renderBulkPayout();
         }
 
@@ -2896,7 +2930,7 @@
                     if (newInitial !== oldInitial) {
                         const before = getPersonBalance(person);
                         const after = before - oldInitial + newInitial;
-                        if (!confirm(`سيتغير الرصيد الافتتاحي من ${formatAmount(oldInitial)} إلى ${formatAmount(newInitial)}.\nوسيتغير الرصيد الإجمالي من ${formatAmount(before)} إلى ${formatAmount(after)}.\nهل تريد المتابعة؟`)) return;
+                        if (!await appConfirm(`سيتغير الرصيد الافتتاحي من ${formatAmount(oldInitial)} إلى ${formatAmount(newInitial)}.\nوسيتغير الرصيد الإجمالي من ${formatAmount(before)} إلى ${formatAmount(after)}.\nهل تريد المتابعة؟`)) return;
                     }
 
                     person.name = document.getElementById('input-name').value;
@@ -2959,7 +2993,7 @@
             const oldTx = editTxId ? (person.transactions || []).find(t => t.id == editTxId) : null;
 
             if (amount <= 0) {
-                alert('أدخل مبلغاً أكبر من صفر.');
+                appAlert('أدخل مبلغاً أكبر من صفر.');
                 return;
             }
 
@@ -2969,7 +3003,7 @@
                 const balBefore = getPersonBalance(others);
                 if (amount > balBefore) {
                     const msg = `مبلغ التسديد (${formatAmount(amount)}) أكبر من الرصيد الحالي (${formatAmount(balBefore)}).\nسيصبح الرصيد سالباً. هل تريد المتابعة؟`;
-                    if (!confirm(msg)) return;
+                    if (!await appConfirm(msg)) return;
                 }
             }
 
@@ -3009,9 +3043,141 @@
                 closeModal('modal-transaction');
             } catch (err) {
                 console.error(err);
-                alert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
+                appAlert('تعذّر حفظ الحركة. تحقق من اتصالك بالإنترنت وحاول مجدداً.');
             }
         }
+
+
+        // --- نوافذ داخل التطبيق بدل نوافذ المتصفح ---
+        const dlgQueue = []; let dlgBusy = false;
+        function appDialog(o) { return new Promise(res => { dlgQueue.push({ o, res }); if (!dlgBusy) dlgNext(); }); }
+        function dlgNext() {
+            const it = dlgQueue.shift();
+            if (!it) { dlgBusy = false; return; }
+            dlgBusy = true;
+            const o = it.o, prevFocus = document.activeElement;
+            const back = document.createElement('div'); back.className = 'dlg-back no-print';
+            const box = document.createElement('div'); box.className = 'dlg'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+            const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+            if (o.icon) box.appendChild(mk('div', 'dlg-ico', o.icon));
+            if (o.title) box.appendChild(mk('div', 'dlg-title', o.title));
+            if (o.message) box.appendChild(mk('div', 'dlg-msg', o.message));
+            let input = null;
+            if (o.input) { input = mk('input', 'dlg-in'); input.type = 'text'; input.value = o.value || ''; box.appendChild(input); }
+            const btns = mk('div', 'dlg-btns' + (o.column ? ' col' : ''));
+            let done = false;
+            const close = (v) => {
+                if (done) return; done = true;
+                document.removeEventListener('keydown', onKey, true);
+                back.remove();
+                try { if (prevFocus && prevFocus.focus) prevFocus.focus(); } catch (e) {}
+                it.res(v);
+                dlgNext();
+            };
+            const valueOf = (b) => (o.input && b.value === true) ? input.value : b.value;
+            let focusBtn = null;
+            (o.buttons || []).forEach(b => {
+                const el = mk('button', 'dlg-btn' + (b.kind ? ' ' + b.kind : ''), b.label); el.type = 'button';
+                el.onclick = () => close(valueOf(b));
+                btns.appendChild(el);
+                if (b.focus) focusBtn = el;
+            });
+            box.appendChild(btns); back.appendChild(box);
+            const okBtn = (o.buttons || []).find(b => b.kind === 'primary' || b.kind === 'danger');
+            function onKey(e) {
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(o.cancelValue); }
+                else if (e.key === 'Enter' && o.input && okBtn) { e.preventDefault(); e.stopPropagation(); close(valueOf(okBtn)); }
+            }
+            document.addEventListener('keydown', onKey, true);
+            back.addEventListener('mousedown', (e) => { if (e.target === back) close(o.cancelValue); });
+            document.body.appendChild(back);
+            setTimeout(() => { if (input) { input.focus(); input.select(); } else (focusBtn || btns.querySelector('.primary,.danger') || btns.firstChild).focus(); }, 30);
+        }
+
+        function dlgTone(msg) {
+            const m = /^\s*([✅❌⚠️ℹ️]+)\s*/.exec(msg);
+            let icon = '', text = msg;
+            if (m) { icon = m[1]; text = msg.slice(m[0].length); }
+            if (!icon) icon = /^(تم|نجح)/.test(text) ? '✅' : /^(تعذّر|تعذر|ليست لديك|الرابط غير|فشل)/.test(text) ? '❌' : '⚠️';
+            const title = icon.startsWith('✅') ? 'تم' : icon.startsWith('❌') ? 'تعذّر الإجراء' : 'تنبيه';
+            return { icon, title, text };
+        }
+        function appAlert(msg, opts) {
+            const t = dlgTone(String(msg));
+            return appDialog({ icon: t.icon, title: (opts && opts.title) || t.title, message: t.text, buttons: [{ label: 'حسناً', value: true, kind: 'primary' }], cancelValue: true });
+        }
+        function appConfirm(msg, opts) {
+            opts = opts || {};
+            msg = String(msg);
+            const danger = opts.danger != null ? opts.danger : /حذف|سحب|تعطيل|نهائياً/.test(msg);
+            const warn = /^\s*تنبيه/.test(msg);
+            return appDialog({
+                icon: danger ? (/حذف/.test(msg) ? '🗑️' : '⚠️') : warn ? '⚠️' : '❓',
+                title: opts.title || (danger ? (/حذف/.test(msg) ? 'تأكيد الحذف' : 'تأكيد الإجراء') : warn ? 'تنبيه' : 'تأكيد'),
+                message: msg.replace(/^\s*تنبيه:\s*/, ''),
+                buttons: [
+                    { label: opts.okText || (danger ? (/حذف/.test(msg) ? 'حذف' : 'تأكيد') : 'متابعة'), value: true, kind: danger ? 'danger' : 'primary' },
+                    { label: 'إلغاء', value: false, focus: danger }
+                ],
+                cancelValue: false
+            });
+        }
+        function appPrompt(msg, def) {
+            return appDialog({ icon: '✏️', title: 'إدخال', message: String(msg).replace(/:\s*$/, ''), input: true, value: def || '',
+                buttons: [{ label: 'حفظ', value: true, kind: 'primary' }, { label: 'إلغاء', value: null }], cancelValue: null });
+        }
+        function appToast(msg) {
+            const t = document.createElement('div'); t.className = 'app-toast no-print'; t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2600);
+        }
+
+        // --- تذكير النسخ الاحتياطي اليومي عند الإغلاق (اختياري) ---
+        let exitGuardOn = false, exitBypass = false;
+        function dailyBackupOn() { try { return localStorage.getItem('app_backup_daily') === 'true'; } catch (e) { return false; } }
+        function backedUpToday() {
+            const t = Number(localStorage.getItem('app_last_backup')) || 0;
+            return !!t && new Date(t).toDateString() === new Date().toDateString();
+        }
+        function backupDueToday() { return dailyBackupOn() && isOwner() && (!!me || !db) && !backedUpToday(); }
+        function setDailyBackup(on) {
+            try { localStorage.setItem('app_backup_daily', String(!!on)); localStorage.removeItem('app_backup_snooze'); } catch (e) {}
+            updateBackupReminder();
+            appToast(on ? '🔔 تم تفعيل تذكير النسخ الاحتياطي اليومي' : 'تم إيقاف التذكير اليومي');
+        }
+        function syncExitGuard() {
+            const need = backupDueToday();
+            if (need && !exitGuardOn) { try { history.pushState({ g: 1 }, ''); exitGuardOn = true; } catch (e) {} }
+            else if (!need && exitGuardOn) { exitGuardOn = false; exitBypass = true; try { history.back(); } catch (e) {} setTimeout(() => { exitBypass = false; }, 1500); }
+        }
+        async function askBackupBeforeExit() {
+            const r = await appDialog({
+                icon: '💾', title: 'نسخة احتياطية قبل الإغلاق',
+                message: 'لم تأخذ نسخة احتياطية اليوم.\nنزّل نسخة الآن لتحمي بياناتك، ثم أغلق التطبيق.',
+                column: true, cancelValue: 'stay',
+                buttons: [
+                    { label: '⬇️ نسخة احتياطية الآن (JSON)', value: 'json', kind: 'primary' },
+                    { label: '📊 نسخة Excel', value: 'xlsx' },
+                    { label: 'البقاء في التطبيق', value: 'stay' },
+                    { label: 'خروج بدون نسخة', value: 'exit', kind: 'danger' }
+                ]
+            });
+            if (r === 'exit') { exitBypass = true; setTimeout(() => { exitBypass = false; }, 1500); try { history.back(); } catch (e) {} return; }
+            if (r === 'json') { exportData(); appToast('تم تنزيل النسخة ✅'); }
+            else if (r === 'xlsx') { exportExcel(); appToast('تم تنزيل النسخة ✅'); }
+            syncExitGuard();
+        }
+        window.addEventListener('popstate', () => {
+            if (exitBypass) { exitBypass = false; return; }
+            if (!exitGuardOn) return;
+            exitGuardOn = false;   // زر الرجوع استهلك حارس الخروج
+            if (!backupDueToday()) { exitBypass = true; setTimeout(() => { exitBypass = false; }, 1500); try { history.back(); } catch (e) {} return; }
+            askBackupBeforeExit();
+        });
+        window.addEventListener('beforeunload', (e) => {
+            if (exitBypass || !backupDueToday()) return;
+            e.preventDefault(); e.returnValue = '';   // رسالة المتصفح العامة (لا يمكن تخصيصها)
+        });
 
         // --- 10. النسخ الاحتياطي ---
         // --- النسخ الاحتياطي: Excel + تذكير ---
@@ -3040,13 +3206,15 @@
             if (!box) return;
             const d = daysSinceBackup();
             const snooze = Number(localStorage.getItem('app_backup_snooze')) || 0;
-            const due = isOwner() && (!!me || !db) && (d === null || d >= BACKUP_DAYS) && Date.now() > snooze;
+            const daily = dailyBackupOn();
+            const due = isOwner() && (!!me || !db) && (daily ? !backedUpToday() : (d === null || d >= BACKUP_DAYS)) && Date.now() > snooze;
             box.classList.toggle('hidden', !due);
             if (due) {
                 document.getElementById('backup-reminder-text').innerText = d === null
                     ? '⚠️ لم تأخذ نسخة احتياطية بعد. نزّل نسخة الآن وانقلها لمكان آمن.'
-                    : `⚠️ مرّ ${d} يوماً على آخر نسخة احتياطية. نزّل نسخة جديدة.`;
+                    : (daily ? `⚠️ لم تأخذ نسخة احتياطية اليوم (آخر نسخة قبل ${d} يوماً). نزّل نسخة الآن.` : `⚠️ مرّ ${d} يوماً على آخر نسخة احتياطية. نزّل نسخة جديدة.`);
             }
+            syncExitGuard();
         }
 
         function snoozeBackupReminder() {
@@ -3220,7 +3388,7 @@
             e.target.value = '';
             if (!file) return;
             if (db && !navigator.onLine) {
-                alert('الاستيراد يحتاج اتصالاً بالإنترنت. أعد المحاولة عند عودة الاتصال.');
+                appAlert('الاستيراد يحتاج اتصالاً بالإنترنت. أعد المحاولة عند عودة الاتصال.');
                 return;
             }
             try {
@@ -3229,11 +3397,11 @@
                 const suppliers = (Array.isArray(data.suppliers) ? data.suppliers : []).map(sanitizePerson).filter(Boolean);
                 const workers = hasPayroll() ? (Array.isArray(data.workers) ? data.workers : []).map(sanitizeWorker).filter(Boolean) : [];
                 if (!customers.length && !suppliers.length && !workers.length) {
-                    alert('الملف لا يحتوي على بيانات صالحة.');
+                    appAlert('الملف لا يحتوي على بيانات صالحة.');
                     return;
                 }
                 const msg = `سيتم استيراد ${customers.length} عميل و ${suppliers.length} مورد${workers.length ? ' و ' + workers.length + ' عامل' : ''}.\nالحسابات التي لها نفس المعرّف سيتم استبدالها، ولن يُحذف أي حساب موجود.\nهل تريد المتابعة؟`;
-                if (!confirm(msg)) return;
+                if (!await appConfirm(msg)) return;
 
                 if (db) {
                     const ops = [
@@ -3258,10 +3426,10 @@
                     if (!document.getElementById('screen-list').classList.contains('hidden')) renderPeopleList();
                 }
                 logActivity('import', '', null, `استيراد ${customers.length} عميل و ${suppliers.length} مورد`);
-                alert('تم الاستيراد بنجاح.');
+                appAlert('تم الاستيراد بنجاح.');
             } catch (err) {
                 console.error(err);
-                alert('تعذّر قراءة الملف أو استيراده. تأكد أنه ملف نسخة احتياطية صحيح.');
+                appAlert('تعذّر قراءة الملف أو استيراده. تأكد أنه ملف نسخة احتياطية صحيح.');
             }
         }
 
