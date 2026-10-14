@@ -5,10 +5,10 @@
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'daftar-' + VERSION;
 
-const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 const PRECACHE_LIBS = [
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
