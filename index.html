@@ -44,6 +44,20 @@
         @keyframes dlgFade{from{opacity:0}to{opacity:1}}
         @keyframes dlgPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
         @media print{.dlg-back,.app-toast{display:none!important}}
+        .about-link{background:none;border:0;cursor:pointer;font:inherit;font-size:.75rem;font-weight:700;color:#94a3b8;padding:.35rem .75rem;border-radius:999px;transition:background .15s,color .15s}
+        .about-link:hover{background:rgba(148,163,184,.18);color:#475569}
+        .dark .about-link:hover{color:#e2e8f0}
+        .dlg.about{max-width:30rem;text-align:right;padding:0;display:flex;flex-direction:column;overflow:hidden}
+        .about-head{padding:1.25rem 1.25rem .75rem;text-align:center;border-bottom:1px solid rgba(148,163,184,.3)}
+        .about-head img{width:72px;height:72px;border-radius:18px;margin:0 auto .5rem;display:block}
+        .about-body{padding:1rem 1.25rem;overflow:auto;font-size:.85rem;line-height:1.85;color:#334155}
+        .dark .about-body{color:#cbd5e1}
+        .about-body h4{font-weight:700;margin:.9rem 0 .15rem;color:#0f172a;font-size:.9rem}
+        .dark .about-body h4{color:#f1f5f9}
+        .about-body h4:first-child{margin-top:0}
+        .about-body ul{margin:.15rem 0 0;padding:0 1.1rem 0 0;list-style:disc}
+        .about-foot{padding:.75rem 1.25rem 1.1rem;border-top:1px solid rgba(148,163,184,.3);text-align:center}
+        .about-foot .dlg-btns{margin-top:.75rem}
         /* مفاتيح التبديل (RTL): النقطة تبدأ يمين المسار وتنتقل يساره عند التفعيل */
         .tgl-track::after { transform: translateX(0); }
         input:checked + .tgl-track::after { transform: translateX(-20px); border-color: #fff; }
@@ -376,6 +390,10 @@
         </section>
 
     </main>
+
+    <footer class="no-print text-center pb-4 pt-1">
+        <button type="button" class="about-link" onclick="openAbout()">ℹ️ حول البرنامج</button>
+    </footer>
 
     <!-- منطقة التقرير القابل للطباعة فقط -->
     <div id="printable-report" class="hidden p-6 bg-white text-slate-900 dir-rtl">
@@ -3061,10 +3079,12 @@
             const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
             if (o.icon) box.appendChild(mk('div', 'dlg-ico', o.icon));
             if (o.title) box.appendChild(mk('div', 'dlg-title', o.title));
+            if (o.node) { box.appendChild(o.node); if (o.boxClass) box.className += ' ' + o.boxClass; }
             if (o.message) box.appendChild(mk('div', 'dlg-msg', o.message));
             let input = null;
             if (o.input) { input = mk('input', 'dlg-in'); input.type = 'text'; input.value = o.value || ''; box.appendChild(input); }
             const btns = mk('div', 'dlg-btns' + (o.column ? ' col' : ''));
+            if (o.footNode) { o.footNode.appendChild(btns); }
             let done = false;
             const close = (v) => {
                 if (done) return; done = true;
@@ -3082,7 +3102,8 @@
                 btns.appendChild(el);
                 if (b.focus) focusBtn = el;
             });
-            box.appendChild(btns); back.appendChild(box);
+            if (o.footNode) box.appendChild(o.footNode); else box.appendChild(btns);
+            back.appendChild(box);
             const okBtn = (o.buttons || []).find(b => b.kind === 'primary' || b.kind === 'danger');
             function onKey(e) {
                 if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(o.cancelValue); }
@@ -3130,6 +3151,42 @@
             const t = document.createElement('div'); t.className = 'app-toast no-print'; t.textContent = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 2600);
+        }
+
+
+        // --- حول البرنامج ---
+        function openAbout() {
+            const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+            const frag = document.createElement('div'); frag.style.cssText = 'display:flex;flex-direction:column;min-height:0;overflow:hidden';
+            const head = mk('div', 'about-head', '<img src="icon-192.png" alt="KARNI"><div class="dlg-title" dir="ltr" style="letter-spacing:.15em;font-size:1.3rem">KARNI</div><div style="font-size:.8rem;margin-top:.15rem;opacity:.75">دفتر الحسابات الرقمي للمحلات والتجار</div>');
+            const body = mk('div', 'about-body', `
+                <h4>ما هو هذا البرنامج؟</h4>
+                <p>KARNI برنامج لإدارة الديون والحسابات اليومية للمحلات والتجار، يحلّ محل الدفتر الورقي: تسجّل فيه ما لك وما عليك، فتعرف في أي وقت كم يدين لك كل عميل وكم تدين لكل مورد وكم يستحق كل عامل، دون أخطاء حسابية أو أوراق ضائعة.</p>
+                <h4>ما الذي يقدّمه؟</h4>
+                <ul>
+                    <li><b>العملاء:</b> ديونهم وما سدّدوه، مع الرصيد بعد كل حركة وتعديل التواريخ والرصيد الافتتاحي.</li>
+                    <li><b>الموردون:</b> ما عليك لهم وما دفعته، بنفس الطريقة.</li>
+                    <li><b>مرتبات العمال:</b> ملف لكل عامل براتب يومي أو شهري يُحتسب تلقائياً، مع السلف والتسديد وصرف الرواتب، وتعديل الراتب بتاريخ سريانه، وملخص شهري وصرف جماعي.</li>
+                    <li><b>كشوف الحساب:</b> طباعة أو ملف PDF، وإرسالها عبر واتساب، والاتصال بالعميل من داخل البرنامج.</li>
+                    <li><b>البحث والترتيب</b> للحسابات وإجماليات الرصيد في الصفحة الرئيسية.</li>
+                </ul>
+                <h4>الأمان وفريق العمل</h4>
+                <ul>
+                    <li>حساب خاص لكل مستخدم بدور <b>مدير</b> أو <b>محاسب</b>، وسجل نشاط يبيّن من فعل ماذا ومتى.</li>
+                    <li>الرواتب والمبالغ الخاصة بالعمال مخفية خلف كلمة السر، ولا تظهر إلا لمن يمنحه المدير صلاحية الرواتب.</li>
+                </ul>
+                <h4>النسخ الاحتياطي والمزامنة</h4>
+                <ul>
+                    <li>بياناتك تُحفظ في السحابة وتتزامن بين أجهزتك، ويعمل البرنامج حتى دون إنترنت ثم يزامن عند عودته.</li>
+                    <li>تصدير نسخة JSON للاستعادة وExcel للقراءة والمحاسبة، مع تذكير يومي اختياري، ونسخة حية اختيارية إلى Google Sheets.</li>
+                </ul>
+                <h4>على أي جهاز يعمل؟</h4>
+                <p>يعمل على <b>الهاتف</b> والحاسوب واللوح من المتصفح مباشرة، ويمكن تثبيته كتطبيق على الشاشة الرئيسية بأيقونته الخاصة. وفيه وضع ليلي وواجهة عربية من اليمين إلى اليسار.</p>
+            `);
+            const foot = mk('div', 'about-foot', '<div style="font-size:.8rem;opacity:.75">تطوير وتصميم</div><div style="font-weight:700;font-size:1rem;margin-top:.1rem"></div>');
+            foot.lastChild.textContent = 'ياسر بوخشم';
+            frag.appendChild(head); frag.appendChild(body);
+            return appDialog({ node: frag, boxClass: 'about', footNode: foot, buttons: [{ label: 'إغلاق', value: true, kind: 'primary' }], cancelValue: true });
         }
 
         // --- تذكير النسخ الاحتياطي اليومي عند الإغلاق (اختياري) ---
