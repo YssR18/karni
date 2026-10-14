@@ -1255,11 +1255,16 @@
             btn.disabled = true; btn.innerText = '⏳ جارٍ تجهيز الملف...';
             try {
                 const blob = await buildPdfBlob(sendCtx.section, person, kind, sendCtx.txId);
-                const base = (kind === 'total' ? 'وصل-رصيد-' : 'كشف-حساب-') + person.name.replace(/[\\/:*?"<>|]+/g, ' ').trim();
-                const file = new File([blob], base + '.pdf', { type: 'application/pdf' });
+                // اسم الملف بحروف لاتينية فقط: واتساب يشوّه الأسماء العربية (ÙØ´Ù...) عند المشاركة
+                const now = new Date(), pd = (n) => String(n).padStart(2, '0');
+                const stamp = `${now.getFullYear()}${pd(now.getMonth() + 1)}${pd(now.getDate())}-${pd(now.getHours())}${pd(now.getMinutes())}`;
+                const digits = String(person.phone || '').replace(/\D/g, '').slice(-10);
+                const fname = (kind === 'total' ? 'Balance-Receipt-' : 'Account-Statement-') + stamp + (digits ? '-' + digits : '');
+                const base = (kind === 'total' ? 'وصل رصيد - ' : 'كشف حساب - ') + person.name.trim();
+                const file = new File([blob], fname + '.pdf', { type: 'application/pdf' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
-                        await navigator.share({ files: [file], title: base });
+                        await navigator.share({ files: [file], title: base, text: base });   // الاسم العربي يصل كنص مرافق للملف
                         closeModal('modal-send');
                     } catch (e) {
                         if (e && e.name !== 'AbortError') throw e;   // الإلغاء من المستخدم ليس خطأ
@@ -1267,7 +1272,7 @@
                 } else {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url; a.download = file.name;
+                    a.href = url; a.download = base.replace(/[\\/:*?"<>|]+/g, ' ') + '.pdf';   // على الحاسوب يبقى الاسم عربياً
                     document.body.appendChild(a); a.click(); a.remove();
                     setTimeout(() => URL.revokeObjectURL(url), 10000);
                     alert('تم تحميل الملف. افتح واتساب وأرفقه في المحادثة (📎 ثم مستند).');
