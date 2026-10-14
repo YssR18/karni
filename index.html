@@ -19,6 +19,10 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <style>
+        /* مفاتيح التبديل (RTL): النقطة تبدأ يمين المسار وتنتقل يساره عند التفعيل */
+        .tgl-track::after { transform: translateX(0); }
+        input:checked + .tgl-track::after { transform: translateX(-20px); border-color: #fff; }
+
         body { font-family: 'Cairo', sans-serif; }
         @media print {
             body * { visibility: hidden; }
@@ -361,7 +365,7 @@
                     <span class="text-sm font-bold text-slate-700 dark:text-slate-300">الوضع الليلي (Dark Mode)</span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="input-dark-mode" onchange="toggleDarkMode(this.checked)" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 tgl-track after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
 
@@ -370,7 +374,7 @@
                     <span class="text-sm font-bold text-slate-700 dark:text-slate-300">إظهار رمز العملة (د.ج)</span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="input-show-currency" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 tgl-track after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
 
