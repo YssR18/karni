@@ -173,6 +173,17 @@
         .inv-doc table{width:100%;border-collapse:collapse}.inv-doc th,.inv-doc td{border:1px solid #cbd5e1;padding:.35rem .5rem;text-align:start}.inv-doc th{background:#f1f5f9}.inv-doc .r{text-align:end;white-space:nowrap}
         .inv-doc .inv-tot{margin-top:.7rem;border:2px solid #0f172a;border-radius:.7rem;padding:.6rem .8rem;display:flex;justify-content:space-between;font-size:1.05rem;font-weight:800}
         .inv-doc .inv-debt{margin-top:.5rem;border:1px dashed #94a3b8;border-radius:.6rem;padding:.5rem .7rem;font-size:.78rem}.inv-doc .inv-note{margin-top:.5rem;color:#334155}
+
+        .fn-debt{text-align:center;padding:.9rem .75rem;border-radius:1rem;border:2px solid #f59e0b}
+        .fn-dl{font-size:.85rem;font-weight:700;opacity:.9}.fn-dv{font-size:1.9rem;font-weight:800;line-height:1.25;margin-top:.1rem}
+        #inv-debt-after{background:#ffedd5;color:#9a3412;border-color:#ea580c}.dark #inv-debt-after{background:rgba(124,45,18,.45);color:#fdba74;border-color:#ea580c}
+        .fn-total{flex-direction:column;justify-content:center;text-align:center;padding:1rem .9rem;border-radius:1rem}
+        .fn-total .fn-dv{font-size:2.2rem}
+        .fn-sum{text-align:center}.fn-sum .fn-sl{font-size:.8rem;margin-bottom:.15rem}.fn-sum .fn-sv{font-size:1.9rem}.fn-sum .fn-sv.sm{font-size:1.1rem}
+        @media(min-width:560px){.fn-sum>div+div{border-inline-start:1px solid #e2e8f0}.dark .fn-sum>div+div{border-color:#334155}}
+        .inv-doc .inv-tot{flex-direction:column;align-items:center;text-align:center;padding:.9rem}.inv-doc .inv-tot b{font-size:2rem;display:block;margin-top:.1rem}
+        .inv-doc .inv-debts{display:flex;gap:.6rem;margin-top:.6rem;flex-wrap:wrap}.inv-doc .inv-debt{flex:1;min-width:10rem;text-align:center;margin:0;padding:.7rem}
+        .inv-doc .inv-debt b{display:block;font-size:1.35rem;margin-top:.1rem}.inv-doc .inv-debt.strong{border:2px solid #b45309;background:#fffbeb}
 </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
@@ -449,7 +460,7 @@
                 </div>
                 <div class="fn-card space-y-3">
                     <div><label class="fn-lbl">ملاحظات (اختياري)</label><input id="inv-notes" type="text" maxlength="200" class="fn-in"></div>
-                    <div class="fn-total"><span>إجمالي الفاتورة</span><span id="inv-total">0</span></div>
+                    <div class="fn-total"><div class="fn-dl">إجمالي الفاتورة</div><div id="inv-total" class="fn-dv">0</div></div>
                     <div id="inv-debt-after" class="fn-debt hidden"></div>
                     <button type="submit" class="fn-btn primary w-full">💾 حفظ الفاتورة</button>
                 </div>
@@ -3700,7 +3711,8 @@
                 .inv-h{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid #0f172a;padding-bottom:8px;margin-bottom:10px}
                 .inv-shop{font-size:20px;font-weight:700}.inv-sub{color:#475569;font-size:12px}.inv-kind{font-size:18px;font-weight:700;text-align:end}
                 .inv-meta{display:flex;justify-content:space-between;gap:12px;margin:10px 0}.inv-box{border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;flex:1}
-                .inv-tot{margin-top:12px;border:2px solid #0f172a;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;font-size:17px;font-weight:700}
+                .inv-tot{margin-top:12px;border:2px solid #0f172a;border-radius:10px;padding:12px;text-align:center}.inv-tot b{display:block;font-size:26px;margin-top:2px}
+                .inv-debts{display:flex;gap:10px;margin-top:10px}.inv-debts .inv-debt{flex:1;text-align:center;margin:0}.inv-debt b{display:block;font-size:19px}.inv-debt.strong{border:2px solid #b45309;background:#fffbeb}
                 .inv-note{margin-top:8px;color:#334155}.inv-debt{margin-top:8px;border:1px dashed #94a3b8;border-radius:8px;padding:8px 10px;font-size:12px}
                 .r{text-align:end;white-space:nowrap}h3{margin:14px 0 6px}`;
             const f = document.createElement('iframe');
@@ -3793,7 +3805,7 @@
             printDoc(`<div class="inv-h"><div><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-sub">${esc(sh.info)}</div></div>
                 <div class="inv-kind">تقرير المصاريف الشهري<div class="inv-sub">${esc(monthLabel(expMonth))}</div></div></div>
                 <table><tr><th>#</th><th>التاريخ</th><th>فيما صُرف</th><th class="r">المبلغ</th></tr>${rows}</table>
-                <div class="inv-tot"><span>إجمالي مصاريف الشهر</span><span>${esc(formatAmount(total))}</span></div>`, 'Expenses ' + expMonth);
+                <div class="inv-tot"><div class="inv-sub">إجمالي مصاريف الشهر</div><b>${esc(formatAmount(total))}</b></div>`, 'Expenses ' + expMonth);
         }
 
         // ---- الفواتير ----
@@ -3923,10 +3935,10 @@
             const debt = pid ? invPartyDebt(pid, ign) : null;
             if (debt == null) { dn.classList.add('hidden'); da.classList.add('hidden'); return; }
             dn.classList.remove('hidden');
-            dn.innerText = (isPur ? i18nT('ما عليك لهذا المورّد حالياً:') : i18nT('دين هذا العميل الحالي:')) + ' ' + formatAmount(debt);
+            dn.innerHTML = `<div class="fn-dl">${esc(isPur ? i18nT('ما عليك لهذا المورّد حالياً:') : i18nT('دين هذا العميل الحالي:'))}</div><div class="fn-dv">${esc(formatAmount(debt))}</div>`;
             const credit = invDraft.type !== 'orders' && document.getElementById('inv-pay').value === 'credit';
             da.classList.toggle('hidden', !credit);
-            if (credit) da.innerText = i18nT('الرصيد بعد إضافة هذه الفاتورة:') + ' ' + formatAmount(fnRound(debt + total));
+            if (credit) da.innerHTML = `<div class="fn-dl">${esc(i18nT('الرصيد بعد إضافة هذه الفاتورة:'))}</div><div class="fn-dv">${esc(formatAmount(fnRound(debt + total)))}</div>`;
         }
 
         async function personTxMutate(section, personId, fn) {
@@ -4008,7 +4020,7 @@
             const isPur = x.type === 'purchases';
             const payTxt = x.type === 'orders' ? '' : (x.pay === 'credit' ? 'أجل' : 'نقداً (مدفوعة)');
             const debt = (x.pay === 'credit' && x.type !== 'orders' && x.prevDebt != null)
-                ? `<div class="inv-debt">${esc(i18nT(isPur ? 'ما عليك للمورّد قبل هذه الفاتورة:' : 'الدين السابق:'))} <b>${esc(formatAmount(x.prevDebt))}</b> &nbsp;|&nbsp; ${esc(i18nT('الرصيد بعد الفاتورة:'))} <b>${esc(formatAmount(fnRound(x.prevDebt + x.total)))}</b></div>` : '';
+                ? `<div class="inv-debts"><div class="inv-debt"><div class="inv-sub">${esc(i18nT(isPur ? 'ما عليك للمورّد قبل هذه الفاتورة:' : 'الدين السابق:'))}</div><b>${esc(formatAmount(x.prevDebt))}</b></div><div class="inv-debt strong"><div class="inv-sub">${esc(i18nT('الرصيد بعد الفاتورة:'))}</div><b>${esc(formatAmount(fnRound(x.prevDebt + x.total)))}</b></div></div>` : '';
             return `<div class="inv-doc"><div class="inv-h"><div><div class="inv-shop" data-notr>${esc(sh.name || 'KARNI')}</div><div class="inv-sub" data-notr>${esc(sh.info)}</div></div>
                 <div class="inv-kind">${esc(i18nT(T.one))}<div class="inv-sub" data-notr>${esc(x.number)}</div></div></div>
                 <div class="inv-meta"><div class="inv-box"><div class="inv-sub">${esc(i18nT(isPur ? 'المورّد' : 'العميل'))}</div><b data-notr>${esc(x.name)}</b>
@@ -4016,7 +4028,7 @@
                     <div class="inv-box"><div class="inv-sub">${esc(i18nT('التاريخ'))}</div><b>${esc(isoToDisplay(x.date))}</b>
                     ${payTxt ? `<div class="inv-sub">${esc(i18nT('طريقة الدفع'))}: <b>${esc(i18nT(payTxt))}</b></div>` : ''}</div></div>
                 <table><tr><th>#</th><th>${esc(i18nT('المنتج'))}</th><th class="r">${esc(i18nT('الكمية'))}</th><th class="r">${esc(i18nT('السعر'))}</th><th class="r">${esc(i18nT('المجموع'))}</th></tr>${rows}</table>
-                <div class="inv-tot"><span>${esc(i18nT('إجمالي الفاتورة'))}</span><span>${esc(formatAmount(x.total))}</span></div>${debt}
+                <div class="inv-tot"><div class="inv-sub">${esc(i18nT('إجمالي الفاتورة'))}</div><b>${esc(formatAmount(x.total))}</b></div>${debt}
                 ${x.notes ? `<div class="inv-note" data-notr>📝 ${esc(x.notes)}</div>` : ''}</div>`;
         }
         function openInvView(id) { invViewId = id; const x = invById(id); if (x) invTab = x.type; renderInvView(); showScreen('invview'); window.scrollTo({ top: 0 }); }
