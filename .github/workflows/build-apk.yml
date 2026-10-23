@@ -39,14 +39,25 @@ jobs:
           EOF
           npx cap add android
 
-      - name: 5. بناء ملف التطبيق القابل للتثبيت (APK)
+      - name: 5. تركيب أيقونة KARNI الرسمية للتطبيق
+        run: |
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          for dir in android/app/src/main/res/mipmap-*; do
+            if [ -d "$dir" ]; then
+              cp icon-512.png "$dir/ic_launcher.png"
+              cp icon-maskable-512.png "$dir/ic_launcher_round.png"
+              cp icon-maskable-512.png "$dir/ic_launcher_foreground.png"
+            fi
+          done
+
+      - name: 6. بناء ملف التطبيق القابل للتثبيت (APK)
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
           mv app/build/outputs/apk/debug/app-debug.apk ../KARNI-App.apk
 
-      - name: 6. رفع ملف APK للتحميل
+      - name: 7. رفع ملف APK للتحميل
         uses: actions/upload-artifact@v4
         with:
           name: KARNI-Android-APK
