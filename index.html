@@ -470,12 +470,12 @@
         .fn-btn.warn{background:#f97316;color:#fff}.fn-btn.warn:hover{background:#ea580c}
         #inv-np-filter{display:flex}
             /* الآلة الحاسبة العائمة */
-        #calc-fab{position:fixed;left:14px;bottom:86px;z-index:9000;width:3.2rem;height:3.2rem;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:1.5rem;box-shadow:0 6px 18px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid rgba(255,255,255,.7)}
+        #calc-fab{touch-action:none;user-select:none;-webkit-user-select:none;position:fixed;left:14px;bottom:86px;z-index:9000;width:3.2rem;height:3.2rem;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:1.5rem;box-shadow:0 6px 18px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid rgba(255,255,255,.7)}
         #calc-fab:hover{filter:brightness(1.08)}
         body:has(#screen-login:not(.hidden)) #calc-fab,body:has(#screen-login:not(.hidden)) #calc-box{display:none!important}
         #calc-box{position:fixed;left:14px;bottom:150px;z-index:9001;width:min(18rem,calc(100vw - 28px));background:#fff;border:1px solid #e2e8f0;border-radius:1.1rem;box-shadow:0 18px 40px rgba(15,23,42,.28);padding:.7rem;direction:ltr}
         .dark #calc-box{background:#151f32;border-color:#26354d}
-        #calc-box .cb-h{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:.85rem;color:#334155;margin-bottom:.4rem;direction:rtl}.dark #calc-box .cb-h{color:#e2e8f0}
+        #calc-box .cb-h{cursor:move;touch-action:none;user-select:none;display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:.85rem;color:#334155;margin-bottom:.4rem;direction:rtl}.dark #calc-box .cb-h{color:#e2e8f0}
         #calc-box .cb-x{padding:.1rem .5rem;font-size:1.1rem;color:#64748b}
         #calc-box .cb-d{background:#f1f5f9;border-radius:.8rem;padding:.5rem .7rem;text-align:right;min-height:4rem;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}.dark #calc-box .cb-d{background:#0f172a}
         #calc-box .cb-e{font-size:.8rem;color:#64748b;min-height:1.1rem;word-break:break-all}
@@ -1440,9 +1440,9 @@
     </div>
 
     <!-- الآلة الحاسبة -->
-    <button type="button" id="calc-fab" class="no-print" aria-label="الآلة الحاسبة" title="الآلة الحاسبة" onclick="calcToggle()">🧮</button>
+    <button type="button" id="calc-fab" class="no-print" aria-label="الآلة الحاسبة" title="الآلة الحاسبة (اسحبها لأي مكان)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/><rect x="7.5" y="5.5" width="9" height="3.5" rx=".8"/><circle cx="8.5" cy="13" r=".6" fill="currentColor"/><circle cx="12" cy="13" r=".6" fill="currentColor"/><circle cx="15.5" cy="13" r=".6" fill="currentColor"/><circle cx="8.5" cy="16.5" r=".6" fill="currentColor"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/><circle cx="15.5" cy="16.5" r=".6" fill="currentColor"/></svg></button>
     <div id="calc-box" class="hidden no-print" role="dialog" aria-label="الآلة الحاسبة">
-        <div class="cb-h"><span>🧮 <span>الآلة الحاسبة</span></span><button type="button" class="cb-x" onclick="calcToggle(false)" aria-label="إغلاق">✕</button></div>
+        <div class="cb-h" id="calc-drag"><span>☰ <span>الآلة الحاسبة</span></span><button type="button" class="cb-x" onclick="calcToggle(false)" aria-label="إغلاق">✕</button></div>
         <div class="cb-d"><div class="cb-e" id="calc-expr"></div><div class="cb-r" id="calc-res">0</div></div>
         <div class="cb-g" id="calc-keys"></div>
         <div class="cb-f"><button type="button" onclick="calcCopy()">📋 <span>نسخ</span></button><button type="button" id="calc-insert" class="go" onclick="calcInsert()" disabled>⤵️ <span>إدراج في الحقل</span></button></div>
@@ -5297,10 +5297,50 @@
             function toggle(on) {
                 const show = on === undefined ? box.classList.contains('hidden') : on;
                 box.classList.toggle('hidden', !show);
-                if (show) upd();
+                if (show) { upd(); restore(); }
             }
             window.calcToggle = toggle;
+            // سحب الزر والنافذة إلى أي مكان (يُحفظ الموضع)
+            const fab = document.getElementById('calc-fab');
+            const clampPos = (el, x, y) => ({ x: Math.max(4, Math.min(x, window.innerWidth - el.offsetWidth - 4)), y: Math.max(4, Math.min(y, window.innerHeight - el.offsetHeight - 4)) });
+            const place = (el, x, y) => { const c = clampPos(el, x, y); el.style.left = c.x + 'px'; el.style.top = c.y + 'px'; el.style.bottom = 'auto'; el.style.right = 'auto'; return c; };
+            const load = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+            const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+            function drag(handle, el, key, onTap) {
+                let sx, sy, ox, oy, moved, on = false;
+                handle.addEventListener('pointerdown', e => {
+                    if (e.target.closest('.cb-x')) return;
+                    on = true; moved = false; sx = e.clientX; sy = e.clientY;
+                    const r = el.getBoundingClientRect(); ox = r.left; oy = r.top;
+                    try { handle.setPointerCapture(e.pointerId); } catch (er) {}
+                });
+                handle.addEventListener('pointermove', e => {
+                    if (!on) return;
+                    const dx = e.clientX - sx, dy = e.clientY - sy;
+                    if (!moved && Math.hypot(dx, dy) < 6) return;
+                    moved = true; place(el, ox + dx, oy + dy);
+                });
+                const end = () => {
+                    if (!on) return; on = false;
+                    if (moved) { const r = el.getBoundingClientRect(); save(key, { x: r.left, y: r.top }); }
+                    else if (onTap) onTap();
+                };
+                handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', () => { on = false; });
+            }
+            drag(fab, fab, 'calc_fab_pos', () => toggle());
+            drag(document.getElementById('calc-drag'), box, 'calc_box_pos', null);
+            function restore() {
+                const f = load('calc_fab_pos'); if (f) place(fab, f.x, f.y);
+                if (!box.classList.contains('hidden')) {
+                    const b = load('calc_box_pos');
+                    if (b) place(box, b.x, b.y);
+                    else { const r = fab.getBoundingClientRect(); place(box, r.left, r.top - box.offsetHeight - 8 < 4 ? r.bottom + 8 : r.top - box.offsetHeight - 8); }
+                }
+            }
+            window.addEventListener('resize', restore);
+
             window.calcCopy = function () { const v = res; try { navigator.clipboard.writeText(v); } catch (e) {} appToast(v); };
+            restore();
             window.calcInsert = function () {
                 if (!lastField || !document.body.contains(lastField) || res === 'خطأ') return;
                 lastField.value = res; lastField.dispatchEvent(new Event('input', { bubbles: true })); lastField.dispatchEvent(new Event('change', { bubbles: true }));
