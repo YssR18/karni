@@ -21,78 +21,113 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. تثبيت أدوات بناء سطح المكتب ومعالج الأيقونات
+      - name: 3. تثبيت أدوات بناء الويندوز
         run: |
           npm init -y
           npm install --save-dev electron@32 electron-builder@25 sharp
 
-      - name: 4. تجهيز نافذة البرنامج وضبط أيقونة KARNI للويندوز
+      - name: 4. عزل ملفات التطبيق وتحويل الأيقونة إلى صيغة ICO للويندوز
         run: |
           node -e '
           const fs = require("fs");
+          const path = require("path");
           const sharp = require("sharp");
 
-          async function setup() {
-            await sharp("icon-512.png").resize(512, 512).png().toFile("app-icon.png");
+          function electronMain() {
+            const { app, BrowserWindow, shell } = require("electron");
+            const path = require("path");
 
-            const mainScript = `
-          const { app, BrowserWindow, shell } = require("electron");
-          const path = require("path");
+            function createWindow() {
+              const mainWindow = new BrowserWindow({
+                width: 1280,
+                height: 800,
+                minWidth: 900,
+                minHeight: 600,
+                title: "KARNI",
+                icon: path.join(__dirname, "icon.png"),
+                autoHideMenuBar: true,
+                webPreferences: {
+                  nodeIntegration: false,
+                  contextIsolation: true
+                }
+              });
 
-          function createWindow() {
-            const mainWindow = new BrowserWindow({
-              width: 1280,
-              height: 800,
-              minWidth: 900,
-              minHeight: 600,
-              title: "KARNI",
-              icon: path.join(__dirname, "app-icon.png"),
-              autoHideMenuBar: true,
-              webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: true
-              }
-            });
+              mainWindow.loadFile("index.html");
 
-            mainWindow.loadFile("index.html");
+              mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+                if (url.startsWith("https://wa.me") || url.startsWith("https://api.whatsapp.com") || url.startsWith("whatsapp://")) {
+                  shell.openExternal(url);
+                  return { action: "deny" };
+                }
+                return { action: "allow" };
+              });
+            }
 
-            mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-              if (url.startsWith("https://wa.me") || url.startsWith("https://api.whatsapp.com") || url.startsWith("whatsapp://")) {
-                shell.openExternal(url);
-                return { action: "deny" };
-              }
-              return { action: "allow" };
+            app.whenReady().then(createWindow);
+            app.on("window-all-closed", () => {
+              if (process.platform !== "darwin") app.quit();
             });
           }
 
-          app.whenReady().then(createWindow);
-          app.on("window-all-closed", () => {
-            if (process.platform !== "darwin") app.quit();
-          });
-          `;
-            fs.writeFileSync("electron-main.js", mainScript.trim());
+          async function setup() {
+            fs.mkdirSync("app", { recursive: true });
 
-            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            pkg.name = "karni-desktop";
-            pkg.productName = "KARNI";
-            pkg.version = "1.0.0";
-            pkg.description = "KARNI Financial Management Desktop Application";
-            pkg.author = "Yasser Boukhchem";
-            pkg.main = "electron-main.js";
-            pkg.build = {
+            const exclude = new Set(["app", "node_modules", ".git", ".github", "dist", "package.json", "package-lock.json"]);
+            for (const item of fs.readdirSync(".")) {
+              if (!exclude.has(item)) {
+                fs.cpSync(item, path.join("app", item), { recursive: true });
+              }
+            }
+
+            fs.writeFileSync("app/electron-main.js", "(" + electronMain.toString() + ")();");
+
+            const appPkg = {
+              name: "karni",
+              productName: "KARNI",
+              version: "1.0.0",
+              description: "KARNI Financial Management Desktop Application",
+              author: "Yasser Boukhchem",
+              main: "electron-main.js"
+            };
+            fs.writeFileSync("app/package.json", JSON.stringify(appPkg, null, 2));
+
+            let hasIco = false;
+            try {
+              const pngBuffer = await sharp("icon-512.png").resize(256, 256).ensureAlpha().png().toBuffer();
+              fs.writeFileSync("app/icon.png", pngBuffer);
+
+              const icoHeader = Buffer.alloc(22);
+              icoHeader.writeUInt16LE(0, 0);
+              icoHeader.writeUInt16LE(1, 2);
+              icoHeader.writeUInt16LE(1, 4);
+              icoHeader.writeUInt8(0, 6);
+              icoHeader.writeUInt8(0, 7);
+              icoHeader.writeUInt8(0, 8);
+              icoHeader.writeUInt8(0, 9);
+              icoHeader.writeUInt16LE(1, 10);
+              icoHeader.writeUInt16LE(32, 12);
+              icoHeader.writeUInt32LE(pngBuffer.length, 14);
+              icoHeader.writeUInt32LE(22, 18);
+
+              fs.writeFileSync("build-icon.ico", Buffer.concat([icoHeader, pngBuffer]));
+              hasIco = true;
+            } catch (err) {
+              console.warn("Icon conversion skipped:", err.message);
+            }
+
+            const rootPkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            rootPkg.name = "karni-builder";
+            rootPkg.private = true;
+            rootPkg.build = {
               appId: "com.yasser.karni.desktop",
               productName: "KARNI",
-              files: [
-                "**/*",
-                "!android/**",
-                "!www/**",
-                "!.git/**",
-                "!.github/**",
-                "!dist/**"
-              ],
+              npmRebuild: false,
+              directories: {
+                app: "app",
+                output: "dist"
+              },
               win: {
                 target: ["nsis"],
-                icon: "app-icon.png",
                 artifactName: "KARNI-Setup.exe"
               },
               nsis: {
@@ -103,7 +138,10 @@ jobs:
                 shortcutName: "KARNI"
               }
             };
-            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+            if (hasIco) {
+              rootPkg.build.win.icon = "build-icon.ico";
+            }
+            fs.writeFileSync("package.json", JSON.stringify(rootPkg, null, 2));
           }
 
           setup().catch(err => { console.error(err); process.exit(1); });
@@ -113,10 +151,10 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
-          npx electron-builder --win --x64
+          npx electron-builder --win nsis --x64 --publish never
 
       - name: 6. رفع برنامج الويندوز للتحميل
         uses: actions/upload-artifact@v4
         with:
           name: KARNI-Windows-EXE
-          path: dist/KARNI-Setup.exe
+          path: dist/*.exe
