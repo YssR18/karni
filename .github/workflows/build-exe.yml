@@ -21,11 +21,23 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. تجهيز نافذة سطح المكتب وأيقونة KARNI
+      - name: 3. تثبيت أدوات بناء سطح المكتب ومعالج الأيقونات
         run: |
-          cat << 'EOF' > electron-main.js
-          const { app, BrowserWindow, shell } = require('electron');
-          const path = require('path');
+          npm init -y
+          npm install --save-dev electron@32 electron-builder@25 sharp
+
+      - name: 4. تجهيز نافذة البرنامج وضبط أيقونة KARNI للويندوز
+        run: |
+          node -e '
+          const fs = require("fs");
+          const sharp = require("sharp");
+
+          async function setup() {
+            await sharp("icon-512.png").resize(512, 512).png().toFile("app-icon.png");
+
+            const mainScript = `
+          const { app, BrowserWindow, shell } = require("electron");
+          const path = require("path");
 
           function createWindow() {
             const mainWindow = new BrowserWindow({
@@ -34,7 +46,7 @@ jobs:
               minWidth: 900,
               minHeight: 600,
               title: "KARNI",
-              icon: path.join(__dirname, 'icon-512.png'),
+              icon: path.join(__dirname, "app-icon.png"),
               autoHideMenuBar: true,
               webPreferences: {
                 nodeIntegration: false,
@@ -42,67 +54,68 @@ jobs:
               }
             });
 
-            mainWindow.loadFile('index.html');
+            mainWindow.loadFile("index.html");
 
-            // فتح روابط واتساب والروابط الخارجية في المتصفح مع السماح بنوافذ الطباعة
             mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-              if (url.startsWith('https://wa.me') || url.startsWith('https://api.whatsapp.com') || url.startsWith('whatsapp://')) {
+              if (url.startsWith("https://wa.me") || url.startsWith("https://api.whatsapp.com") || url.startsWith("whatsapp://")) {
                 shell.openExternal(url);
-                return { action: 'deny' };
+                return { action: "deny" };
               }
-              return { action: 'allow' };
+              return { action: "allow" };
             });
           }
 
-          app.whenReady().then(() => {
-            createWindow();
-            app.on('activate', () => {
-              if (BrowserWindow.getAllWindows().length === 0) createWindow();
-            });
+          app.whenReady().then(createWindow);
+          app.on("window-all-closed", () => {
+            if (process.platform !== "darwin") app.quit();
           });
+          `;
+            fs.writeFileSync("electron-main.js", mainScript.trim());
 
-          app.on('window-all-closed', () => {
-            if (process.platform !== 'darwin') app.quit();
-          });
-          EOF
-
-          cat << 'EOF' > package.json
-          {
-            "name": "karni-desktop",
-            "productName": "KARNI",
-            "version": "1.0.0",
-            "description": "KARNI Financial & Debt Management Desktop Application",
-            "author": "Yasser Boukhchem",
-            "main": "electron-main.js",
-            "build": {
-              "appId": "com.yasser.karni.desktop",
-              "productName": "KARNI",
-              "win": {
-                "target": [
-                  "nsis"
-                ],
-                "icon": "icon-512.png"
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            pkg.name = "karni-desktop";
+            pkg.productName = "KARNI";
+            pkg.version = "1.0.0";
+            pkg.description = "KARNI Financial Management Desktop Application";
+            pkg.author = "Yasser Boukhchem";
+            pkg.main = "electron-main.js";
+            pkg.build = {
+              appId: "com.yasser.karni.desktop",
+              productName: "KARNI",
+              files: [
+                "**/*",
+                "!android/**",
+                "!www/**",
+                "!.git/**",
+                "!.github/**",
+                "!dist/**"
+              ],
+              win: {
+                target: ["nsis"],
+                icon: "app-icon.png",
+                artifactName: "KARNI-Setup.exe"
               },
-              "nsis": {
-                "oneClick": false,
-                "allowToChangeInstallationDirectory": true,
-                "createDesktopShortcut": true,
-                "createStartMenuShortcut": true,
-                "shortcutName": "KARNI",
-                "artifactName": "KARNI-Setup.exe"
+              nsis: {
+                oneClick: false,
+                allowToChangeInstallationDirectory: true,
+                createDesktopShortcut: true,
+                createStartMenuShortcut: true,
+                shortcutName: "KARNI"
               }
-            }
+            };
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
           }
-          EOF
 
-      - name: 4. بناء ملف التثبيت للويندوز (KARNI-Setup.exe)
+          setup().catch(err => { console.error(err); process.exit(1); });
+          '
+
+      - name: 5. بناء ملف التثبيت للويندوز (KARNI-Setup.exe)
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
-          npm install --save-dev electron@32 electron-builder@25
           npx electron-builder --win --x64
 
-      - name: 5. رفع برنامج الويندوز للتحميل
+      - name: 6. رفع برنامج الويندوز للتحميل
         uses: actions/upload-artifact@v4
         with:
           name: KARNI-Windows-EXE
