@@ -1,9 +1,16 @@
 name: Build KARNI Android APK
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch:
+    paths:
+      - ".github/workflows/build-apk.yml"
+      - "icon-*.png"
+      - "android-signing/**"
+
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -24,17 +31,21 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 4. تجهيز ملفات الويب وتحويلها إلى أندرويد
+      - name: 4. تجهيز غلاف أندرويد (يفتح الموقع الحي فيتحدّث تلقائياً)
         run: |
           mkdir -p www
-          rsync -a --exclude='www' --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='android' ./ www/
+          printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=https://yssr18.github.io/karni/"><title>KARNI</title>' > www/index.html
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.yasser.karni",
             "appName": "KARNI",
-            "webDir": "www"
+            "webDir": "www",
+            "server": {
+              "url": "https://yssr18.github.io/karni/",
+              "cleartext": false
+            }
           }
           EOF
           npx cap add android
@@ -50,15 +61,35 @@ jobs:
             fi
           done
 
-      - name: 6. بناء ملف التطبيق القابل للتثبيت (APK)
+      - name: 6. تثبيت مفتاح التوقيع الثابت (ليُحدَّث التطبيق فوق النسخة القديمة)
+        env:
+          KS_B64: ${{ secrets.KARNI_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > ~/.android/debug.keystore
+            echo "Using secret keystore"
+          else
+            cp android-signing/debug.keystore ~/.android/debug.keystore
+            echo "Using repo keystore"
+          fi
+
+      - name: 7. بناء ملف التطبيق القابل للتثبيت (APK)
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
           mv app/build/outputs/apk/debug/app-debug.apk ../KARNI-App.apk
 
-      - name: 7. رفع ملف APK للتحميل
+      - name: 8. رفع ملف APK كـ Artifact
         uses: actions/upload-artifact@v4
         with:
           name: KARNI-Android-APK
           path: KARNI-App.apk
+
+      - name: 9. نشر APK في Releases (رابط تنزيل ثابت)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest --title "KARNI - أحدث إصدار" --notes "أحدث ملفات التثبيت: KARNI-App.apk (أندرويد) و KARNI-Setup.exe (ويندوز)" || true
+          gh release upload latest KARNI-App.apk --clobber

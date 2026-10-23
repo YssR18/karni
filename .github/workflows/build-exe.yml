@@ -1,9 +1,15 @@
 name: Build KARNI Windows EXE
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch:
+    paths:
+      - ".github/workflows/build-exe.yml"
+      - "icon-*.png"
+
+permissions:
+  contents: write
 
 jobs:
   build-windows:
@@ -36,9 +42,16 @@ jobs:
           function electronMain() {
             const { app, BrowserWindow, shell } = require("electron");
             const path = require("path");
+            const LIVE = "https://yssr18.github.io/karni/";
+
+            if (!app.requestSingleInstanceLock()) { app.quit(); return; }
+            let win = null;
+
+            const isInternal = (u) => u.startsWith(LIVE) || u.startsWith("file://") || u.startsWith("about:") || u.startsWith("blob:") || u.startsWith("data:");
+            const openOutside = (u) => { if (/^(https?|whatsapp|tel|mailto):/i.test(u)) shell.openExternal(u); };
 
             function createWindow() {
-              const mainWindow = new BrowserWindow({
+              win = new BrowserWindow({
                 width: 1280,
                 height: 800,
                 minWidth: 900,
@@ -52,17 +65,28 @@ jobs:
                 }
               });
 
-              mainWindow.loadFile("index.html");
-
-              mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-                if (url.startsWith("https://wa.me") || url.startsWith("https://api.whatsapp.com") || url.startsWith("whatsapp://")) {
-                  shell.openExternal(url);
-                  return { action: "deny" };
-                }
-                return { action: "allow" };
+              let fellBack = false;
+              win.webContents.on("did-fail-load", (e, code, desc, url, isMain) => {
+                if (code === -3 || !isMain || fellBack || !url.startsWith(LIVE)) return;
+                fellBack = true;
+                win.loadFile(path.join(__dirname, "index.html"));
               });
+
+              win.webContents.setWindowOpenHandler(({ url }) => {
+                if (isInternal(url)) return { action: "allow" };
+                openOutside(url);
+                return { action: "deny" };
+              });
+              win.webContents.on("will-navigate", (e, url) => {
+                if (!isInternal(url)) { e.preventDefault(); openOutside(url); }
+              });
+
+              win.loadURL(LIVE);
             }
 
+            app.on("second-instance", () => {
+              if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
+            });
             app.whenReady().then(createWindow);
             app.on("window-all-closed", () => {
               if (process.platform !== "darwin") app.quit();
@@ -72,7 +96,7 @@ jobs:
           async function setup() {
             fs.mkdirSync("app", { recursive: true });
 
-            const exclude = new Set(["app", "node_modules", ".git", ".github", "dist", "package.json", "package-lock.json"]);
+            const exclude = new Set(["app", "node_modules", ".git", ".github", "dist", "android-signing", "package.json", "package-lock.json"]);
             for (const item of fs.readdirSync(".")) {
               if (!exclude.has(item)) {
                 fs.cpSync(item, path.join("app", item), { recursive: true });
@@ -158,3 +182,10 @@ jobs:
         with:
           name: KARNI-Windows-EXE
           path: dist/*.exe
+
+      - name: 7. نشر المثبّت في Releases (رابط تنزيل ثابت)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest --title "KARNI - أحدث إصدار" --notes "أحدث ملفات التثبيت: KARNI-App.apk (أندرويد) و KARNI-Setup.exe (ويندوز)" || true
+          gh release upload latest dist/KARNI-Setup.exe --clobber
