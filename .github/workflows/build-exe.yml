@@ -40,12 +40,32 @@ jobs:
           const sharp = require("sharp");
 
           function electronMain() {
-            const { app, BrowserWindow, shell } = require("electron");
+            const { app, BrowserWindow, shell, ipcMain } = require("electron");
             const path = require("path");
+            const fs = require("fs");
+            const os = require("os");
             const LIVE = "https://yssr18.github.io/karni/";
 
             if (!app.requestSingleInstanceLock()) { app.quit(); return; }
             let win = null;
+
+            // الطباعة: نُنتج PDF (بمعاينة كاملة) ونفتحه في قارئ PDF بدل نافذة الطباعة الأصلية بلا معاينة
+            const pdfOpts = { printBackground: true, pageSize: "A4", margins: { marginType: "default" } };
+            async function savePdf(buf) {
+              const file = path.join(os.tmpdir(), "KARNI-" + Date.now() + ".pdf");
+              fs.writeFileSync(file, buf);
+              const err = await shell.openPath(file);
+              if (err) throw new Error(err);
+              return true;
+            }
+            ipcMain.handle("karni-print-page", async (e) => savePdf(await e.sender.printToPDF(pdfOpts)));
+            ipcMain.handle("karni-print-html", async (e, html) => {
+              const w = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
+              try {
+                await w.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(String(html)));
+                return await savePdf(await w.webContents.printToPDF(pdfOpts));
+              } finally { w.destroy(); }
+            });
 
             const isInternal = (u) => u.startsWith(LIVE) || u.startsWith("file://") || u.startsWith("about:") || u.startsWith("blob:") || u.startsWith("data:");
             const openOutside = (u) => { if (/^(https?|whatsapp|tel|mailto):/i.test(u)) shell.openExternal(u); };
@@ -61,7 +81,8 @@ jobs:
                 autoHideMenuBar: true,
                 webPreferences: {
                   nodeIntegration: false,
-                  contextIsolation: true
+                  contextIsolation: true,
+                  preload: path.join(__dirname, "electron-preload.js")
                 }
               });
 
@@ -93,6 +114,14 @@ jobs:
             });
           }
 
+          function electronPreload() {
+            const { contextBridge, ipcRenderer } = require("electron");
+            contextBridge.exposeInMainWorld("karniDesktop", {
+              printPage: () => ipcRenderer.invoke("karni-print-page"),
+              printHtml: (html, title) => ipcRenderer.invoke("karni-print-html", html, title)
+            });
+          }
+
           async function setup() {
             fs.mkdirSync("app", { recursive: true });
 
@@ -104,6 +133,7 @@ jobs:
             }
 
             fs.writeFileSync("app/electron-main.js", "(" + electronMain.toString() + ")();");
+            fs.writeFileSync("app/electron-preload.js", "(" + electronPreload.toString() + ")();");
 
             const appPkg = {
               name: "karni",

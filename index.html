@@ -3747,8 +3747,13 @@
 
             const rpt = document.getElementById('printable-report');
             rpt.classList.remove('hidden');
-            window.print();
-            rpt.classList.add('hidden');
+            if (window.karniDesktop && window.karniDesktop.printPage) {
+                // تطبيق ويندوز: ينتج PDF بمعاينة كاملة ويفتحه (نافذة الطباعة الأصلية بلا معاينة)
+                window.karniDesktop.printPage().catch(() => { try { window.print(); } catch (e) {} }).finally(() => rpt.classList.add('hidden'));
+            } else {
+                window.print();
+                rpt.classList.add('hidden');
+            }
         }
 
         // --- 9. الحفظ والتحكم بالـ Modals ---
@@ -4246,8 +4251,10 @@
                 .r{text-align:end;white-space:nowrap}h3{margin:14px 0 6px}`;
             const f = document.createElement('iframe');
             f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
-            f.srcdoc = `<!doctype html><html dir="${dir}" lang="${LANG}"><head><meta charset="utf-8"><title>${esc(title || 'KARNI')}</title><style>${css}</style></head><body>${tmp.innerHTML}
+            const fullHtml = `<!doctype html><html dir="${dir}" lang="${LANG}"><head><meta charset="utf-8"><title>${esc(title || 'KARNI')}</title><style>${css}</style></head><body>${tmp.innerHTML}
 </body></html>`;
+            if (window.karniDesktop && window.karniDesktop.printHtml) { window.karniDesktop.printHtml(fullHtml, title || 'KARNI').catch(() => appAlert('تعذّرت الطباعة من هذا المتصفح.')); return; }
+            f.srcdoc = fullHtml;
             f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { appAlert('تعذّرت الطباعة من هذا المتصفح.'); } setTimeout(() => f.remove(), 60000); };
             document.body.appendChild(f);
         }
