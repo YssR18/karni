@@ -18,32 +18,35 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. إعداد بيئة Java JDK 17
+      - name: 3. إعداد بيئة Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
-      - name: 4. إعداد Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: 5. تحويل ملفات الويب إلى تطبيق أندرويد أصلي عبر Capacitor
+      - name: 4. تجهيز ملفات الويب وتحويلها إلى أندرويد
         run: |
           mkdir -p www
-          find . -maxdepth 1 -not -name 'www' -not -name '.git' -not -name '.github' -not -name '.' -exec cp -r {} www/ \;
+          rsync -a --exclude='www' --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='android' ./ www/
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
-          npx cap init "KARNI" "com.yasser.karni" --web-dir www
+          cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "com.yasser.karni",
+            "appName": "KARNI",
+            "webDir": "www"
+          }
+          EOF
           npx cap add android
 
-      - name: 6. بناء ملف التطبيق القابل للتثبيت (APK)
+      - name: 5. بناء ملف التطبيق القابل للتثبيت (APK)
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
           mv app/build/outputs/apk/debug/app-debug.apk ../KARNI-App.apk
 
-      - name: 7. رفع ملف APK ليكون جاهزاً للتحميل
+      - name: 6. رفع ملف APK للتحميل
         uses: actions/upload-artifact@v4
         with:
           name: KARNI-Android-APK
