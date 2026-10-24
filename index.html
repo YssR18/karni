@@ -564,8 +564,9 @@
         .sl-pt button{padding:.25rem .65rem;border-radius:.55rem;font-size:.75rem;font-weight:800;color:#475569}.dark .sl-pt button{color:#cbd5e1}
         .sl-pt button.on{background:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.12)}.dark .sl-pt button.on{background:#1e293b;color:#60a5fa}
         .sl-cs{flex:0 1 230px!important;min-width:0}
+        .sl-clock{display:flex;flex-direction:column;align-items:center;line-height:1.1;margin-inline:auto;padding:.1rem .6rem}.sl-clock b{font-size:1.15rem;font-weight:800;letter-spacing:.06em;color:#d97706}.sl-clock small{font-size:.7rem;color:#64748b}.dark .sl-clock b{color:#fbbf24}
         .sl-chip b{margin-inline-start:.4rem}
-        .sl-r1 .sl-today{margin-inline-start:auto;gap:.3rem;flex-wrap:nowrap}
+        .sl-r1 .sl-today{gap:.3rem;flex-wrap:nowrap}
         .sl-hd,.sl-ln{display:grid;grid-template-columns:minmax(0,1.6fr) 3.5rem 4.3rem 3.5rem 4.6rem 1.7rem;gap:.3rem;align-items:center}
         .sl-hd{font-size:.65rem;font-weight:700;color:#64748b;padding:0 .1rem .25rem;border-bottom:1px solid #e2e8f0}.dark .sl-hd{border-color:#334155}
         .sl-ln{padding:.3rem .1rem;border-bottom:1px solid #f1f5f9}.dark .sl-ln{border-color:#1e293b}
@@ -1019,6 +1020,7 @@
                     <button type="button" onclick="openSaleCust()" class="sl-mini primary" title="زبون جديد">➕</button>
                     <button type="button" onclick="saleCamera()" class="sl-mini cam-only" title="مسح بالكاميرا">📷</button>
                     <div id="sl-ptypes" class="sl-pt"></div>
+                    <div id="sl-clock" class="sl-clock" dir="ltr" data-notr></div>
                     <div id="sl-today" class="sl-today"></div>
                 </div>
             </div>
@@ -3066,6 +3068,7 @@
             const dateEl = document.getElementById('date');
             if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', { hour12: false });
             if (dateEl) dateEl.innerText = now.toLocaleDateString('en-GB');
+            const sc = document.getElementById('sl-clock'); if (sc) sc.innerHTML = '<b>' + now.toLocaleTimeString('en-US', { hour12: false }) + '</b><small>' + now.toLocaleDateString('en-GB') + '</small>';
         }
         setInterval(updateClock, 1000);
         updateClock();
@@ -5154,8 +5157,8 @@
             } catch (err) { console.error(err); appAlert('تعذّر حفظ الفاتورة. تحقق من اتصالك بالإنترنت وحاول مجدداً.'); return; }
             saleReset(); document.getElementById('sl-disc').value = ''; document.getElementById('sl-paid').value = ''; closeModal('modal-pay'); renderSales();
             appToast('✔ ' + i18nT('تم البيع') + ' — ' + number);
-            if (act === 'print') { openInvView(inv.id); printInvoice(); }
-            else if (act === 'wa') { openInvView(inv.id); invoiceWhatsApp(); }
+            if (act === 'print') { printDoc(invoiceHtml(inv), inv.number); }
+            else if (act === 'wa') { invViewId = inv.id; invoiceWhatsApp(); }
         }
 
         function nextInvNumber(type, noParty) {
