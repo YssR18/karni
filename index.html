@@ -5147,7 +5147,7 @@
             if (document.querySelector('.modal-open, [id^="modal-"]:not(.hidden)')) return;
             const sc = document.getElementById('sl-scan'); if (sc) sc.focus();
         });
-        function saleCamera() { openScanner(c => { if (saleByCode(c, false)) appToast('✔ ' + c); }); }
+        function saleCamera() { openScanner(c => { closeScanner(); if (saleByCode(c, false)) appToast('✔ ' + c); }); }
         async function saleCheckout(act) {
             if (!sale.lines.length) { appAlert('أضف منتجاً واحداً على الأقل إلى السلة.'); return; }
             const items = sale.lines.map(l => { const it = { name: l.name, qty: fnRound(+l.qty || 0), price: +l.price || 0 }; if ((+l.disc || 0) > 0) it.disc = +l.disc; return it; });
