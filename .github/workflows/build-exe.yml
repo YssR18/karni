@@ -56,22 +56,7 @@ jobs:
               fr: { title: "Rappel de sauvegarde", msg: "N oubliez pas de sauvegarder vos données avant de quitter.", last: "Dernière sauvegarde : ", never: "aucune sauvegarde", note: "En quittant, vous serez déconnecté ; le programme s ouvrira sur la page de connexion.", exit: "Quitter", backup: "Sauvegarder maintenant", cancel: "Annuler" },
               en: { title: "Backup reminder", msg: "Do not forget to back up your data before exiting.", last: "Last backup: ", never: "no backup yet", note: "On exit you will be signed out; the app will open on the login page next time.", exit: "Exit", backup: "Back up now", cancel: "Cancel" }
             };
-            async function askExit() {
-              let lang = "ar", last = "";
-              try { lang = (await win.webContents.executeJavaScript("localStorage.getItem(\"app_lang\") || \"ar\"")) || "ar"; } catch (e) {}
-              try { last = await win.webContents.executeJavaScript("localStorage.getItem(\"app_last_backup\") || \"\""); } catch (e) {}
-              const t = TXT[lang] || TXT.ar;
-              const when = last && Number(last) ? new Date(Number(last)).toLocaleString(lang === "ar" ? "ar-DZ" : lang) : t.never;
-              const r = await dialog.showMessageBox(win, {
-                type: "warning", title: "KARNI", message: t.title,
-                detail: t.msg + "\n" + t.last + when + "\n\n" + t.note,
-                buttons: [t.exit, t.backup, t.cancel], defaultId: 1, cancelId: 2, noLink: true
-              });
-              if (r.response === 1) {
-                try { await win.webContents.executeJavaScript("typeof exportData === \"function\" && exportData()"); } catch (e) {}
-                return;
-              }
-              if (r.response !== 0) return;
+            async function doExit() {
               try {
                 await Promise.race([
                   win.webContents.executeJavaScript("(function () { try { if (typeof auth !== \"undefined\" && auth) return auth.signOut().then(function () { return 1; }); } catch (e) {} return 0; })()"),
@@ -80,6 +65,29 @@ jobs:
               } catch (e) {}
               allowClose = true;
               win.close();
+            }
+            async function askExit() {
+              // الأفضل: نافذة التطبيق نفسها (بثيم التطبيق)، وإن لم تتوفر ننتقل لنافذة النظام
+              try {
+                const r = await win.webContents.executeJavaScript("typeof desktopExitPrompt === \"function\" ? desktopExitPrompt() : null");
+                if (r === "exit") { await doExit(); return; }
+                if (typeof r === "string") return;
+              } catch (e) {}
+              let lang = "ar", last = "";
+              try { lang = (await win.webContents.executeJavaScript("localStorage.getItem(\"app_lang\") || \"ar\"")) || "ar"; } catch (e) {}
+              try { last = await win.webContents.executeJavaScript("localStorage.getItem(\"app_last_backup\") || \"\""); } catch (e) {}
+              const t = TXT[lang] || TXT.ar;
+              const when = last && Number(last) ? new Date(Number(last)).toLocaleString(lang === "ar" ? "ar-DZ" : lang) : t.never;
+              const res = await dialog.showMessageBox(win, {
+                type: "warning", title: "KARNI", message: t.title,
+                detail: t.msg + "\n" + t.last + when + "\n\n" + t.note,
+                buttons: [t.exit, t.backup, t.cancel], defaultId: 1, cancelId: 2, noLink: true
+              });
+              if (res.response === 1) {
+                try { await win.webContents.executeJavaScript("typeof exportData === \"function\" && exportData()"); } catch (e) {}
+                return;
+              }
+              if (res.response === 0) await doExit();
             }
 
             // الطباعة: نُنتج PDF (بمعاينة كاملة) ونفتحه في قارئ PDF بدل نافذة الطباعة الأصلية بلا معاينة
