@@ -298,6 +298,7 @@
         input:checked + .tgl-track::after { transform: translateX(-20px); border-color: #fff; }
 
         @media print {
+            html, html.dark, body, .dark body { background: #fff !important; background-image: none !important; min-height: 0 !important; }
             body * { visibility: hidden; }
             #printable-report, #printable-report * { visibility: visible; }
             #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
