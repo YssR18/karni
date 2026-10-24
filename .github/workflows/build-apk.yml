@@ -50,6 +50,8 @@ jobs:
           }
           EOF
           npx cap add android
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          grep -n "CAMERA" android/app/src/main/AndroidManifest.xml
 
       - name: 5. تركيب أيقونة KARNI بحواف دائرية + دعم الطباعة على أندرويد
         run: |
