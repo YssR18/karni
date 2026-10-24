@@ -495,6 +495,7 @@
             /* الآلة الحاسبة العائمة */
         #calc-fab{touch-action:none;user-select:none;-webkit-user-select:none;position:fixed;left:14px;bottom:86px;z-index:9000;width:3.2rem;height:3.2rem;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:1.5rem;box-shadow:0 6px 18px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid rgba(255,255,255,.7)}
         #calc-fab:hover{filter:brightness(1.08)}
+        .pos-mode #calc-fab{bottom:140px}
         body:has(#screen-login:not(.hidden)) #calc-fab,body:has(#screen-login:not(.hidden)) #calc-box{display:none!important}
         #calc-box{position:fixed;left:14px;bottom:150px;z-index:9001;width:min(18rem,calc(100vw - 28px));background:#fff;border:1px solid #e2e8f0;border-radius:1.1rem;box-shadow:0 18px 40px rgba(15,23,42,.28);padding:.7rem;direction:ltr}
         .dark #calc-box{background:#151f32;border-color:#26354d}
@@ -574,13 +575,15 @@
         @media(max-width:560px){.sl-hd{display:none}.sl-ln{grid-template-columns:3.4rem 1fr 3.4rem 1fr;row-gap:.25rem}.sl-nm{grid-column:1/4;white-space:normal}.sl-ln .fn-x{grid-column:4;justify-self:end;grid-row:1}}
         @media(max-width:899px){.sl-left{order:-1}}
         .sl-top .sl-chip{padding:.2rem .55rem;font-size:.7rem;white-space:nowrap}
-        .sl-bar{position:sticky;bottom:.4rem;z-index:30;display:none;flex-wrap:wrap;gap:.5rem;align-items:stretch}
-        .sl-card{flex:1 1 150px;border-radius:1rem;padding:.6rem .85rem;border:1px solid;display:flex;flex-direction:column;justify-content:center;gap:.1rem;box-shadow:0 6px 18px rgba(15,23,42,.12)}
-        .sl-card small{font-size:.75rem;font-weight:700;opacity:.85}.sl-card b{font-size:1.35rem;font-weight:800;line-height:1.2}.sl-card i{font-style:normal;font-size:.75rem;display:flex;justify-content:space-between;gap:.4rem;opacity:.85}
+        .sl-bar{position:fixed;left:0;right:0;bottom:0;z-index:45;display:none;flex-wrap:wrap;gap:.6rem;align-items:stretch;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));background:rgba(241,245,249,.92);backdrop-filter:blur(10px);border-top:1px solid #cbd5e1;box-shadow:0 -8px 24px rgba(15,23,42,.12)}
+        .dark .sl-bar{background:rgba(15,23,42,.92);border-top-color:#334155}
+        .pos-mode body,body.pos-mode{padding-bottom:7.5rem}
+        .sl-card{flex:1 1 170px;max-width:360px;border-radius:1rem;padding:.75rem 1.1rem;border:1px solid;display:flex;flex-direction:column;justify-content:center;gap:.1rem;box-shadow:0 6px 18px rgba(15,23,42,.12)}
+        .sl-card small{font-size:.85rem;font-weight:700;opacity:.85}.sl-card b{font-size:1.75rem;font-weight:800;line-height:1.2}.sl-card i{font-style:normal;font-size:.75rem;display:flex;justify-content:space-between;gap:.4rem;opacity:.85}
         .sl-card.g{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.dark .sl-card.g{background:#0b3b2e;border-color:rgba(52,211,153,.4);color:#6ee7b7}
         .sl-card.o{background:#fffbeb;border-color:#fde68a;color:#92400e}.dark .sl-card.o{background:#3b2a0b;border-color:rgba(251,191,36,.4);color:#fcd34d}
         .sl-card.r{background:#fef2f2;border-color:#fecaca;color:#991b1b}.dark .sl-card.r{background:#3b1010;border-color:rgba(248,113,113,.4);color:#fca5a5}
-        .sl-go{flex:0 0 auto;border-radius:.8rem;font-weight:800;font-size:.85rem;color:#fff;background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 12px rgba(5,150,105,.3);padding:.45rem .9rem;align-self:center}
+        .sl-go{flex:0 0 auto;border-radius:.8rem;font-weight:800;font-size:1.05rem;color:#fff;background:linear-gradient(135deg,#059669,#047857);box-shadow:0 4px 12px rgba(5,150,105,.3);padding:.8rem 1.6rem;align-self:center;margin-inline-start:auto}
         .sl-bar-old{position:sticky;bottom:.5rem;z-index:30;display:none;justify-content:space-between;align-items:center;gap:.5rem;padding:.55rem .75rem;border-radius:1rem;background:#065f46;color:#fff;box-shadow:0 8px 24px rgba(6,95,70,.35)}
         .sl-bar.show{display:flex}
         .sl-row{display:flex;align-items:center;gap:.4rem;padding:.45rem .6rem;border-radius:.8rem;background:#f1f5f9}.dark .sl-row{background:#0f172a}
