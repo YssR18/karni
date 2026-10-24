@@ -174,7 +174,7 @@ jobs:
           async function setup() {
             fs.mkdirSync("app", { recursive: true });
 
-            const exclude = new Set(["app", "node_modules", ".git", ".github", "dist", "android-signing", "package.json", "package-lock.json"]);
+            const exclude = new Set(["app", "node_modules", ".git", ".github", "dist", "android-signing", "android-icons", "package.json", "package-lock.json"]);
             for (const item of fs.readdirSync(".")) {
               if (!exclude.has(item)) {
                 fs.cpSync(item, path.join("app", item), { recursive: true });
