@@ -552,8 +552,27 @@
         .sl-top{position:sticky;top:var(--hdr-h,64px);z-index:30;display:flex;flex-direction:column;gap:.5rem;padding:.55rem;border-radius:1rem;background:rgba(255,255,255,.94);border:1px solid #e2e8f0;box-shadow:0 6px 18px rgba(15,23,42,.1);backdrop-filter:blur(8px)}
         .dark .sl-top{background:rgba(15,23,42,.94);border-color:#334155}
         .no-cam .cam-only{display:none!important}
-        .sl-bar{position:sticky;bottom:.5rem;z-index:30;display:none;justify-content:space-between;align-items:center;gap:.5rem;padding:.55rem .75rem;border-radius:1rem;background:#065f46;color:#fff;box-shadow:0 8px 24px rgba(6,95,70,.35)}
-        .sl-bar.show{display:flex;flex-wrap:wrap}.sl-bar b{font-size:1rem}.sl-bar .bi{display:flex;flex-direction:column;line-height:1.2}.sl-bar .bi small{font-size:.65rem;opacity:.8}.sl-bar .bi.dbt b{color:#fecaca}
+        .pos-mode header.app-header,.pos-mode #demo-bar{display:none!important}
+        .pos-mode .sl-top{top:0;margin-top:-.5rem}
+        .sl-r1,.sl-r2{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+        .sl-r1 .fn-in{padding:.45rem .6rem;font-size:.85rem}
+        .sl-x{flex:none;width:2.1rem;height:2.1rem;border-radius:.7rem;background:#fee2e2;color:#b91c1c;font-weight:800;font-size:.95rem}.dark .sl-x{background:rgba(127,29,29,.4);color:#fca5a5}
+        .sl-mini{flex:none;min-width:2.1rem;height:2.1rem;padding:0 .55rem;border-radius:.7rem;background:#e2e8f0;color:#334155;font-weight:800;font-size:.85rem}.dark .sl-mini{background:#26354d;color:#e2e8f0}
+        .sl-mini.primary{background:#2563eb;color:#fff}
+        .sl-pt{display:flex;gap:.25rem;background:#e2e8f0;border-radius:.7rem;padding:.2rem}.dark .sl-pt{background:#26354d}
+        .sl-pt button{padding:.25rem .65rem;border-radius:.55rem;font-size:.75rem;font-weight:800;color:#475569}.dark .sl-pt button{color:#cbd5e1}
+        .sl-pt button.on{background:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.12)}.dark .sl-pt button.on{background:#1e293b;color:#60a5fa}
+        .sl-r2 .sl-today{margin-inline-start:auto;gap:.3rem;flex-wrap:nowrap;overflow-x:auto}
+        .sl-top .sl-chip{padding:.2rem .55rem;font-size:.7rem;white-space:nowrap}
+        .sl-bar{position:sticky;bottom:.4rem;z-index:30;display:none;flex-wrap:wrap;gap:.5rem;align-items:stretch}
+        .sl-card{flex:1 1 150px;border-radius:1rem;padding:.6rem .85rem;border:1px solid;display:flex;flex-direction:column;justify-content:center;gap:.1rem;box-shadow:0 6px 18px rgba(15,23,42,.12)}
+        .sl-card small{font-size:.75rem;font-weight:700;opacity:.85}.sl-card b{font-size:1.35rem;font-weight:800;line-height:1.2}.sl-card i{font-style:normal;font-size:.75rem;display:flex;justify-content:space-between;gap:.4rem;opacity:.85}
+        .sl-card.g{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.dark .sl-card.g{background:#0b3b2e;border-color:rgba(52,211,153,.4);color:#6ee7b7}
+        .sl-card.o{background:#fffbeb;border-color:#fde68a;color:#92400e}.dark .sl-card.o{background:#3b2a0b;border-color:rgba(251,191,36,.4);color:#fcd34d}
+        .sl-card.r{background:#fef2f2;border-color:#fecaca;color:#991b1b}.dark .sl-card.r{background:#3b1010;border-color:rgba(248,113,113,.4);color:#fca5a5}
+        .sl-go{flex:1 1 150px;border-radius:1rem;font-weight:800;font-size:1.05rem;color:#fff;background:linear-gradient(135deg,#059669,#047857);box-shadow:0 6px 18px rgba(5,150,105,.35);padding:.8rem}
+        .sl-bar-old{position:sticky;bottom:.5rem;z-index:30;display:none;justify-content:space-between;align-items:center;gap:.5rem;padding:.55rem .75rem;border-radius:1rem;background:#065f46;color:#fff;box-shadow:0 8px 24px rgba(6,95,70,.35)}
+        .sl-bar.show{display:flex}
         .sl-row{display:flex;align-items:center;gap:.4rem;padding:.45rem .6rem;border-radius:.8rem;background:#f1f5f9}.dark .sl-row{background:#0f172a}
         .sl-row small{color:#64748b;font-size:.7rem}
         .wh-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem}
@@ -980,18 +999,18 @@
 
         <!-- شاشة البيع -->
         <section id="screen-sales" class="hidden space-y-3">
-            <div class="screen-bar">
-                <div class="flex items-center gap-3">
-                    <button onclick="showScreen('home')" class="btn-back">← العودة</button>
-                    <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🛒 البيع</h2>
-                </div>
-                <button type="button" onclick="saleCamera()" class="fn-btn cam-only">📷 مسح باركود</button>
-            </div>
             <div id="sl-top" class="sl-top no-print">
-                <div class="flex gap-2"><select id="sl-cust" onchange="saleCustChange()" class="fn-in flex-1" style="min-width:0"></select><button type="button" onclick="openSaleCust()" class="fn-btn primary" title="زبون جديد">➕ زبون</button></div>
-                <div id="sl-ptypes" class="fn-tabs"></div>
+                <div class="sl-r1">
+                    <button type="button" onclick="showScreen('home')" class="sl-x" title="العودة" aria-label="العودة">✕</button>
+                    <select id="sl-cust" onchange="saleCustChange()" class="fn-in" style="min-width:0;flex:1"></select>
+                    <button type="button" onclick="openSaleCust()" class="sl-mini primary" title="زبون جديد">➕</button>
+                    <button type="button" onclick="saleCamera()" class="sl-mini cam-only" title="مسح بالكاميرا">📷</button>
+                </div>
+                <div class="sl-r2">
+                    <div id="sl-ptypes" class="sl-pt"></div>
+                    <div id="sl-today" class="sl-today"></div>
+                </div>
             </div>
-            <div id="sl-today" class="sl-today"></div>
             <input id="sl-scan" type="search" autocomplete="off" onkeydown="saleScanKey(event)" oninput="saleScanInput(this)" placeholder="امسح الباركود أو ابحث بالاسم" class="fn-in">
             <div class="sl-split">
                 <div class="sl-left space-y-2">
@@ -1009,10 +1028,8 @@
                         <button type="button" onclick="salePaidQuick('full')" class="fn-btn flex-1">دفع كامل</button>
                         <button type="button" onclick="salePaidQuick('none')" class="fn-btn flex-1">لم يدفع (دين)</button>
                     </div>
-                    <div class="sl-sum" id="sl-sum"></div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="saleCheckout()" class="fn-btn ok flex-1">✅ إتمام البيع</button>
-                        <button type="button" onclick="saleClear()" class="fn-btn del">🗑️ تفريغ</button>
+                        <button type="button" onclick="saleClear()" class="fn-btn del flex-1">🗑️ تفريغ</button>
                     </div>
                 </div>
             </div>
@@ -3076,6 +3093,7 @@
             });
             const target = document.getElementById(`screen-${screenId}`);
             if (target) target.classList.remove('hidden');
+            document.body.classList.toggle('pos-mode', screenId === 'sales');
             const ab = document.getElementById('about-link');
             if (ab) ab.classList.toggle('hidden', screenId !== 'home');
         }
@@ -4942,7 +4960,7 @@
             const today = toISODate(new Date()), ts = (state.invoices || []).filter(x => x.type === 'sales' && x.date === today);
             const tot = fnRound(ts.reduce((s, x) => s + (x.total || 0), 0)), owed = fnRound(ts.filter(x => x.pay === 'credit').reduce((s, x) => s + ((x.total || 0) - (x.paid || 0)), 0));
             document.getElementById('sl-today').innerHTML = `<span class="sl-chip">${esc(i18nT('فواتير اليوم'))}<b>${ts.length}</b></span><span class="sl-chip g">${esc(i18nT('المبيعات'))}<b>${esc(formatAmount(tot))}</b></span><span class="sl-chip g">${esc(i18nT('المقبوض'))}<b>${esc(formatAmount(fnRound(tot - owed)))}</b></span>${owed > 0 ? `<span class="sl-chip r">${esc(i18nT('ديون جديدة'))}<b>${esc(formatAmount(owed))}</b></span>` : ''}`;
-            document.getElementById('sl-ptypes').innerHTML = PT.map(t => `<button type="button" class="fn-tab${sale.ptype === t.k ? ' on' : ''}" onclick="saleSetType('${t.k}')">${esc(i18nT(t.l))}</button>`).join('');
+            document.getElementById('sl-ptypes').innerHTML = PT.map(t => `<button type="button" class="${sale.ptype === t.k ? 'on' : ''}" onclick="saleSetType('${t.k}')">${esc(i18nT(t.l))}</button>`).join('');
             const cats = catList();
             if (sale.cat && sale.cat !== '_none' && !cats.some(c => c.id === sale.cat)) sale.cat = '';
             const cb = document.getElementById('sl-cats'); cb.classList.toggle('hidden', !cats.length);
@@ -4998,17 +5016,16 @@
             const c = saleCalc();
             sale.lines.forEach((l, i) => { const e = document.querySelector(`[data-lt="${i}"]`); if (e) e.innerText = formatAmount(saleLineTotal(l)); });
             document.getElementById('sl-count').innerText = sale.lines.length ? sale.lines.length + ' ' + i18nT('منتج') : '';
-            document.getElementById('sl-sum').innerHTML = `${c.discount > 0 ? `<div><span>${esc(i18nT('المجموع قبل الخصم:'))}</span><span>${esc(formatAmount(c.sub))}</span></div><div><span>${esc(i18nT('خصم من صافي الفاتورة'))}</span><span>− ${esc(formatAmount(c.discount))}</span></div>` : ''}
-                <div class="big"><span>${esc(i18nT('إجمالي الفاتورة'))}</span><span>${esc(formatAmount(c.total))}</span></div>
-                <div><span>${esc(i18nT('المدفوع'))}</span><span>${esc(formatAmount(c.paid))}</span></div>
-                ${c.owed > 0 ? `<div class="owe"><span>${esc(i18nT('المتبقي (دين على الزبون)'))}</span><span>${esc(formatAmount(c.owed))}</span></div>` : ''}`;
             const bar = document.getElementById('sl-bar'), cu = (state.customers || []).find(x => x.id === sale.custId);
             const debt = cu ? fnRound(getPersonBalance(cu) || 0) : 0, after = fnRound(debt + c.owed);
             bar.classList.add('show');
-            bar.innerHTML = `<div class="bi"><small>${esc(i18nT('إجمالي الفاتورة'))} · ${sale.lines.length} ${esc(i18nT('منتج'))}</small><b>${esc(formatAmount(c.total))}</b></div>` +
-                (cu && debt > 0 ? `<div class="bi dbt"><small>${esc(i18nT('دين الزبون'))}</small><b>${esc(formatAmount(debt))}</b></div>` : '') +
-                (cu && (debt > 0 || c.owed > 0) ? `<div class="bi dbt"><small>${esc(i18nT('إجمالي الدين بعد الفاتورة'))}</small><b>${esc(formatAmount(after))}</b></div>` : '') +
-                `<button type="button" class="fn-btn ok" onclick="saleCheckout()">✅ ${esc(i18nT('إتمام البيع'))}</button>`;
+            bar.innerHTML = `<div class="sl-card g"><small>${esc(i18nT('إجمالي الفاتورة'))} · ${sale.lines.length} ${esc(i18nT('منتج'))}</small><b>${esc(formatAmount(c.total))}</b>` +
+                `<i><span>${esc(i18nT('المدفوع'))}</span><span>${esc(formatAmount(c.paid))}</span></i>` +
+                (c.discount > 0 ? `<i><span>${esc(i18nT('خصم من صافي الفاتورة'))}</span><span>${esc(formatAmount(c.discount))}</span></i>` : '') + `</div>` +
+                (c.owed > 0 ? `<div class="sl-card r"><small>${esc(i18nT('المتبقي (دين على الزبون)'))}</small><b>${esc(formatAmount(c.owed))}</b></div>` : '') +
+                (cu && debt > 0 ? `<div class="sl-card o"><small>${esc(i18nT('دين الزبون'))}</small><b>${esc(formatAmount(debt))}</b></div>` : '') +
+                (cu && (debt > 0 || c.owed > 0) ? `<div class="sl-card r"><small>${esc(i18nT('إجمالي الدين بعد الفاتورة'))}</small><b>${esc(formatAmount(after))}</b></div>` : '') +
+                `<button type="button" class="sl-go" onclick="saleCheckout()">✅ ${esc(i18nT('إتمام البيع'))}</button>`;
         }
         function saleField(f, v) { sale[f] = v; saleTotals(); }
         function salePaidQuick(m) {
