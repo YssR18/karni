@@ -108,7 +108,11 @@ jobs:
               } finally { w.destroy(); }
             });
 
-            ipcMain.handle("karni-print-sized", async (e, html, title, wMm, hMm) => {
+            ipcMain.handle("karni-printers", async (e) => {
+              const list = await e.sender.getPrintersAsync();
+              return list.map((p) => ({ name: p.name, isDefault: !!p.isDefault }));
+            });
+            ipcMain.handle("karni-print-sized", async (e, html, title, wMm, hMm, device) => {
               const w = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
               try {
                 await w.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(String(html)));
@@ -117,11 +121,15 @@ jobs:
                   const px = await w.webContents.executeJavaScript("Math.ceil(document.documentElement.scrollHeight)");
                   h = Math.max(30, Math.ceil(px * 25.4 / 96) + 6);
                 }
-                return await new Promise((resolve, reject) => {
-                  w.webContents.print({ silent: false, printBackground: true, margins: { marginType: "none" }, pageSize: { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) } }, (ok, why) => {
+                const doPrint = (dev) => new Promise((resolve, reject) => {
+                  const o = { silent: !!dev, printBackground: true, margins: { marginType: "none" }, pageSize: { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) } };
+                  if (dev) o.deviceName = dev;
+                  w.webContents.print(o, (ok, why) => {
                     if (ok || why === "cancelled" || why === "Print job canceled") resolve(true); else reject(new Error(why || "print failed"));
                   });
                 });
+                try { return await doPrint(device || ""); }
+                catch (err) { if (device) return await doPrint(""); throw err; }
               } finally { w.destroy(); }
             });
 
@@ -185,7 +193,8 @@ jobs:
             contextBridge.exposeInMainWorld("karniDesktop", {
               printPage: () => ipcRenderer.invoke("karni-print-page"),
               printHtml: (html, title) => ipcRenderer.invoke("karni-print-html", html, title),
-              printSized: (html, title, w, h) => ipcRenderer.invoke("karni-print-sized", html, title, w, h)
+              printSized: (html, title, w, h, device) => ipcRenderer.invoke("karni-print-sized", html, title, w, h, device),
+              listPrinters: () => ipcRenderer.invoke("karni-printers")
             });
           }
 
