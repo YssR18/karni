@@ -104,6 +104,36 @@ jobs:
                           }
                       });
                   }
+
+                  @JavascriptInterface
+                  public void printSized(final String html, final String title, final int wMm, final int hMm) {
+                      runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              final String name = (title == null || title.length() == 0) ? "KARNI" : title;
+                              printView = new WebView(MainActivity.this);
+                              printView.setWebViewClient(new WebViewClient() {
+                                  @Override
+                                  public void onPageFinished(final WebView view, String url) {
+                                      view.postDelayed(new Runnable() {
+                                          @Override
+                                          public void run() {
+                                              int wMil = Math.round(wMm * 1000f / 25.4f);
+                                              int hMil = hMm > 0 ? Math.round(hMm * 1000f / 25.4f) : Math.max(1500, Math.round(view.getContentHeight() * 1000f / 96f) + 200);
+                                              PrintAttributes attrs = new PrintAttributes.Builder()
+                                                  .setMediaSize(new PrintAttributes.MediaSize("KARNI_" + wMm + "x" + hMm, "KARNI " + wMm + "mm", wMil, hMil))
+                                                  .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                                  .build();
+                                              PrintManager pm = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                                              pm.print(name, view.createPrintDocumentAdapter(name), attrs);
+                                          }
+                                      }, 350);
+                                  }
+                              });
+                              printView.loadDataWithBaseURL("https://yssr18.github.io/karni/", html, "text/html", "UTF-8", null);
+                          }
+                      });
+                  }
               }
           }
           EOF

@@ -108,6 +108,23 @@ jobs:
               } finally { w.destroy(); }
             });
 
+            ipcMain.handle("karni-print-sized", async (e, html, title, wMm, hMm) => {
+              const w = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
+              try {
+                await w.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(String(html)));
+                let h = Number(hMm) || 0;
+                if (!h) {
+                  const px = await w.webContents.executeJavaScript("Math.ceil(document.documentElement.scrollHeight)");
+                  h = Math.max(30, Math.ceil(px * 25.4 / 96) + 6);
+                }
+                return await new Promise((resolve, reject) => {
+                  w.webContents.print({ silent: false, printBackground: true, margins: { marginType: "none" }, pageSize: { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) } }, (ok, why) => {
+                    if (ok || why === "cancelled" || why === "Print job canceled") resolve(true); else reject(new Error(why || "print failed"));
+                  });
+                });
+              } finally { w.destroy(); }
+            });
+
             const isInternal = (u) => u.startsWith(LIVE) || u.startsWith("file://") || u.startsWith("about:") || u.startsWith("blob:") || u.startsWith("data:");
             const openOutside = (u) => { if (/^(https?|whatsapp|tel|mailto):/i.test(u)) shell.openExternal(u); };
 
@@ -167,7 +184,8 @@ jobs:
             const { contextBridge, ipcRenderer } = require("electron");
             contextBridge.exposeInMainWorld("karniDesktop", {
               printPage: () => ipcRenderer.invoke("karni-print-page"),
-              printHtml: (html, title) => ipcRenderer.invoke("karni-print-html", html, title)
+              printHtml: (html, title) => ipcRenderer.invoke("karni-print-html", html, title),
+              printSized: (html, title, w, h) => ipcRenderer.invoke("karni-print-sized", html, title, w, h)
             });
           }
 
