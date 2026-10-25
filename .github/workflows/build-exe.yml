@@ -125,7 +125,7 @@ jobs:
                   h = Math.max(30, Math.ceil(px * 25.4 / 96) + 4);
                 }
                 const doPrint = (dev) => new Promise((resolve, reject) => {
-                  const o = { silent: !!dev, printBackground: true, margins: { marginType: "none" }, pageSize: { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) } };
+                  const o = { silent: !!dev, printBackground: true, margins: { marginType: "none" } }; if (Number(hMm) > 0) o.pageSize = { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) };
                   if (dev) o.deviceName = dev;
                   w.webContents.print(o, (ok, why) => {
                     if (ok || why === "cancelled" || why === "Print job canceled") resolve(true); else reject(new Error(why || "print failed"));
