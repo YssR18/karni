@@ -113,13 +113,16 @@ jobs:
               return list.map((p) => ({ name: p.name, isDefault: !!p.isDefault }));
             });
             ipcMain.handle("karni-print-sized", async (e, html, title, wMm, hMm, device) => {
-              const w = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
+              const pxW = Math.max(200, Math.round(Number(wMm) * 96 / 25.4));
+              const w = new BrowserWindow({ show: false, width: pxW, height: 1200, useContentSize: true, webPreferences: { sandbox: true } });
               try {
                 await w.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(String(html)));
+                try { await w.webContents.executeJavaScript("document.fonts && document.fonts.ready ? document.fonts.ready.then(function () { return true; }) : true"); } catch (e) {}
+                await new Promise((r) => setTimeout(r, 600));
                 let h = Number(hMm) || 0;
                 if (!h) {
-                  const px = await w.webContents.executeJavaScript("Math.ceil(document.documentElement.scrollHeight)");
-                  h = Math.max(30, Math.ceil(px * 25.4 / 96) + 6);
+                  const px = await w.webContents.executeJavaScript("Math.ceil(document.body.getBoundingClientRect().height)");
+                  h = Math.max(30, Math.ceil(px * 25.4 / 96) + 4);
                 }
                 const doPrint = (dev) => new Promise((resolve, reject) => {
                   const o = { silent: !!dev, printBackground: true, margins: { marginType: "none" }, pageSize: { width: Math.round(Number(wMm) * 1000), height: Math.round(h * 1000) } };
