@@ -4853,7 +4853,7 @@
             const p = prodItems().find(x => x.id === id); if (!p || !p.barcode) return;
             const svg = barcodeSvg(p.barcode, 50, true);
             if (!svg) { appAlert('هذا الباركود ليس بصيغة EAN-13 ولا يمكن طباعته كملصق. يمكنك استبداله بباركود مولَّد من النظام.'); return; }
-            const sizes = [[50, 30], [40, 30], [60, 40], [40, 20], [58, 40]]; let st = '50x30', sp = 'priceDetail'; try { st = localStorage.getItem('app_label_size') || st; sp = localStorage.getItem('app_label_price') || sp; } catch (e) {}
+            const sizes = [[20, 40], [40, 20], [50, 30], [40, 30], [60, 40], [58, 40]]; let st = '50x30', sp = 'priceDetail'; try { st = localStorage.getItem('app_label_size') || st; sp = localStorage.getItem('app_label_price') || sp; } catch (e) {}
             let v;
             for (;;) {
                 const rot = lblRot();
