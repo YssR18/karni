@@ -633,7 +633,9 @@
         .scan-box video{width:100%;height:100%;object-fit:cover}
         .scan-line{position:absolute;left:8%;right:8%;top:50%;height:2px;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:scanl 1.6s ease-in-out infinite alternate}
         @keyframes scanl{from{top:25%}to{top:75%}}
-    </style>
+            .bg-amber-100{background:#fef3c7}.text-red-800{color:#991b1b}
+        .dark .dark\:bg-amber-900\/40{background:rgba(120,53,15,.4)}.dark .dark\:bg-amber-950\/60{background:rgba(69,26,3,.6)}.dark .dark\:bg-red-900\/40{background:rgba(127,29,29,.4)}.dark .dark\:text-amber-400{color:#fbbf24}.dark .dark\:text-red-300{color:#fca5a5}
+</style>
 </head>
 <body class="text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
@@ -5607,7 +5609,7 @@
             const st = pStock(p), whs = Object.keys(st).filter(k => (st[k] || 0) !== 0).map(k => `<span class="sl-chip" data-notr>${esc(whName(k))}<b>${esc(fnNum(st[k]))}</b></span>`).join('');
             const bc = barcodeSvg(p.barcode);
             const row = (l, v) => v ? `<div class="flex justify-between gap-2 text-xs py-0.5"><span class="text-slate-500">${esc(i18nT(l))}</span><b data-notr>${esc(v)}</b></div>` : '';
-            box.innerHTML = `<div class="fn-card" style="padding:.7rem;background:#f8fafc"><div class="text-[11px] font-bold text-slate-500 mb-1">${esc(i18nT('معلومات المنتج'))}</div>
+            box.innerHTML = `<div class="fn-card" style="padding:.7rem"><div class="text-[11px] font-bold text-slate-500 mb-1">${esc(i18nT('معلومات المنتج'))}</div>
                 <div class="font-extrabold text-slate-800 dark:text-slate-100 mb-1" data-notr>${esc(p.name)}</div>
                 ${bc ? `<div style="max-width:150px;margin:0 auto .4rem">${bc}</div>` : ''}
                 ${row('الكمية الإجمالية', fnNum(pTotal(p)))}
