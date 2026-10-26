@@ -3278,6 +3278,8 @@
             const target = document.getElementById(`screen-${screenId}`);
             if (target) target.classList.remove('hidden');
             document.body.classList.toggle('pos-mode', screenId === 'sales');
+            if (window.__lastScreen !== screenId) { window.__lastScreen = screenId; try { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => window.scrollTo(0, 0), 30); } catch (e) {} }
+            if (window.__curScreen !== screenId) { window.__curScreen = screenId; try { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); document.body.scrollTop = 0; requestAnimationFrame(() => window.scrollTo(0, 0)); } catch (e) {} }
             const ab = document.getElementById('about-link');
             if (ab) ab.classList.toggle('hidden', screenId !== 'home');
         }
