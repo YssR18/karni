@@ -4896,7 +4896,25 @@
         async function prnEnsure(kind) { if (prnHas() && !prnGet(kind)) { await prnLoad(); const g = prnGuess(kind); if (g) try { localStorage.setItem('app_prn_' + kind, g); } catch (e) {} } }
         const rcW = () => { try { const v = parseInt(localStorage.getItem('app_rc_w'), 10); return [50, 58, 80].includes(v) ? v : 80; } catch (e) { return 80; } };
         const rcPrintable = () => ({ 50: 42, 58: 48, 80: 72 })[rcW()];
-        async function printRoll(html, title, opts) { await prnEnsure(opts.kind); if (opts.kind === 'receipt') opts = { ...opts, w: rcW() }; printDoc(html, title, opts); }
+        // قياس ارتفاع محتوى الوصل بالمليمتر ليُرسل بحجم صفحة دقيق (بدل الاعتماد على طول ورق الدرايفر)
+        async function measureMm(html, wMm) {
+            const tmp = document.createElement('div'); tmp.innerHTML = html; try { i18nTree(tmp); } catch (e) {}
+            const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;left:-9999px;top:0;border:0;width:' + wMm + 'mm;height:200px;visibility:hidden';
+            f.srcdoc = `<!doctype html><html dir="${LANG === 'ar' ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><style>*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;margin:0;padding:0;width:${wMm}mm}</style></head><body>${tmp.innerHTML}</body></html>`;
+            document.body.appendChild(f);
+            try {
+                await new Promise(r => { f.onload = r; setTimeout(r, 1500); });
+                try { if (f.contentDocument.fonts && f.contentDocument.fonts.ready) await f.contentDocument.fonts.ready; } catch (e) {}
+                await new Promise(r => setTimeout(r, 150));
+                const px = Math.ceil(f.contentDocument.body.getBoundingClientRect().height);
+                return px > 0 ? Math.min(3000, Math.max(40, Math.ceil(px * 25.4 / 96) + 6)) : 0;
+            } catch (e) { return 0; } finally { f.remove(); }
+        }
+        async function printRoll(html, title, opts) {
+            await prnEnsure(opts.kind);
+            if (opts.kind === 'receipt') { opts = { ...opts, w: rcW() }; if (!(opts.h > 0)) { const h = await measureMm(html, opts.w); if (h > 0) opts.h = h; } }
+            printDoc(html, title, opts);
+        }
         async function prnTest(kind) {
             prnSave();
             if (kind === 'receipt') {
