@@ -108,6 +108,17 @@ jobs:
               } finally { w.destroy(); }
             });
 
+            ipcMain.handle("karni-print-raw", async (e, device, b64) => {
+              const tmpd = os.tmpdir(), f = path.join(tmpd, "karni-raw-" + Date.now() + ".bin"), psf = path.join(tmpd, "karni-raw.ps1");
+              fs.writeFileSync(f, Buffer.from(String(b64), "base64"));
+              fs.writeFileSync(psf, Buffer.from("cGFyYW0oW3N0cmluZ10kUHJpbnRlcixbc3RyaW5nXSRQYXRoKQokRXJyb3JBY3Rpb25QcmVmZXJlbmNlID0gIlN0b3AiCiRzcmMgPSBAIgp1c2luZyBTeXN0ZW07CnVzaW5nIFN5c3RlbS5SdW50aW1lLkludGVyb3BTZXJ2aWNlczsKcHVibGljIGNsYXNzIEthcm5pUmF3IHsKICBbU3RydWN0TGF5b3V0KExheW91dEtpbmQuU2VxdWVudGlhbCwgQ2hhclNldCA9IENoYXJTZXQuVW5pY29kZSldCiAgcHVibGljIHN0cnVjdCBET0NJTkZPIHsgcHVibGljIHN0cmluZyBwRG9jTmFtZTsgcHVibGljIHN0cmluZyBwT3V0cHV0RmlsZTsgcHVibGljIHN0cmluZyBwRGF0YVR5cGU7IH0KICBbRGxsSW1wb3J0KCJ3aW5zcG9vbC5kcnYiLCBFbnRyeVBvaW50ID0gIk9wZW5QcmludGVyVyIsIFNldExhc3RFcnJvciA9IHRydWUsIENoYXJTZXQgPSBDaGFyU2V0LlVuaWNvZGUpXQogIHB1YmxpYyBzdGF0aWMgZXh0ZXJuIGJvb2wgT3BlblByaW50ZXIoc3RyaW5nIG4sIG91dCBJbnRQdHIgaCwgSW50UHRyIGQpOwogIFtEbGxJbXBvcnQoIndpbnNwb29sLmRydiIsIFNldExhc3RFcnJvciA9IHRydWUpXQogIHB1YmxpYyBzdGF0aWMgZXh0ZXJuIGJvb2wgQ2xvc2VQcmludGVyKEludFB0ciBoKTsKICBbRGxsSW1wb3J0KCJ3aW5zcG9vbC5kcnYiLCBFbnRyeVBvaW50ID0gIlN0YXJ0RG9jUHJpbnRlclciLCBTZXRMYXN0RXJyb3IgPSB0cnVlLCBDaGFyU2V0ID0gQ2hhclNldC5Vbmljb2RlKV0KICBwdWJsaWMgc3RhdGljIGV4dGVybiBpbnQgU3RhcnREb2NQcmludGVyKEludFB0ciBoLCBpbnQgbGV2ZWwsIHJlZiBET0NJTkZPIGRpKTsKICBbRGxsSW1wb3J0KCJ3aW5zcG9vbC5kcnYiLCBTZXRMYXN0RXJyb3IgPSB0cnVlKV0KICBwdWJsaWMgc3RhdGljIGV4dGVybiBib29sIEVuZERvY1ByaW50ZXIoSW50UHRyIGgpOwogIFtEbGxJbXBvcnQoIndpbnNwb29sLmRydiIsIFNldExhc3RFcnJvciA9IHRydWUpXQogIHB1YmxpYyBzdGF0aWMgZXh0ZXJuIGJvb2wgU3RhcnRQYWdlUHJpbnRlcihJbnRQdHIgaCk7CiAgW0RsbEltcG9ydCgid2luc3Bvb2wuZHJ2IiwgU2V0TGFzdEVycm9yID0gdHJ1ZSldCiAgcHVibGljIHN0YXRpYyBleHRlcm4gYm9vbCBFbmRQYWdlUHJpbnRlcihJbnRQdHIgaCk7CiAgW0RsbEltcG9ydCgid2luc3Bvb2wuZHJ2IiwgU2V0TGFzdEVycm9yID0gdHJ1ZSldCiAgcHVibGljIHN0YXRpYyBleHRlcm4gYm9vbCBXcml0ZVByaW50ZXIoSW50UHRyIGgsIGJ5dGVbXSBiLCBpbnQgYywgb3V0IGludCB3KTsKICBwdWJsaWMgc3RhdGljIHN0cmluZyBTZW5kKHN0cmluZyBwcmludGVyLCBieXRlW10gZGF0YSkgewogICAgSW50UHRyIGg7CiAgICBpZiAoIU9wZW5QcmludGVyKHByaW50ZXIsIG91dCBoLCBJbnRQdHIuWmVybykpIHJldHVybiAiT3BlblByaW50ZXIgZmFpbGVkICIgKyBNYXJzaGFsLkdldExhc3RXaW4zMkVycm9yKCk7CiAgICBET0NJTkZPIGRpID0gbmV3IERPQ0lORk8oKTsKICAgIGRpLnBEb2NOYW1lID0gIktBUk5JIjsKICAgIGRpLnBPdXRwdXRGaWxlID0gbnVsbDsKICAgIGRpLnBEYXRhVHlwZSA9ICJSQVciOwogICAgaWYgKFN0YXJ0RG9jUHJpbnRlcihoLCAxLCByZWYgZGkpID09IDApIHsgaW50IGUgPSBNYXJzaGFsLkdldExhc3RXaW4zMkVycm9yKCk7IENsb3NlUHJpbnRlcihoKTsgcmV0dXJuICJTdGFydERvYyBmYWlsZWQgIiArIGU7IH0KICAgIFN0YXJ0UGFnZVByaW50ZXIoaCk7CiAgICBpbnQgdzsKICAgIGJvb2wgb2sgPSBXcml0ZVByaW50ZXIoaCwgZGF0YSwgZGF0YS5MZW5ndGgsIG91dCB3KTsKICAgIGludCBlMiA9IE1hcnNoYWwuR2V0TGFzdFdpbjMyRXJyb3IoKTsKICAgIEVuZFBhZ2VQcmludGVyKGgpOwogICAgRW5kRG9jUHJpbnRlcihoKTsKICAgIENsb3NlUHJpbnRlcihoKTsKICAgIHJldHVybiBvayA/ICJPSyIgOiAiV3JpdGVQcmludGVyIGZhaWxlZCAiICsgZTI7CiAgfQp9CiJACkFkZC1UeXBlIC1UeXBlRGVmaW5pdGlvbiAkc3JjCiRieXRlcyA9IFtTeXN0ZW0uSU8uRmlsZV06OlJlYWRBbGxCeXRlcygkUGF0aCkKV3JpdGUtT3V0cHV0IChbS2FybmlSYXddOjpTZW5kKCRQcmludGVyLCAkYnl0ZXMpKQo=", "base64").toString("utf8"), "utf8");
+              return await new Promise((resolve) => {
+                require("child_process").execFile("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", psf, "-Printer", String(device), "-Path", f], { windowsHide: true, timeout: 30000 }, (err, stdout, stderr) => {
+                  try { fs.unlinkSync(f); } catch (x) {}
+                  resolve(err ? "ERR " + String(stderr || err.message).slice(0, 300) : String(stdout || "").trim());
+                });
+              });
+            });
             ipcMain.handle("karni-printers", async (e) => {
               const list = await e.sender.getPrintersAsync();
               return list.map((p) => ({ name: p.name, isDefault: !!p.isDefault }));
@@ -197,6 +208,7 @@ jobs:
               printPage: () => ipcRenderer.invoke("karni-print-page"),
               printHtml: (html, title) => ipcRenderer.invoke("karni-print-html", html, title),
               printSized: (html, title, w, h, device) => ipcRenderer.invoke("karni-print-sized", html, title, w, h, device),
+              printRaw: (device, b64) => ipcRenderer.invoke("karni-print-raw", device, b64),
               listPrinters: () => ipcRenderer.invoke("karni-printers")
             });
           }
