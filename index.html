@@ -5161,7 +5161,7 @@
                 }
             }
             if (rcCut() === 'auto') out.push(0x1B, 0x64, 0x04, 0x1D, 0x56, 0x42, 0x00);
-            else out.push(0x1B, 0x4A, 150);   // قطع يدوي: تمرير الورق ~19مم ليبتعد المحتوى عن حافة التمزيق
+            else out.push(0x1B, 0x64, 0x07);   // قطع يدوي: تمرير الورق 7 أسطر ~28مم ليبتعد المحتوى عن حافة التمزيق
             return new Uint8Array(out);
         }
         async function prnRawTest() {
