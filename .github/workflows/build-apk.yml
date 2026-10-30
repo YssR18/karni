@@ -52,6 +52,8 @@ jobs:
           npx cap add android
           sed -i 's#</manifest>#    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />\n</manifest>#' android/app/src/main/AndroidManifest.xml
           grep -n "CAMERA" android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />\n</manifest>#' android/app/src/main/AndroidManifest.xml
+          grep -n "BLUETOOTH" android/app/src/main/AndroidManifest.xml
 
       - name: 5. تركيب أيقونة KARNI بحواف دائرية + دعم الطباعة على أندرويد
         run: |
@@ -65,7 +67,17 @@ jobs:
           cat << 'EOF' > android/app/src/main/java/com/yasser/karni/MainActivity.java
           package com.yasser.karni;
 
+          import android.Manifest;
+          import android.bluetooth.BluetoothAdapter;
+          import android.bluetooth.BluetoothDevice;
+          import android.bluetooth.BluetoothSocket;
           import android.content.Context;
+          import android.content.pm.PackageManager;
+          import android.os.Build;
+          import android.util.Base64;
+          import java.io.OutputStream;
+          import java.util.Set;
+          import java.util.UUID;
           import android.os.Bundle;
           import android.print.PrintAttributes;
           import android.print.PrintDocumentAdapter;
@@ -85,6 +97,80 @@ jobs:
               }
 
               public class KarniAndroid {
+
+                  private boolean btPermOk() {
+                      if (Build.VERSION.SDK_INT >= 31) {
+                          if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                              runOnUiThread(new Runnable() {
+                                  @Override
+                                  public void run() {
+                                      requestPermissions(new String[] { Manifest.permission.BLUETOOTH_CONNECT }, 7);
+                                  }
+                              });
+                              return false;
+                          }
+                      }
+                      return true;
+                  }
+
+                  @JavascriptInterface
+                  public String btList() {
+                      try {
+                          if (!btPermOk()) return "PERM";
+                          BluetoothAdapter ad = BluetoothAdapter.getDefaultAdapter();
+                          if (ad == null) return "ERR no bluetooth";
+                          StringBuilder sb = new StringBuilder("[");
+                          Set<BluetoothDevice> set = ad.getBondedDevices();
+                          boolean first = true;
+                          for (BluetoothDevice d : set) {
+                              if (!first) sb.append(",");
+                              first = false;
+                              String n = d.getName() == null ? "" : d.getName().replace("\\", "").replace("\"", "");
+                              sb.append("{\"name\":\"").append(n).append("\",\"address\":\"").append(d.getAddress()).append("\"}");
+                          }
+                          sb.append("]");
+                          return sb.toString();
+                      } catch (Exception e) {
+                          return "ERR " + e.getMessage();
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public String btPrint(String address, String b64) {
+                      BluetoothSocket sock = null;
+                      try {
+                          if (!btPermOk()) return "ERR permission";
+                          BluetoothAdapter ad = BluetoothAdapter.getDefaultAdapter();
+                          if (ad == null) return "ERR no bluetooth";
+                          BluetoothDevice dev = ad.getRemoteDevice(address);
+                          ad.cancelDiscovery();
+                          UUID spp = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+                          try {
+                              sock = dev.createRfcommSocketToServiceRecord(spp);
+                              sock.connect();
+                          } catch (Exception e1) {
+                              try { if (sock != null) sock.close(); } catch (Exception e2) {}
+                              sock = dev.createInsecureRfcommSocketToServiceRecord(spp);
+                              sock.connect();
+                          }
+                          OutputStream os = sock.getOutputStream();
+                          byte[] data = Base64.decode(b64, Base64.DEFAULT);
+                          int off = 0;
+                          while (off < data.length) {
+                              int n = Math.min(1024, data.length - off);
+                              os.write(data, off, n);
+                              off += n;
+                              Thread.sleep(25);
+                          }
+                          os.flush();
+                          Thread.sleep(800);
+                          return "OK";
+                      } catch (Exception e) {
+                          return "ERR " + e.getMessage();
+                      } finally {
+                          try { if (sock != null) sock.close(); } catch (Exception e3) {}
+                      }
+                  }
                   @JavascriptInterface
                   public void printHtml(final String html, final String title) {
                       runOnUiThread(new Runnable() {
