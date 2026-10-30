@@ -79,6 +79,8 @@ jobs:
           import java.util.Set;
           import java.util.UUID;
           import android.os.Bundle;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
           import android.print.PrintAttributes;
           import android.print.PrintDocumentAdapter;
           import android.print.PrintManager;
@@ -94,9 +96,49 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   getBridge().getWebView().addJavascriptInterface(new KarniAndroid(), "KarniAndroid");
+                  grabAct(getIntent());
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  if (grabAct(intent)) {
+                      getBridge().getWebView().postDelayed(new Runnable() {
+                          @Override
+                          public void run() {
+                              getBridge().getWebView().evaluateJavascript("window.karniPoll && karniPoll()", null);
+                          }
+                      }, 250);
+                  }
+              }
+
+              private boolean grabAct(Intent it) {
+                  if (it == null) return false;
+                  String a = it.getStringExtra("karni_act");
+                  if (a == null || a.length() == 0) return false;
+                  getSharedPreferences("karni_widget", Context.MODE_PRIVATE).edit().putString("act", a).apply();
+                  it.removeExtra("karni_act");
+                  return true;
               }
 
               public class KarniAndroid {
+
+                  @JavascriptInterface
+                  public void setWidget(String json) {
+                      try {
+                          getSharedPreferences("karni_widget", Context.MODE_PRIVATE).edit().putString("data", json).apply();
+                          KarniWidget.refresh(MainActivity.this);
+                      } catch (Exception e) {}
+                  }
+
+                  @JavascriptInterface
+                  public String takeAct() {
+                      SharedPreferences sp = getSharedPreferences("karni_widget", Context.MODE_PRIVATE);
+                      String a = sp.getString("act", "");
+                      if (a.length() > 0) sp.edit().remove("act").apply();
+                      return a;
+                  }
 
                   private boolean btPermOk() {
                       if (Build.VERSION.SDK_INT >= 31) {
@@ -223,6 +265,157 @@ jobs:
               }
           }
           EOF
+
+      - name: 5b. ودجت الشاشة الرئيسية (ملخص اليوم + الديون + تنبيهات + أزرار سريعة)
+        run: |
+          RES=android/app/src/main/res
+          mkdir -p $RES/layout $RES/xml $RES/drawable
+          cat << 'EOF' > android/app/src/main/java/com/yasser/karni/KarniWidget.java
+          package com.yasser.karni;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.os.Build;
+          import android.widget.RemoteViews;
+          import org.json.JSONObject;
+
+          public class KarniWidget extends AppWidgetProvider {
+
+              @Override
+              public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
+                  for (int id : ids) mgr.updateAppWidget(id, build(ctx));
+              }
+
+              public static void refresh(Context ctx) {
+                  AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+                  int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, KarniWidget.class));
+                  if (ids == null || ids.length == 0) return;
+                  for (int id : ids) mgr.updateAppWidget(id, build(ctx));
+              }
+
+              private static PendingIntent act(Context ctx, String a, int code) {
+                  Intent it = new Intent(ctx, MainActivity.class);
+                  it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  if (a != null) it.putExtra("karni_act", a);
+                  int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
+                  return PendingIntent.getActivity(ctx, code, it, fl);
+              }
+
+              private static RemoteViews build(Context ctx) {
+                  RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.karni_widget);
+                  String shop = "KARNI", sales = "-", count = "0", cust = "-", supp = "-", alertTxt = "";
+                  String lS = "Sales", lC = "Invoices", lCu = "Customers", lSu = "Suppliers", lOk = "", b1 = "Sale", b2 = "Customers", b3 = "Vouchers", b4 = "Scan";
+                  String upd = "";
+                  try {
+                      String js = ctx.getSharedPreferences("karni_widget", Context.MODE_PRIVATE).getString("data", "");
+                      if (js.length() > 0) {
+                          JSONObject o = new JSONObject(js);
+                          JSONObject l = o.getJSONObject("l");
+                          shop = o.optString("shop", shop);
+                          sales = o.optString("sales", sales);
+                          count = o.optString("count", count);
+                          cust = o.optString("cust", cust);
+                          supp = o.optString("supp", supp);
+                          lS = l.optString("sales", lS); lC = l.optString("count", lC); lCu = l.optString("cust", lCu); lSu = l.optString("supp", lSu);
+                          lOk = l.optString("ok", lOk);
+                          b1 = l.optString("b1", b1); b2 = l.optString("b2", b2); b3 = l.optString("b3", b3); b4 = l.optString("b4", b4);
+                          int low = o.optInt("low", 0), pend = o.optInt("pend", 0);
+                          StringBuilder sb = new StringBuilder();
+                          if (low > 0) sb.append("⚠️ ").append(l.optString("low", "")).append(": ").append(low);
+                          if (pend > 0) { if (sb.length() > 0) sb.append("   "); sb.append("🔔 ").append(l.optString("pend", "")).append(": ").append(pend); }
+                          alertTxt = sb.length() > 0 ? sb.toString() : "✅ " + lOk;
+                          long at = o.optLong("at", 0);
+                          if (at > 0) upd = new java.text.SimpleDateFormat("HH:mm").format(new java.util.Date(at));
+                      }
+                  } catch (Exception e) {}
+                  v.setTextViewText(R.id.kw_shop, shop);
+                  v.setTextViewText(R.id.kw_time, upd);
+                  v.setTextViewText(R.id.kw_sales_l, lS + " · " + count + " " + lC);
+                  v.setTextViewText(R.id.kw_sales, sales);
+                  v.setTextViewText(R.id.kw_cust_l, lCu);
+                  v.setTextViewText(R.id.kw_cust, cust);
+                  v.setTextViewText(R.id.kw_supp_l, lSu);
+                  v.setTextViewText(R.id.kw_supp, supp);
+                  v.setTextViewText(R.id.kw_alert, alertTxt);
+                  v.setTextViewText(R.id.kw_b1, "🛒\n" + b1);
+                  v.setTextViewText(R.id.kw_b2, "👥\n" + b2);
+                  v.setTextViewText(R.id.kw_b3, "🧾\n" + b3);
+                  v.setTextViewText(R.id.kw_b4, "📷\n" + b4);
+                  v.setOnClickPendingIntent(R.id.kw_root, act(ctx, null, 10));
+                  v.setOnClickPendingIntent(R.id.kw_b1, act(ctx, "sale", 11));
+                  v.setOnClickPendingIntent(R.id.kw_b2, act(ctx, "cust", 12));
+                  v.setOnClickPendingIntent(R.id.kw_b3, act(ctx, "vch", 13));
+                  v.setOnClickPendingIntent(R.id.kw_b4, act(ctx, "scan", 14));
+                  return v;
+              }
+          }
+          EOF
+          cat << 'EOF' > $RES/layout/karni_widget.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/kw_root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="12dp"
+              android:background="@drawable/karni_widget_bg">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                  <TextView android:id="@+id/kw_shop" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" />
+              </LinearLayout>
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                  <LinearLayout android:layout_width="0dp" android:layout_weight="1.3" android:layout_height="wrap_content" android:orientation="vertical">
+                      <TextView android:id="@+id/kw_sales_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" />
+                      <TextView android:id="@+id/kw_sales" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#34D399" android:textSize="22sp" android:textStyle="bold" android:singleLine="true" />
+                  </LinearLayout>
+                  <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                      <TextView android:id="@+id/kw_cust_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" />
+                      <TextView android:id="@+id/kw_cust" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FCA5A5" android:textSize="14sp" android:textStyle="bold" android:singleLine="true" />
+                      <TextView android:id="@+id/kw_supp_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" android:layout_marginTop="2dp" />
+                      <TextView android:id="@+id/kw_supp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FDE68A" android:textSize="14sp" android:textStyle="bold" android:singleLine="true" />
+                  </LinearLayout>
+              </LinearLayout>
+              <TextView android:id="@+id/kw_alert" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FDBA74" android:textSize="11sp" android:singleLine="true" android:layout_marginTop="4dp" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="6dp">
+                  <TextView android:id="@+id/kw_b1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:background="@drawable/karni_widget_btn" />
+                  <TextView android:id="@+id/kw_b2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
+                  <TextView android:id="@+id/kw_b3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
+                  <TextView android:id="@+id/kw_b4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
+              </LinearLayout>
+          </LinearLayout>
+          EOF
+          cat << 'EOF' > $RES/drawable/karni_widget_bg.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#E60F172A" />
+              <corners android:radius="20dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/karni_widget_btn.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#334155" />
+              <corners android:radius="12dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/xml/karni_widget_info.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="140dp"
+              android:targetCellWidth="4"
+              android:targetCellHeight="2"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/karni_widget"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+          sed -i 's#</application>#    <receiver android:name=".KarniWidget" android:exported="false">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/karni_widget_info" />\n        </receiver>\n    </application>#' android/app/src/main/AndroidManifest.xml
+          grep -n "KarniWidget" android/app/src/main/AndroidManifest.xml
 
       - name: 6. تثبيت مفتاح التوقيع الثابت (ليُحدَّث التطبيق فوق النسخة القديمة)
         env:
