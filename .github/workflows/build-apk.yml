@@ -143,7 +143,7 @@ jobs:
                           BluetoothAdapter ad = BluetoothAdapter.getDefaultAdapter();
                           if (ad == null) return "ERR no bluetooth";
                           BluetoothDevice dev = ad.getRemoteDevice(address);
-                          ad.cancelDiscovery();
+                          try { ad.cancelDiscovery(); } catch (Exception ce) {}
                           UUID spp = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
                           try {
                               sock = dev.createRfcommSocketToServiceRecord(spp);
