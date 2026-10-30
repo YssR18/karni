@@ -157,13 +157,13 @@ jobs:
                           byte[] data = Base64.decode(b64, Base64.DEFAULT);
                           int off = 0;
                           while (off < data.length) {
-                              int n = Math.min(2048, data.length - off);
+                              int n = Math.min(1024, data.length - off);
                               os.write(data, off, n);
                               off += n;
-                              Thread.sleep(8);
+                              Thread.sleep(25);
                           }
                           os.flush();
-                          Thread.sleep(800);
+                          Thread.sleep(Math.min(6000, 1500 + data.length / 12));
                           return "OK";
                       } catch (Exception e) {
                           return "ERR " + e.getMessage();
