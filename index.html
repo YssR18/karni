@@ -704,6 +704,30 @@
         html[data-theme="calm"] .dash-card::before{height:0}
         html[data-theme="calm"] .dash-ico{border-radius:1.1rem}
         html[data-theme="night"]{--bg-main:#0a0f1f;--card-bg:#0f1730;--border-soft:#1f2e55;--shadow-soft:none;--shadow-hover:0 10px 30px rgba(56,189,248,.18)}
+
+        /* per-theme primary colour for inner screens */
+        html[data-theme="calm"]{--pri:#047857;--pri-h:#065f46;--pri-s:rgba(4,120,87,.12)}
+        html[data-theme="night"]{--pri:#0891b2;--pri-h:#0e7490;--pri-s:rgba(34,211,238,.14)}
+        html[data-theme] .bg-blue-600,html[data-theme] .bg-indigo-600,html[data-theme] .bg-blue-500{background-color:var(--pri)!important}
+        html[data-theme] .hover\:bg-blue-700:hover,html[data-theme] .hover\:bg-indigo-700:hover,html[data-theme] .hover\:bg-blue-600:hover{background-color:var(--pri-h)!important}
+        html[data-theme] .text-blue-600,html[data-theme] .text-indigo-600,html[data-theme] .text-blue-800,html[data-theme] .text-indigo-800{color:var(--pri)!important}
+        html[data-theme="night"] .text-blue-400,html[data-theme="night"] .text-indigo-400,html[data-theme="night"] .text-blue-300,html[data-theme="night"] .text-indigo-300{color:#67e8f9!important}
+        html[data-theme="calm"] .text-blue-400,html[data-theme="calm"] .text-indigo-400{color:var(--pri)!important}
+        html[data-theme] .bg-blue-50,html[data-theme] .bg-indigo-50,html[data-theme] .bg-blue-100,html[data-theme] .bg-indigo-100,html[data-theme] .bg-blue-950\/60,html[data-theme] .bg-indigo-950\/60,html[data-theme] .bg-blue-900\/40,html[data-theme] .bg-indigo-900\/40{background-color:var(--pri-s)!important}
+        html[data-theme] .border-blue-200\/60,html[data-theme] .border-blue-800\/50{border-color:var(--pri-s)!important}
+        html[data-theme] .st-tabs button.on,html[data-theme] .th-btn.on{background:var(--pri)!important;color:#fff}
+        html[data-theme] .th-btn.on{background:transparent!important;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-s)}
+        html[data-theme] input:focus,html[data-theme] select:focus,html[data-theme] textarea:focus{border-color:var(--pri)!important;box-shadow:0 0 0 2px var(--pri-s)!important;outline:none}
+        html[data-theme] .dlg-btn.primary,html[data-theme] .iv-new,html[data-theme] .sl-cat.on,html[data-theme] .sl-mini.primary,html[data-theme] #calc-box .cb-g .eq,html[data-theme] .dark .sl-cat.on{background:var(--pri)!important;color:#fff}
+        html[data-theme] .fn-btn.primary{background:linear-gradient(135deg,var(--pri),var(--pri-h))!important;box-shadow:0 4px 12px var(--pri-s)}
+        html[data-theme] .fn-tab.on,html[data-theme] .sl-pt button.on,html[data-theme] .lang-btn.on,html[data-theme] .about-link:hover,html[data-theme] .iv-tab.on{color:var(--pri)!important;border-color:var(--pri)!important}
+        html[data-theme] .lang-btn.on,html[data-theme] .iv-tab.on{background:var(--pri-s)!important}
+        html[data-theme] .iv-card{border-inline-start-color:var(--pri)!important}
+        html[data-theme] .fn-in:focus,html[data-theme] .dlg-in:focus,html[data-theme] .fn-inv:hover,html[data-theme] .iv-bar{border-color:var(--pri)!important}
+        html[data-theme] .dlg-btn:focus-visible{outline-color:var(--pri)}
+        html[data-theme] #calc-fab{background:linear-gradient(135deg,var(--pri),var(--pri-h))!important;box-shadow:0 6px 18px var(--pri-s)!important}
+        html[data-theme] .sn.on{background:var(--pri-s)!important;color:var(--pri)!important}
+        html[data-theme="night"] .fn-tab.on,html[data-theme="night"] .sl-pt button.on,html[data-theme="night"] .lang-btn.on,html[data-theme="night"] .iv-tab.on,html[data-theme="night"] .sn.on{color:#67e8f9!important;border-color:#22d3ee!important}
         html[data-theme="night"] body{background-image:radial-gradient(120% 60% at 80% 0%,#16254a 0%,#0a0f1f 62%);background-attachment:fixed}
         html[data-theme="night"] .app-header{background:rgba(10,15,31,.9);border-bottom-color:#1f2e55}
         html[data-theme="night"] .dash-card::before{height:0}
@@ -2312,24 +2336,34 @@
             if (last < v.length) frag.appendChild(document.createTextNode(v.slice(last)));
             par.replaceChild(frag, t);
         }
+        const IC_PH = new RegExp('(' + Object.keys(IC_MAP).sort((a, b) => b.length - a.length).join('|') + ')\\uFE0F?\\s*', 'g');
+        function icPh(el) {
+            const cur = el.getAttribute('placeholder'); if (cur == null) return;
+            if (el.getAttribute('data-ph1') === cur) return;
+            IC_PH.lastIndex = 0; if (!IC_PH.test(cur)) return; IC_PH.lastIndex = 0;
+            const out = cur.replace(IC_PH, '').trim(); el.setAttribute('data-ph0', cur); el.setAttribute('data-ph1', out); el.setAttribute('placeholder', out);
+        }
         function icWalk(root) {
             if (!root) return; if (root.nodeType === 3) { icNode(root); return; }
-            if (root.nodeType !== 1 || IC_SKIP.test(root.nodeName)) return;
+            if (root.nodeType !== 1 || IC_SKIP.test(root.nodeName) && !/^(INPUT|TEXTAREA)$/i.test(root.nodeName)) return;
+            if (root.hasAttribute('placeholder')) icPh(root); root.querySelectorAll && root.querySelectorAll('[placeholder]').forEach(icPh);
+            if (/^(INPUT|TEXTAREA)$/i.test(root.nodeName)) return;
             const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = []; let n; while ((n = w.nextNode())) list.push(n); list.forEach(icNode);
         }
         function icFlush() {
             icTimer = 0; if (!icOn) return; if (icObs) icObs.disconnect();
             try { const s = icPending; icPending = new Set(); s.forEach(n => { if (n.isConnected) icWalk(n); }); } catch (e) { console.error(e); }
-            if (icObs && icOn) icObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+            if (icObs && icOn) icObs.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder'] });
         }
         function iconsApply(on) {
             icOn = !!on;
             if (icObs) { icObs.disconnect(); icObs = null; }
             if (icOn) {
                 icWalk(document.body);
-                icObs = new MutationObserver(recs => { recs.forEach(r => { if (r.type === 'characterData') icPending.add(r.target); else r.addedNodes.forEach(n => icPending.add(n)); }); if (!icTimer) icTimer = setTimeout(icFlush, 30); });
-                icObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+                icObs = new MutationObserver(recs => { recs.forEach(r => { if (r.type === 'characterData' || r.type === 'attributes') icPending.add(r.target); else r.addedNodes.forEach(n => icPending.add(n)); }); if (!icTimer) icTimer = setTimeout(icFlush, 30); });
+                icObs.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder'] });
             } else {
+                document.querySelectorAll('[data-ph0]').forEach(el => { if (el.getAttribute('placeholder') === el.getAttribute('data-ph1')) el.setAttribute('placeholder', el.getAttribute('data-ph0')); el.removeAttribute('data-ph0'); el.removeAttribute('data-ph1'); });
                 document.querySelectorAll('svg.ic[data-e]').forEach(sv => sv.replaceWith(document.createTextNode(sv.getAttribute('data-e') + ' ')));
                 document.body.normalize();
             }
