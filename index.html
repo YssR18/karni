@@ -184,7 +184,7 @@
         .dash-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-hover);
-            border-color: var(--border-soft);
+            border-color: var(--accent, #3b82f6);
         }
         .dash-card:active {
             transform: translateY(-1px) scale(.995);
@@ -702,13 +702,12 @@
         html[data-theme="calm"] body{background-image:none}
         html[data-theme="calm"] .dash-card{border-radius:1.5rem;border-color:transparent}
         html[data-theme="calm"] .dash-card::before{height:0}
-        html[data-theme="calm"] .dash-card:hover{border-color:transparent}
         html[data-theme="calm"] .dash-ico{border-radius:1.1rem}
         html[data-theme="night"]{--bg-main:#0a0f1f;--card-bg:#0f1730;--border-soft:#1f2e55;--shadow-soft:none;--shadow-hover:0 10px 30px rgba(56,189,248,.18)}
         html[data-theme="night"] body{background-image:radial-gradient(120% 60% at 80% 0%,#16254a 0%,#0a0f1f 62%);background-attachment:fixed}
         html[data-theme="night"] .app-header{background:rgba(10,15,31,.9);border-bottom-color:#1f2e55}
         html[data-theme="night"] .dash-card::before{height:0}
-        html[data-theme="night"] .dash-card:hover{border-color:var(--border-soft);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+        html[data-theme="night"] .dash-card:hover,html[data-theme="calm"] .dash-card:hover{border-color:var(--accent,#38bdf8);box-shadow:0 0 0 1px var(--accent,#38bdf8),0 12px 32px -6px var(--accent,#38bdf8)}
         html[data-theme="night"] .dash-ico{background:transparent !important;border:1px solid var(--accent,#38bdf8)}
         html[data-theme="night"] .dark\:bg-slate-800{background-color:#0f1730 !important}
         html[data-theme="night"] .dark\:bg-slate-900{background-color:#0a1226 !important}
