@@ -716,10 +716,9 @@
         html[data-theme="night"].dark .dlg{background:#0f1730;border-color:#1f2e55}
         html[data-theme="glass"]{--bg-main:#1a4f9c;--card-bg:rgba(255,255,255,.14);--border-soft:rgba(255,255,255,.32);--shadow-soft:0 8px 30px rgba(8,20,60,.25);--shadow-hover:0 16px 40px rgba(8,20,60,.35)}
         html[data-theme="glass"] body{background-image:linear-gradient(160deg,#2b1b8f 0%,#1a4f9c 50%,#0b7a82 100%);background-attachment:fixed;position:relative}
-        html[data-theme="glass"] body::before,html[data-theme="glass"] body::after{content:'';position:fixed;z-index:0;border-radius:50%;pointer-events:none;filter:blur(70px);animation:thDrift 10s ease-in-out infinite alternate}
+        html[data-theme="glass"] body::before,html[data-theme="glass"] body::after{content:'';position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(70px);animation:thDrift 10s ease-in-out infinite alternate}
         html[data-theme="glass"] body::before{top:-90px;left:-60px;width:340px;height:340px;background:#7c5cff;opacity:.5}
         html[data-theme="glass"] body::after{bottom:-80px;right:-60px;width:380px;height:380px;background:#14d3c4;opacity:.35}
-        html[data-theme="glass"] body>*{position:relative;z-index:1}
         html[data-theme="glass"] .app-header{background:rgba(255,255,255,.12);border-bottom-color:rgba(255,255,255,.3)}
         html[data-theme="glass"] .dash-card,html[data-theme="glass"] .dark\:bg-slate-800,html[data-theme="glass"] .dark\:bg-slate-900{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
         html[data-theme="glass"] .dark\:bg-slate-800{background-color:rgba(255,255,255,.12) !important}
