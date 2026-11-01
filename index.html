@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script>
-        (function () { try { var t = localStorage.getItem('app_theme'), h = document.documentElement; if (t && t !== 'classic') { h.setAttribute('data-theme', t); if (t !== 'calm') h.classList.add('dark'); } if (localStorage.getItem('app_lite') === '1') h.classList.add('lite'); if (localStorage.getItem('app_side') === '1') h.classList.add('has-side'); if (localStorage.getItem('app_quick') === '1') h.classList.add('has-quick'); } catch (e) {} })();
+        (function () { try { var t = localStorage.getItem('app_theme'), h = document.documentElement; if (t && t !== 'classic' && t !== 'glass') { h.setAttribute('data-theme', t); if (t !== 'calm') h.classList.add('dark'); } if (localStorage.getItem('app_lite') === '1') h.classList.add('lite'); if (localStorage.getItem('app_side') === '1') h.classList.add('has-side'); if (localStorage.getItem('app_quick') === '1') h.classList.add('has-quick'); } catch (e) {} })();
         /* الوضع التجريبي: تخزين منفصل تماماً (مفاتيح demo_) ولا اتصال بـ Firebase إطلاقاً */
         (function () {
             try {
@@ -184,7 +184,7 @@
         .dash-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-hover);
-            border-color: var(--accent, #3b82f6);
+            border-color: var(--border-soft);
         }
         .dash-card:active {
             transform: translateY(-1px) scale(.995);
@@ -708,31 +708,15 @@
         html[data-theme="night"] body{background-image:radial-gradient(120% 60% at 80% 0%,#16254a 0%,#0a0f1f 62%);background-attachment:fixed}
         html[data-theme="night"] .app-header{background:rgba(10,15,31,.9);border-bottom-color:#1f2e55}
         html[data-theme="night"] .dash-card::before{height:0}
-        html[data-theme="night"] .dash-card:hover{border-color:#38bdf8;box-shadow:0 0 0 1px #38bdf8,0 10px 30px rgba(56,189,248,.18)}
+        html[data-theme="night"] .dash-card:hover{border-color:var(--border-soft);box-shadow:0 10px 26px rgba(0,0,0,.35)}
         html[data-theme="night"] .dash-ico{background:transparent !important;border:1px solid var(--accent,#38bdf8)}
         html[data-theme="night"] .dark\:bg-slate-800{background-color:#0f1730 !important}
         html[data-theme="night"] .dark\:bg-slate-900{background-color:#0a1226 !important}
         html[data-theme="night"] .dark\:bg-slate-700{background-color:#16213f !important}
         html[data-theme="night"].dark .dlg{background:#0f1730;border-color:#1f2e55}
-        html[data-theme="glass"]{--bg-main:#1a4f9c;--card-bg:rgba(255,255,255,.14);--border-soft:rgba(255,255,255,.32);--shadow-soft:0 8px 30px rgba(8,20,60,.25);--shadow-hover:0 16px 40px rgba(8,20,60,.35)}
-        html[data-theme="glass"] body{background-image:linear-gradient(160deg,#2b1b8f 0%,#1a4f9c 50%,#0b7a82 100%);background-attachment:fixed;position:relative}
-        html[data-theme="glass"] body::before,html[data-theme="glass"] body::after{content:'';position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(70px);animation:thDrift 10s ease-in-out infinite alternate}
-        html[data-theme="glass"] body::before{top:-90px;left:-60px;width:340px;height:340px;background:#7c5cff;opacity:.5}
-        html[data-theme="glass"] body::after{bottom:-80px;right:-60px;width:380px;height:380px;background:#14d3c4;opacity:.35}
-        html[data-theme="glass"] .app-header{background:rgba(255,255,255,.12);border-bottom-color:rgba(255,255,255,.3)}
-        html[data-theme="glass"] .dash-card,html[data-theme="glass"] .dark\:bg-slate-800,html[data-theme="glass"] .dark\:bg-slate-900{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-        html[data-theme="glass"] .dark\:bg-slate-800{background-color:rgba(255,255,255,.12) !important}
-        html[data-theme="glass"] .dark\:bg-slate-900{background-color:rgba(255,255,255,.08) !important}
-        html[data-theme="glass"] .dark\:bg-slate-700{background-color:rgba(255,255,255,.18) !important}
-        html[data-theme="glass"] .dash-card{border-radius:1.6rem}
-        html[data-theme="glass"] .dash-card::before{height:0}
-        html[data-theme="glass"] .dash-card:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.6)}
-        html[data-theme="glass"] .dash-ico{background:rgba(255,255,255,.22) !important}
-        html[data-theme="glass"] .fn-in{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
         html.lite *,html.lite *::before,html.lite *::after{animation:none !important;transition-duration:.01ms !important}
         html.lite *{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
-        html.lite[data-theme="glass"] .dash-card,html.lite[data-theme="glass"] .dark\:bg-slate-800{background-color:rgba(20,40,110,.6) !important}
-        @media (prefers-reduced-motion:reduce){html[data-theme] .home-grid>.dash-card,html[data-theme="glass"] body::before,html[data-theme="glass"] body::after{animation:none !important}}
+        @media (prefers-reduced-motion:reduce){html[data-theme] .home-grid>.dash-card}
         #quick-row{display:none}
         html.has-quick #quick-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin-bottom:1rem}
         .qk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;padding:.65rem .3rem;border-radius:1rem;background:var(--card-bg);border:1px solid var(--border-soft);box-shadow:var(--shadow-soft);font-size:.78rem;font-weight:800;color:inherit;transition:transform .15s,box-shadow .15s}
@@ -744,6 +728,9 @@
             html.has-side #side-nav{display:flex;flex-direction:column;gap:.25rem;position:fixed;z-index:30;top:var(--hdr,4.4rem);bottom:0;inset-inline-start:0;width:13.5rem;padding:1rem .7rem;overflow-y:auto;background:var(--card-bg);border-inline-end:1px solid var(--border-soft)}
             html.has-side body{padding-inline-start:13.5rem}
             html.has-side main{max-width:80rem}
+            html.has-side.in-sales #side-nav{display:none}
+            html.has-side.in-sales body{padding-inline-start:0}
+            html.has-side.in-sales .app-header{margin-inline-start:0}
             html.has-side .app-header{margin-inline-start:-13.5rem}
             .sn{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:.85rem;font-size:.92rem;font-weight:700;color:inherit;text-align:start;transition:background .15s}
             .sn:hover{background:rgba(59,130,246,.1)}
@@ -1641,7 +1628,6 @@
                         <button type="button" class="th-btn" data-th="classic" onclick="themeSet('classic')"><div class="th-sw" style="background:linear-gradient(135deg,#f4f7fb,#3b82f6)"></div>الكلاسيكي (الحالي)</button>
                         <button type="button" class="th-btn" data-th="calm" onclick="themeSet('calm')"><div class="th-sw" style="background:linear-gradient(135deg,#f3f5f7,#10b981)"></div>هدوء</button>
                         <button type="button" class="th-btn" data-th="night" onclick="themeSet('night')"><div class="th-sw" style="background:linear-gradient(135deg,#0a0f1f,#22d3ee)"></div>ليل</button>
-                        <button type="button" class="th-btn" data-th="glass" onclick="themeSet('glass')"><div class="th-sw" style="background:linear-gradient(135deg,#2b1b8f,#0b7a82)"></div>زجاج</button>
                     </div>
                     <label class="fn-chk"><input type="checkbox" id="opt-icons" onchange="thSetLS('app_icons', this.checked ? '1' : '0'); themeApply()"> <span>أيقونات خطية احترافية بدل الإيموجي</span></label>
                     <label class="fn-chk"><input type="checkbox" id="opt-lite" onchange="themeOpt('lite',this.checked)"> <span>تقليل الحركة والتمويه (أسرع على الهواتف الضعيفة)</span></label>
@@ -2352,7 +2338,7 @@
         const thGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
         const thSetLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
         function themeApply() {
-            const t = thGet('app_theme', 'classic'), h = document.documentElement;
+            let t = thGet('app_theme', 'classic'); if (t === 'glass') { t = 'classic'; thSetLS('app_theme', 'classic'); } const h = document.documentElement;
             if (t === 'classic') h.removeAttribute('data-theme'); else h.setAttribute('data-theme', t);
             const dark = t === 'classic' ? thGet('app_dark_mode', 'false') === 'true' : (t !== 'calm');
             h.classList.toggle('dark', dark);
@@ -2372,6 +2358,7 @@
             set('opt-icons', icOn); set('opt-lite', thGet('app_lite', '0') === '1'); set('opt-quick', thGet('app_quick', '0') === '1'); set('opt-side', thGet('app_side', '0') === '1');
         }
         function sideMark(id) {
+            document.documentElement.classList.toggle('in-sales', id === 'sales');
             const key = id === 'list' ? 'list-' + (state.activeSection || 'customers') : id;
             document.querySelectorAll('#side-nav .sn').forEach(b => b.classList.toggle('on', b.dataset.sn === key));
         }
