@@ -1050,7 +1050,7 @@
                     <div><label class="fn-lbl">التاريخ</label><input id="exp-date" type="date" required class="fn-in"></div>
                     <div><label class="fn-lbl">المبلغ</label><input id="exp-amount" type="number" inputmode="decimal" min="0" step="any" required placeholder="0" class="fn-in"></div>
                 </div>
-                <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><select id="exp-cat" class="fn-in"><option value="sales">مدخول المبيعات</option><option value="other">مدخول خارج المبيعات</option></select></div>
+                <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><input type="hidden" id="exp-cat" value="sales"><div class="fn-tabs"><button type="button" id="exp-c-sales" class="fn-tab on" onclick="expCatSet('sales')">مدخول المبيعات</button><button type="button" id="exp-c-other" class="fn-tab" onclick="expCatSet('other')">مدخول خارج المبيعات</button></div></div>
                 <div><label id="exp-note-l" class="fn-lbl">فيما صُرف هذا المبلغ؟</label><input id="exp-note" type="text" required maxlength="200" autocomplete="off" placeholder="مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة..." class="fn-in"></div>
                 <div class="flex gap-2">
                     <button type="submit" id="exp-submit" class="fn-btn primary flex-1">💾 حفظ المصروف</button>
@@ -5547,6 +5547,7 @@
         const isInc = () => expKind === 'inc';
         const expSum = (f, t) => fnRound((state.expenses || []).filter(x => !x.inc && (x.date || '') >= f && (x.date || '') <= t).reduce((a, x) => a + (x.amount || 0), 0));
         const incSum = (f, t) => fnRound((state.expenses || []).filter(x => x.inc && (x.date || '') >= f && (x.date || '') <= t).reduce((a, x) => a + (x.amount || 0), 0));
+        function expCatSet(v) { document.getElementById('exp-cat').value = v; document.getElementById('exp-c-sales').classList.toggle('on', v === 'sales'); document.getElementById('exp-c-other').classList.toggle('on', v === 'other'); }
         function expSetKind(k) {
             expKind = k; document.getElementById('exp-k-exp').classList.toggle('on', k === 'exp'); document.getElementById('exp-k-inc').classList.toggle('on', k === 'inc');
             resetExpenseForm(); renderExpenses();
@@ -5568,7 +5569,7 @@
             document.getElementById('exp-note-l').innerText = i18nT(isInc() ? 'ملاحظة (اختياري)' : 'فيما صُرف هذا المبلغ؟');
             document.getElementById('exp-note').placeholder = i18nT(isInc() ? 'مثال: دفعة من زبون، مساهمة...' : 'مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة...');
             document.getElementById('exp-note').required = !isInc();
-            document.getElementById('exp-cat-w').classList.toggle('hidden', !isInc()); document.getElementById('exp-cat').value = 'sales';
+            document.getElementById('exp-cat-w').classList.toggle('hidden', !isInc()); expCatSet('sales');
         }
         function saveExpense(e) {
             e.preventDefault();
@@ -5593,7 +5594,7 @@
             expEditId = id;
             document.getElementById('exp-date').value = x.date;
             document.getElementById('exp-amount').value = x.amount;
-            document.getElementById('exp-note').value = x.note || ''; if (x.inc) document.getElementById('exp-cat').value = x.ic === 'other' ? 'other' : 'sales';
+            document.getElementById('exp-note').value = x.note || ''; if (x.inc) expCatSet(x.ic === 'other' ? 'other' : 'sales');
             document.getElementById('exp-form-title').innerText = isInc() ? '✏️ تعديل المدخول' : '✏️ تعديل المصروف';
             document.getElementById('exp-submit').innerText = '💾 حفظ التعديل';
             document.getElementById('exp-cancel').classList.remove('hidden');
