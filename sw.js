@@ -1,11 +1,11 @@
 /* Service worker: دفتر الحسابات
- * - الصفحة نفسها: الشبكة أولاً، وعند انقطاع الإنترنت تُقدَّم النسخة المخزنة
- * - ملفات الموقع (tailwind.css والأيقونات): الشبكة أولاً ثم النسخة المخزنة
+ * - الصفحة وملفات الموقع: تُقدَّم فوراً من التخزين (يفتح التطبيق بلا إنترنت وبلا انتظار)،
+ *   وفي الخلفية تُجلب النسخة الأحدث بلا تخزين وسيط، وعند اختلافها تُبلَّغ الصفحة لتُحدَّث
  * - مكتبات Firebase والخطوط: تُقدَّم من التخزين وتُحدَّث في الخلفية
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = 'daftar-' + VERSION;
 
 const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
@@ -28,7 +28,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     // الصفحة الأساسية: لا بد منها
-    await Promise.all(PRECACHE_PAGES.map((u) => cache.add(u).catch(() => {})));
+    await Promise.all(PRECACHE_PAGES.map(async (u) => { try { const r = await fetch(u, { cache: 'reload' }); if (r && r.ok) await cache.put(u, r); } catch (e) {} }));
+    try { const r = await cache.match('./index.html'); if (r) await cache.put('./', r.clone()); } catch (e) {}
     // المكتبات: محاولة جيدة، ولا يفشل التثبيت إن تعذّر أحدها
     await Promise.all(PRECACHE_LIBS.map(async (u) => {
       try { await cache.add(new Request(u, { mode: 'no-cors' })); } catch (e) { /* يُخزَّن لاحقاً عند أول طلب */ }
@@ -49,33 +50,61 @@ function isCacheable(response) {
   return response && (response.ok || response.type === 'opaque');
 }
 
-async function networkFirstPage(request) {
-  const cache = await caches.open(CACHE);
-  try {
-    const fresh = await fetch(request);
-    if (fresh && fresh.ok) cache.put('./index.html', fresh.clone());
-    return fresh;
-  } catch (err) {
-    const cached = (await cache.match(request, { ignoreSearch: true })) ||
-                   (await cache.match('./index.html')) ||
-                   (await cache.match('./'));
-    if (cached) return cached;
-    throw err;
-  }
+const SHELL = ['./index.html', './tailwind.css', './manifest.webmanifest'];
+let lastRefresh = 0, refreshing = null;
+
+function fetchT(req, opts, ms) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms || 15000);
+  return fetch(req, Object.assign({}, opts || {}, { signal: ctl.signal })).finally(() => clearTimeout(t));
 }
 
-// ملفات الموقع نفسه (CSS, أيقونات...): الشبكة أولاً حتى لا يبقى تنسيق قديم مع صفحة جديدة
-async function networkFirst(request) {
+async function broadcast(msg) {
+  const cl = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  cl.forEach((c) => c.postMessage(msg));
+}
+
+// جلب أحدث نسخة من الصفحة والتنسيق دون استخدام التخزين الوسيط للمتصفح، وتخزينها معاً
+function refreshShell(force) {
+  if (refreshing) return refreshing;
+  if (!force && Date.now() - lastRefresh < 20000) return Promise.resolve();
+  lastRefresh = Date.now();
+  refreshing = (async () => {
+    try {
+      const cache = await caches.open(CACHE);
+      const old = await cache.match('./index.html');
+      const oldTxt = old ? await old.clone().text() : null;
+      const res = await fetchT('./index.html', { cache: 'no-cache' }, 20000);
+      if (!res || !res.ok) return;
+      const txt = await res.clone().text();
+      if (oldTxt === txt) return;
+      const css = await fetchT('./tailwind.css', { cache: 'no-cache' }, 20000).catch(() => null);
+      if (css && css.ok) await cache.put('./tailwind.css', css);
+      await cache.put('./index.html', res);
+      if (oldTxt !== null) broadcast({ type: 'karni-updated' });
+    } catch (e) { /* بلا اتصال: نبقى على النسخة المخزنة */ }
+    finally { refreshing = null; }
+  })();
+  return refreshing;
+}
+
+async function shellFirst(event, key) {
   const cache = await caches.open(CACHE);
-  try {
-    const fresh = await fetch(request);
-    if (fresh && fresh.ok) cache.put(request, fresh.clone());
-    return fresh;
-  } catch (err) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw err;
-  }
+  const cached = await cache.match(key, { ignoreSearch: true });
+  if (cached) { event.waitUntil(refreshShell(false)); return cached; }
+  // لا نسخة مخزنة (أول تشغيل): الشبكة
+  const fresh = await fetchT(event.request, {}, 25000);
+  if (fresh && fresh.ok) cache.put(key, fresh.clone());
+  return fresh;
+}
+
+// بقية ملفات الموقع: من التخزين إن وُجدت، وإلا الشبكة بمهلة قصيرة
+async function assetFirst(event) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(event.request, { ignoreSearch: true });
+  if (cached) return cached;
+  const fresh = await fetchT(event.request, {}, 10000);
+  if (fresh && fresh.ok) cache.put(event.request, fresh.clone());
+  return fresh;
 }
 
 async function staleWhileRevalidate(request) {
@@ -94,6 +123,10 @@ async function staleWhileRevalidate(request) {
   return Response.error();
 }
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'check') event.waitUntil(refreshShell(true));
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -102,9 +135,13 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin === self.location.origin) {
     if (request.mode === 'navigate') {
-      event.respondWith(networkFirstPage(request));
+      event.respondWith(shellFirst(event, './index.html').catch(() => caches.match('./index.html').then((r) => r || Response.error())));
+    } else if (/\/(tailwind\.css|manifest\.webmanifest)$/.test(url.pathname)) {
+      event.respondWith(assetFirst(event).catch(() => Response.error()));
+    } else if (/\/sw\.js$/.test(url.pathname)) {
+      return;
     } else {
-      event.respondWith(networkFirst(request));
+      event.respondWith(assetFirst(event).catch(() => Response.error()));
     }
     return;
   }
