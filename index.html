@@ -770,9 +770,18 @@
         html[data-theme="studio"] .pr-tag{background:var(--pri-s);color:var(--pri)}
         .th-pre{display:flex;flex-wrap:wrap;gap:.5rem}.th-pre button{width:2rem;height:2rem;border-radius:9999px;border:2px solid rgba(255,255,255,.5);box-shadow:0 0 0 1px rgba(0,0,0,.2)}
         .st-col{width:100%;height:2.2rem;border:0;border-radius:.6rem;background:none;padding:0;cursor:pointer}
-        @keyframes pgIn{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
-        html[data-theme="studio"] .pgx>*:not(#sl-bar):not([id^="modal-"]){animation:pgIn .5s cubic-bezier(.2,.8,.2,1) backwards}
-        html[data-theme="studio"] .pgx>*:nth-child(2){animation-delay:.04s}html[data-theme="studio"] .pgx>*:nth-child(3){animation-delay:.08s}html[data-theme="studio"] .pgx>*:nth-child(4){animation-delay:.12s}html[data-theme="studio"] .pgx>*:nth-child(5){animation-delay:.16s}html[data-theme="studio"] .pgx>*:nth-child(n+6){animation-delay:.2s}
+        @keyframes pgIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+        html[data-theme="studio"] .pgx>*:not(#sl-bar):not([id^="modal-"]){animation:pgIn .28s cubic-bezier(.2,.7,.2,1) backwards}
+        html[data-theme="studio"] .pgx>*:nth-child(2){animation-delay:.025s}html[data-theme="studio"] .pgx>*:nth-child(3){animation-delay:.05s}html[data-theme="studio"] .pgx>*:nth-child(n+4){animation-delay:.075s}
+        :is(.pr-card,.iv-card,.fn-inv){content-visibility:auto;contain-intrinsic-size:auto 150px}
+        /* أداء: بلا تمويه خلفي ولا خلفية ثابتة (تسببان التقطيع)، والخلفية على طبقة مثبّتة مستقلة */
+        html[data-theme="studio"] *,html[data-theme="studio"] *::before,html[data-theme="studio"] *::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+        html[data-theme="studio"]{background:var(--bg1)}
+        html[data-theme="studio"] body{background:transparent!important}
+        html[data-theme="studio"]::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;transform:translateZ(0);background:radial-gradient(75% 50% at 12% 0%,var(--bg2),transparent 70%),radial-gradient(70% 55% at 100% 100%,color-mix(in srgb,var(--bg2) 65%,transparent),transparent 70%),var(--bg1)}
+        html[data-theme="studio"] #side-nav{will-change:width;transition:width .22s cubic-bezier(.2,.7,.2,1)}
+        html[data-theme="studio"] .app-header{background:rgba(18,22,29,.92)!important}
+        html[data-theme="studio"] [id^="modal-"]>div{background:rgba(22,26,34,.98)!important}
         .sn-h{display:none}
         #quick-row{display:none}
         html.has-quick #quick-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin-bottom:1rem}
@@ -5772,11 +5781,17 @@
         // ===== التصنيفات والمخازن والمخزون (تُحفظ في مجموعة products بحقل kind) =====
         const NOWH = '_';
         const prodItems = () => (state.products || []).filter(p => !p.kind);
-        const catList = () => (state.products || []).filter(p => p.kind === 'cat').sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+        const catList = () => (state.products || []).filter(p => p.kind === 'cat').sort((a, b) => ARC.compare(a.name || '', b.name || ''));
         const whList = () => (state.products || []).filter(p => p.kind === 'wh').sort((a, b) => (a.at || 0) - (b.at || 0));
         const catName = id => { const c = catList().find(x => x.id === id); return c ? c.name : ''; };
         const whName = id => (!id || id === NOWH) ? i18nT('بدون مخزن') : ((whList().find(x => x.id === id) || {}).name || i18nT('مخزن محذوف'));
         const PT = [{ k: 'priceDetail', l: 'ديطاي', f: 'سعر ديطاي' }, { k: 'priceSemi', l: 'دومي قرو', f: 'سعر دومي قرو' }, { k: 'priceGros', l: 'قرو', f: 'سعر قرو' }];
+        // أداء: مقارنة عربية بمُقارِن مخزَّن، ورسم القوائم الطويلة على دفعات
+        const ARC = new Intl.Collator('ar');
+        function ckParts(box, parts, first) {
+            const tok = box.__ck = (box.__ck || 0) + 1, n = first || 24; box.innerHTML = parts.slice(0, n).join(''); let i = n;
+            (function step() { if (box.__ck !== tok || i >= parts.length) return; const j = Math.min(parts.length, i + 36); box.insertAdjacentHTML('beforeend', parts.slice(i, j).join('')); i = j; requestAnimationFrame(step); })();
+        }
         function pStock(p) { if (p.stock) return p.stock; return (p.qty != null && p.qty !== '') ? { [NOWH]: p.qty } : {}; }
         const pTotal = p => fnRound(Object.values(pStock(p)).reduce((s, v) => s + (+v || 0), 0));
         // ---- وحدات البيع بالجملة (علبة / كرتونة): المخزون يبقى بالقطع ----
@@ -6018,7 +6033,7 @@
             document.getElementById('vch-mtitle').innerText = '🧾 ' + i18nT('سند جديد');
             document.getElementById('vch-kind').value = 'receipt'; vchKindChange();
             document.getElementById('vch-party-lbl').innerText = i18nT(sec === 'customers' ? 'العميل' : 'المورّد');
-            document.getElementById('vch-party').innerHTML = `<option value="">${esc(i18nT('— إدخال يدوي —'))}</option>` + persons.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
+            document.getElementById('vch-party').innerHTML = `<option value="">${esc(i18nT('— إدخال يدوي —'))}</option>` + persons.slice().sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
             document.getElementById('vch-name').value = ''; document.getElementById('vch-amount').value = ''; document.getElementById('vch-note').value = '';
             document.getElementById('vch-date').value = toISODate(new Date()); document.getElementById('vch-method').value = 'نقداً'; document.getElementById('vch-reg').checked = true;
             document.getElementById('modal-vch').classList.remove('hidden');
@@ -6345,7 +6360,7 @@
         function ctGrid() {
             const g = document.getElementById('ct-grid'); if (!g) return;
             const q = (document.getElementById('ct-scan').value || '').trim().toLowerCase();
-            const list = prodItems().filter(p => q ? ((p.name || '').toLowerCase().includes(q) || String(p.barcode || '').includes(q)) : ctInScope(p)).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+            const list = prodItems().filter(p => q ? ((p.name || '').toLowerCase().includes(q) || String(p.barcode || '').includes(q)) : ctInScope(p)).sort((a, b) => ARC.compare(a.name || '', b.name || ''));
             g.innerHTML = list.length ? list.map(p => { const c = ctMap[p.id]; return `<button type="button" class="ct-card ${c != null ? 'on' : ''}" onclick="ctAdd(prodItems().find(x=>x.id==='${esc(p.id)}'),1)">${c != null ? `<i>${esc(fnNum(c))}</i>` : ''}<b data-notr>${esc(p.name)}</b><small>${esc(i18nT('المسجَّل'))}: ${esc(fnNum(ctExpected(p)))}</small></button>`; }).join('')
                 : `<div class="text-center text-slate-400 py-6 text-sm" style="grid-column:1/-1">${esc(i18nT('لا توجد منتجات في هذا المخزن. اكتب اسماً في خانة البحث لعرض كل المنتجات.'))}</div>`;
         }
@@ -6409,7 +6424,7 @@
         function rpOrderItems() { return rpLowList().map(o => ({ name: o.name, qty: rpNeed[o.name] != null ? rpNeed[o.name] : o.need })).filter(i => i.qty > 0); }
         async function rpOrder() {
             const its = rpOrderItems(); if (!its.length) { appAlert('لا توجد كميات مطلوبة.'); return; }
-            const sup = (state.suppliers || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+            const sup = (state.suppliers || []).slice().sort((a, b) => ARC.compare(a.name || '', b.name || ''));
             const pick = await appDialog({ icon: '🛒', title: i18nT('طلب شراء من مورّد'), message: i18nT('اختر المورّد'), column: true, cancelValue: 'x',
                 buttons: sup.map(s => ({ label: s.name, value: 'S' + s.id })).concat([{ label: i18nT('بدون تحديد مورّد'), value: 'none' }, { label: i18nT('إلغاء'), value: 'x' }]) });
             if (!pick || pick === 'x') return;
@@ -6780,7 +6795,7 @@
             document.getElementById('prod-pane-wh').classList.toggle('hidden', prodTab !== 'wh');
             if (pend) { document.getElementById('prod-add-btn').classList.add('hidden'); renderPending(); return; }
             document.getElementById('prod-add-btn').classList.toggle('hidden', !items);
-            const all = prodItems(), srt = (a, b) => (a.name || '').localeCompare(b.name || '', 'ar');
+            const all = prodItems(), srt = (a, b) => ARC.compare(a.name || '', b.name || '');
             if (items) {
                 const q = (document.getElementById('prod-search').value || '').trim().toLowerCase();
                 const cats = catList();
@@ -6793,8 +6808,8 @@
                     (!prodCat || (prodCat === '_none' ? !(p.cat && catName(p.cat)) : p.cat === prodCat))).sort(srt);
                 document.getElementById('prod-count').innerText = i18nT('عدد المنتجات:') + ' ' + list.length;
                 const box = document.getElementById('prod-list');
-                box.innerHTML = list.length ? list.map(p => prodCardHtml(p)).join('')
-                    : `<div class="nt-empty">${esc(i18nT(all.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات بعد. تُضاف تلقائياً عند حفظ فاتورة مشتريات.'))}</div>`;
+                if (list.length) ckParts(box, list.map(p => prodCardHtml(p)));
+                else box.innerHTML = `<div class="nt-empty">${esc(i18nT(all.length ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات بعد. تُضاف تلقائياً عند حفظ فاتورة مشتريات.'))}</div>`;
             } else {
                 const whs = whList(), unassigned = all.filter(p => (pStock(p)[NOWH] || 0) > 0);
                 if (whSel !== 'all' && whSel !== NOWH && !whs.some(w => w.id === whSel)) whSel = 'all';
@@ -6806,7 +6821,7 @@
                 document.getElementById('wh-cards').innerHTML = h;
                 const list = (whSel === 'all' ? all : all.filter(p => (pStock(p)[whSel] || 0) > 0)).sort(srt);
                 document.getElementById('wh-count').innerText = (whs.length ? '' : i18nT('لم تُضف مخازن بعد. اضغط «إضافة مخزن».') + ' ') + i18nT('عدد المنتجات:') + ' ' + list.length;
-                document.getElementById('wh-list').innerHTML = list.length ? list.map(p => prodCardHtml(p, whSel === 'all' ? null : whSel)).join('') : `<div class="nt-empty">${esc(i18nT('لا توجد منتجات في هذا المخزن'))}</div>`;
+                { const wb = document.getElementById('wh-list'); if (list.length) ckParts(wb, list.map(p => prodCardHtml(p, whSel === 'all' ? null : whSel))); else wb.innerHTML = `<div class="nt-empty">${esc(i18nT('لا توجد منتجات في هذا المخزن'))}</div>`; }
             }
         }
 
@@ -6843,15 +6858,15 @@
             if (!sale) return;
             const q = (document.getElementById('sl-scan').value || '').trim().toLowerCase();
             const list = prodItems().filter(p => (!q || (p.name || '').toLowerCase().includes(q) || (p.barcode || '').includes(q)) &&
-                (!sale.cat || (sale.cat === '_none' ? !(p.cat && catName(p.cat)) : p.cat === sale.cat))).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar')).slice(0, 300);
+                (!sale.cat || (sale.cat === '_none' ? !(p.cat && catName(p.cat)) : p.cat === sale.cat))).sort((a, b) => ARC.compare(a.name || '', b.name || '')).slice(0, 300);
             const g = document.getElementById('sl-grid');
             if (!list.length) { g.innerHTML = `<div class="nt-empty" style="grid-column:1/-1">${esc(i18nT(prodItems().length ? 'لا توجد منتجات مطابقة' : 'لا توجد منتجات بعد. أضفها من قسم المنتجات.'))}</div>`; return; }
-            g.innerHTML = list.map(p => {
+            ckParts(g, list.map(p => {
                 const pr = p[sale.ptype], tot = pTotal(p), low = p.minQty > 0 && tot <= p.minQty;
                 return `<button type="button" class="sl-tile${tot <= 0 ? ' out' : ''}" onclick="saleAdd('${esc(p.id)}')"><span class="t-n" data-notr>${esc(p.name)}</span>
                     <span class="t-p${pr == null ? ' none' : ''}">${pr == null ? esc(i18nT('بلا سعر')) : esc(formatAmount(pr))}</span>
                     <span class="t-s${low || tot <= 0 ? ' low' : ''}">${esc(i18nT('المتوفر'))}: ${esc(fnNum(tot))}${low && tot > 0 ? ' ⚠️' : ''}</span>${pUnits(p).length ? `<span class="t-us">${pUnits(p).map(u => `<span class="t-u" data-notr onclick="event.stopPropagation();saleAdd('${esc(p.id)}',${u.k})">${esc(u.n)}</span>`).join('')}</span>` : ''}</button>`;
-            }).join('');
+            }), 30);
         }
         function saleSetType(k) {
             sale.ptype = k;
@@ -6936,7 +6951,7 @@
         }
         function renderSaleCust() {
             const sel = document.getElementById('sl-cust'), cs = state.customers || [];
-            sel.innerHTML = `<option value="">${esc(i18nT('— زبون عابر (بدون حساب) —'))}</option>` + cs.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
+            sel.innerHTML = `<option value="">${esc(i18nT('— زبون عابر (بدون حساب) —'))}</option>` + cs.slice().sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
             if (sale.custId && !cs.some(c => c.id === sale.custId)) sale.custId = '';
             sel.value = sale.custId; saleCustChange(true);
         }
@@ -7184,12 +7199,14 @@
             sb.innerHTML = st.map(([l, v, c]) => `<div class="iv-st ${c}"><small>${esc(l)}</small><b>${esc(v)}</b></div>`).join('');
             const box = document.getElementById('inv-list');
             if (!list.length) { box.innerHTML = `<div class="nt-empty">${esc(i18nT('لا توجد فواتير هنا بعد'))}</div>`; return; }
-            let html = '', cur = '';
+            const parts = []; let html = '', cur = '';
+            const mtot = {}; list.forEach(y => { const k = (y.date || '').slice(0, 7); mtot[k] = (mtot[k] || 0) + (y.total || 0); });
             list.forEach(x => {
+                html = '';
                 const ym = (x.date || '').slice(0, 7);
                 if (ym !== cur) {
                     cur = ym;
-                    const mt = fnRound(list.filter(y => (y.date || '').slice(0, 7) === ym).reduce((s, y) => s + (y.total || 0), 0));
+                    const mt = fnRound(mtot[ym] || 0);
                     html += `<div class="iv-mh"><span>${esc(monthLabel(ym))}</span><span>${esc(formatAmount(mt))}</span></div>`;
                 }
                 const badge = x.type === 'orders' ? (x.status === 'archived' ? `<span class="od-box gray">${esc(i18nT('مؤرشفة'))}</span>` : `<span class="od-box blue">${esc(i18nT('طلب مفتوح'))}</span>`)
@@ -7197,8 +7214,9 @@
                 const n = (x.items || []).length;
                 html += `<div class="iv-card t-${x.type}" onclick="openInvView('${x.id}')"><div class="nt-body" style="min-width:0"><div class="iv-nm" data-notr>${esc(invNm(x))}</div>
                     <div class="iv-sm" data-notr>${esc(x.number)} · ${esc(isoToDisplay(x.date))} · ${n} ${esc(i18nT('منتج'))}${x.noParty && x.pay === 'credit' ? ' · ' + esc(i18nT('غير خالص')) : ''}</div></div><div class="pc-mid">${badge}</div><div class="fn-invr pc-end"><div class="fn-amt">${esc(formatAmount(x.total))}</div></div></div>`;
+                parts.push(html);
             });
-            box.innerHTML = html;
+            ckParts(box, parts, 30);
         }
 
         function openInvForm(type, id, preset) {
@@ -7212,7 +7230,7 @@
             document.getElementById('inv-prodlist').innerHTML = isPur ? prodItems().map(p => `<option value="${esc(p.name)}">`).join('') : '';
             const persons = state[T.section] || [];
             const sel = document.getElementById('inv-party');
-            sel.innerHTML = `<option value="">${esc(i18nT('— إدخال يدوي —'))}</option>` + persons.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
+            sel.innerHTML = `<option value="">${esc(i18nT('— إدخال يدوي —'))}</option>` + persons.slice().sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<option value="${esc(p.id)}" data-notr>${esc(p.name)}</option>`).join('');
             const src = old || preset || {};
             sel.value = src.partyId && persons.some(p => p.id === src.partyId) ? src.partyId : '';
             document.getElementById('inv-name').value = src.name || '';
