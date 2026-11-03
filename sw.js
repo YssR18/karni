@@ -5,7 +5,7 @@
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE = 'daftar-' + VERSION;
 
 const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
@@ -32,7 +32,7 @@ self.addEventListener('install', (event) => {
     try { const r = await cache.match('./index.html'); if (r) await cache.put('./', r.clone()); } catch (e) {}
     // المكتبات: محاولة جيدة، ولا يفشل التثبيت إن تعذّر أحدها
     await Promise.all(PRECACHE_LIBS.map(async (u) => {
-      try { await cache.add(new Request(u, { mode: 'no-cors' })); } catch (e) { /* يُخزَّن لاحقاً عند أول طلب */ }
+      try { const r = await fetch(u, { mode: 'no-cors' }); await cache.put(u, r); } catch (e) { /* يُخزَّن لاحقاً عند أول طلب */ }
     }));
     await self.skipWaiting();
   })());

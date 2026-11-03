@@ -2269,11 +2269,15 @@
         }
 
         // تخزين محلي لبيانات Firestore ليعمل التطبيق بدون إنترنت
+        let persistState = 'pending';
         try {
             if (db) {
-                db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-                    console.warn('التخزين المحلي غير متاح:', err && err.code);
+                db.enablePersistence({ synchronizeTabs: true }).then(() => { persistState = 'ok'; }).catch((err) => {
+                    persistState = 'off'; console.warn('التخزين المحلي غير متاح:', err && err.code);
+                    setTimeout(() => { try { appAlert('تنبيه: التخزين المحلي غير متاح في هذه النافذة (' + ((err && err.code) || '') + '). قد تضيع التعديلات التي تُدخلها بلا إنترنت إن أغلقت التطبيق أو حدّثته قبل رجوع الاتصال. أغلق النوافذ الأخرى المفتوحة للتطبيق ثم أعد فتحه.'); } catch (e) {} }, 4000);
                 });
+                // لا نتصل بالخادم قبل التحقق من الحساب: تعديلات الدخول المحلي بلا إنترنت تُرفع بعد الدخول فقط (وإلا يرفضها الخادم وتضيع)
+                db.disableNetwork().catch(() => {});
             }
         } catch (e) {
             console.warn('التخزين المحلي غير متاح:', e);
@@ -2538,13 +2542,14 @@
         }
 
         // --- حالة الاتصال والمزامنة ---
-        const syncState = { pending: { customers: false, suppliers: false } };
+        const syncState = { pending: { customers: false, suppliers: false, expenses: false, invoices: false, products: false, workers: false, notes: false } };
+        const anyPending = () => Object.values(syncState.pending).some(Boolean);
 
         function updateSyncBadge() {
             const el = document.getElementById('sync-badge');
             if (!el) return;
             const offline = !navigator.onLine;
-            const pending = syncState.pending.customers || syncState.pending.suppliers;
+            const pending = anyPending();
             if (offline) {
                 el.innerText = pending ? '📴 بدون إنترنت • تعديلات بانتظار الرفع' : '📴 بدون إنترنت';
                 el.classList.remove('hidden');
@@ -3145,7 +3150,8 @@
                 unsubs.push(unsub);
             });
             ['expenses', 'invoices', 'products'].forEach(col => {
-                unsubs.push(db.collection(col).onSnapshot((snapshot) => {
+                unsubs.push(db.collection(col).onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+                    syncState.pending[col] = !!(snapshot.metadata && snapshot.metadata.hasPendingWrites); updateSyncBadge();
                     state[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshFin();
                 }, onSyncError));
@@ -3157,7 +3163,8 @@
                 }, onSyncError));
             }
             if (hasPayroll()) {
-                unsubs.push(db.collection('workers').onSnapshot((snapshot) => {
+                unsubs.push(db.collection('workers').onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+                    syncState.pending.workers = !!(snapshot.metadata && snapshot.metadata.hasPendingWrites); updateSyncBadge();
                     state.workers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshWorkerScreens();
                 }, onSyncError));
@@ -3180,8 +3187,7 @@
             unsubs.forEach(u => { try { u(); } catch (e) {} });
             unsubs = [];
             cloudStarted = false;
-            syncState.pending.customers = false;
-            syncState.pending.suppliers = false;
+            Object.keys(syncState.pending).forEach(k => { syncState.pending[k] = false; });
             updateSyncBadge();
             state.customers = [];
             state.suppliers = [];
@@ -3598,7 +3604,12 @@
         }
 
         function initAuth() {
-            if (!db) { hideLogin(); return; } // وضع محلي بدون سحابة
+            if (!db) {
+                if (window.KARNI_DEMO) { hideLogin(); return; }
+                // لا نفتح وضعاً محلياً صامتاً: أي بيانات تُدخل فيه تختفي عند عودة السحابة
+                const le = document.getElementById('login-loading'); if (le) { le.classList.remove('hidden'); le.innerText = 'تعذّر تحميل مكتبات التطبيق. افتح التطبيق مرة واحدة بوجود إنترنت ثم أعد المحاولة.'; }
+                return;
+            }
             if (!auth) {
                 document.getElementById('login-loading').innerText = 'تعذّر تحميل نظام تسجيل الدخول. تحقق من الاتصال ثم أعد تحميل الصفحة.';
                 return;
@@ -3608,6 +3619,7 @@
                 clearTimeout(timer);
                 const logoutBtn = document.getElementById('btn-logout');
                 if (user) {
+                    try { await db.enableNetwork(); } catch (e) {}
                     const ok = await loadProfile(user);
                     if (!ok) return;
                     hideLogin();
@@ -8334,7 +8346,7 @@
         })();
         if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
             // تحديث تلقائي هادئ: عند وصول نسخة جديدة والمستخدم في الشاشة الرئيسية بلا نافذة مفتوحة تُحمَّل فوراً، وإلا يظهر شريط التحديث
-            const idleHome = () => { const h = document.getElementById('screen-home'); const modal = document.querySelector('[id^="modal-"]:not(.hidden), .dlg-back'); const ae = document.activeElement; return h && !h.classList.contains('hidden') && !modal && !(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)); };
+            const idleHome = () => { if (anyPending()) return false; const h = document.getElementById('screen-home'); const modal = document.querySelector('[id^="modal-"]:not(.hidden), .dlg-back'); const ae = document.activeElement; return h && !h.classList.contains('hidden') && !modal && !(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)); };
             navigator.serviceWorker.addEventListener('message', (e) => {
                 if (!e.data || e.data.type !== 'karni-updated') return;
                 if (idleHome()) location.reload();
@@ -8346,6 +8358,7 @@
             });
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') ping(); });
             window.addEventListener('online', ping);
+            window.addEventListener('beforeunload', (e) => { if (anyPending()) { e.preventDefault(); e.returnValue = ''; } });
         }
         updateHomeTotals();
         initAuth();
