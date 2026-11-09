@@ -5,7 +5,7 @@
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v7';
+const VERSION = 'v8';
 const CACHE = 'daftar-' + VERSION;
 
 const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
