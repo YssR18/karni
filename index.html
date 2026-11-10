@@ -3775,6 +3775,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     hideLogin();
                     logoutBtn.classList.remove('hidden');
                     if (!cloudStarted) { cloudStarted = true; syncWithCloud(); listenShopSettings(); }
+                    obReplay(user.uid);
                 } else {
                     logoutBtn.classList.add('hidden');
                     stopSyncAndClear();
@@ -3785,6 +3786,76 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
 
         // ---- دخول محلي بلا إنترنت (لحساب سبق تسجيل دخوله على هذا الجهاز) ----
         let offSess = null;
+
+        // ---- صندوق صادر: تعديلات الدخول بلا إنترنت (بلا حساب Firebase) ----
+        // طابور Firestore مرتبط بالمستخدم الحالي؛ بعد تسجيل الدخول بالحساب الحقيقي يُترك طابور «بلا مستخدم» معلقاً فتضيع التعديلات.
+        // لذلك نسجّل كل كتابة أثناء الدخول المحلي ونعيد إرسالها بعد تسجيل الدخول.
+        const OB_KEY = 'app_outbox';
+        let obBusy = false;
+        const obGet = () => { try { return JSON.parse(localStorage.getItem(OB_KEY) || '[]') || []; } catch (e) { return []; } };
+        const obSet = (a) => { try { if (a.length) localStorage.setItem(OB_KEY, JSON.stringify(a)); else localStorage.removeItem(OB_KEY); } catch (e) { console.warn('outbox', e); } };
+        function obEnc(v) {
+            if (v && typeof v === 'object') {
+                if (v.__kv) return { $kv: v.__kv.m, a: v.__kv.a.map(obEnc) };
+                if (v instanceof Date) return { $d: v.getTime() };
+                if (Array.isArray(v)) return v.map(obEnc);
+                const o = {}; Object.keys(v).forEach(k => { if (v[k] !== undefined) o[k] = obEnc(v[k]); }); return o;
+            }
+            return v;
+        }
+        function obDec(v) {
+            if (v && typeof v === 'object') {
+                if (v.$kv) { const F = firebase.firestore.FieldValue; return F[v.$kv].apply(F, (v.a || []).map(obDec)); }
+                if (v.$d != null) return new Date(v.$d);
+                if (Array.isArray(v)) return v.map(obDec);
+                const o = {}; Object.keys(v).forEach(k => { o[k] = obDec(v[k]); }); return o;
+            }
+            return v;
+        }
+        function obPush(m, path, args) {
+            if (!offSess || obBusy) return;
+            try { const a = obGet(); a.push({ u: offSess.uid, m, p: path, a: args.map(obEnc), t: Date.now() }); obSet(a); } catch (e) { console.warn('outbox push', e); }
+        }
+        function obPatch() {
+            try {
+                const F = firebase.firestore.FieldValue;
+                ['arrayUnion', 'arrayRemove', 'serverTimestamp', 'delete'].forEach(m => {
+                    const orig = F[m]; if (typeof orig !== 'function') return;
+                    F[m] = function () { const r = orig.apply(this, arguments); try { r.__kv = { m, a: Array.prototype.slice.call(arguments) }; } catch (e) {} return r; };
+                });
+                const DR = Object.getPrototypeOf(db.doc('__ob/x'));
+                ['set', 'update', 'delete'].forEach(m => {
+                    const orig = DR[m]; if (typeof orig !== 'function') return;
+                    DR[m] = function () { obPush(m, this.path, Array.prototype.slice.call(arguments)); return orig.apply(this, arguments); };
+                });
+                const WB = Object.getPrototypeOf(db.batch());
+                ['set', 'update', 'delete'].forEach(m => {
+                    const orig = WB[m]; if (typeof orig !== 'function') return;
+                    WB[m] = function (ref) { obPush(m, ref && ref.path, Array.prototype.slice.call(arguments, 1)); return orig.apply(this, arguments); };
+                });
+            } catch (e) { console.warn('outbox patch', e); }
+        }
+        async function obReplay(uid) {
+            if (obBusy || !db) return;
+            const all = obGet(), mine = all.filter(o => o.u === uid); if (!mine.length) return;
+            obBusy = true; const keep = all.filter(o => o.u !== uid); let ok = 0, stop = false;
+            try {
+                for (let i = 0; i < mine.length; i++) {
+                    const o = mine[i];
+                    if (stop) { keep.push(o); continue; }
+                    try {
+                        const ref = db.doc(o.p), a = (o.a || []).map(obDec);
+                        await Promise.race([ref[o.m].apply(ref, a), new Promise(r => setTimeout(r, 15000))]); ok++; // بعد المهلة تبقى الكتابة في طابور حسابك وتُرسل لاحقاً
+                    } catch (err) {
+                        if (isOfflineError(err)) { stop = true; keep.push(o); }
+                        else { console.warn('outbox replay failed', o.p, err && err.code); keep.push(o); }
+                    }
+                }
+            } finally { obSet(keep); obBusy = false; }
+            if (ok) appToast('✔ ' + i18nT('أُرسلت تعديلاتك المحفوظة بلا إنترنت') + ' (' + ok + ')');
+            if (keep.some(o => o.u === uid)) appAlert('تعذّر إرسال بعض التعديلات المحفوظة بلا إنترنت، وستُعاد المحاولة عند الدخول التالي.');
+        }
+        if (db) obPatch();
         const offB64 = u8 => btoa(String.fromCharCode.apply(null, u8));
         async function offHash(pass, saltB64) {
             const enc = new TextEncoder(), key = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
@@ -3827,6 +3898,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                         offSaveCred(offSess.email, pw, cr.user.uid);
                         offSess = null; offBanner();
                         try { await db.enableNetwork(); } catch (e) {}
+                        await obReplay(cr.user.uid);
                         appToast('✔ ' + i18nT('تمت المزامنة')); return;
                     } catch (err) {
                         if (err && err.code === 'auth/network-request-failed') { appAlert('لا يوجد اتصال بالإنترنت الآن. حاول لاحقاً.'); return; }
