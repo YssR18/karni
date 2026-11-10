@@ -37,7 +37,7 @@ jobs:
           mkdir -p www
           printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=https://yssr18.github.io/karni/"><title>KARNI</title>' > www/index.html
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/app@6
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.yasser.karni",
