@@ -936,6 +936,35 @@ html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justif
 }
 html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6rem}
 
+/* ===== رصيد افتتاحي أوضح (هاتف وويندوز) ===== */
+.pr-short{display:none}
+.tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
+.tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
+.tx-open-v{font-size:1.5rem;font-weight:900;color:var(--pri,#1d4ed8);font-variant-numeric:tabular-nums;white-space:nowrap}.dark .tx-open-v{color:#93c5fd}
+/* ===== الهاتف فقط ===== */
+@media(max-width:640px){
+ .btn-back{width:2.5rem;height:2.5rem;padding:0;justify-content:center;font-size:0!important;gap:0;flex:0 0 auto}
+ .btn-back::before{content:"←";font-size:1.3rem;font-weight:800;line-height:1}
+ .btn-back:hover{transform:none}
+ .screen-bar{padding:.55rem .7rem;gap:.4rem}
+ #screen-detail .screen-bar{justify-content:flex-start}
+ .pr-short{display:inline}.pr-long{display:none}
+ #screen-detail .screen-bar{flex-wrap:nowrap}
+ #screen-detail .screen-bar>div.flex{gap:.25rem;flex-wrap:nowrap;flex:1;min-width:0;justify-content:space-between}
+ #screen-detail .screen-bar .fn-btn,#screen-detail .screen-bar button.bg-slate-800{padding:.4rem .35rem;font-size:.63rem;border-radius:.65rem;gap:.15rem;white-space:nowrap;flex:0 1 auto;min-width:0}
+ #screen-detail .screen-bar{padding:.5rem .45rem;gap:.3rem}
+ .hero-balance-card{flex-direction:row!important;align-items:center!important;gap:.6rem!important;padding:.9rem .85rem!important}
+ .hero-balance-card>div:first-child{flex:1;min-width:0}
+ .hero-balance-card h2{font-size:1.2rem!important;line-height:1.3}
+ .hero-balance-card #person-phone{font-size:.68rem}
+ .hero-balance-card #person-balance{font-size:1.6rem!important}
+ .hero-balance-card>div.flex-col{flex:0 0 auto;gap:.4rem}
+ .hero-balance-card>div.flex-col button{padding:.4rem .7rem!important;font-size:.8rem;border-radius:.7rem;white-space:nowrap}
+ .tx-top>span.font-bold.text-base{display:none}
+ .tx-amt{display:flex;align-items:center;font-weight:800;font-size:1.2rem;white-space:nowrap;padding:0 .3rem;font-variant-numeric:tabular-nums}
+ .tx-open{padding:.8rem .9rem}
+}
+
 /* ===== ملاحظات المعاينة 3 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) #transactions-container>div.bg-red-50{background:#fddede;border-color:#f0a3a3;color:#991b1b}
 html:not([data-theme]) #transactions-container>div.bg-green-50{background:#d3f5de;border-color:#8bd8a8;color:#166534}
@@ -1601,7 +1630,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                         🗑️ حذف
                     </button>
                     <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1 shadow">
-                        🖨️ طباعة التقرير
+                        🖨️ <span class="pr-long">طباعة التقرير</span><span class="pr-short">طباعة</span>
                     </button>
                 </div>
             </div>
@@ -4201,7 +4230,34 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const ab = document.getElementById('about-link');
             if (ab) ab.classList.toggle('hidden', screenId !== 'home');
             try { sideMark(screenId); } catch (e) {}
+            try { navTrack(screenId); } catch (e) {}
         }
+
+        // ---- زر الرجوع في الهاتف (الأزرار أو الإيماءات) يعيد للشاشة السابقة بدل الخروج من التطبيق ----
+        let navDepth = 0, navMute = false, navIgnore = 0;
+        const navPhone = () => { try { return window.matchMedia('(max-width: 640px)').matches; } catch (e) { return false; } };
+        try { history.replaceState({ k: 'karni' }, ''); } catch (e) {}
+        function navTrack(id) {
+            if (!navPhone() || navMute) return;
+            if (id === 'home') { if (navDepth > 0) { const d = navDepth; navDepth = 0; navIgnore++; history.go(-d); } return; }
+            if (history.state && history.state.s === id) return;
+            history.pushState({ k: 'karni', s: id }, ''); navDepth++;
+        }
+        window.addEventListener('popstate', () => {
+            if (navIgnore > 0) { navIgnore--; return; }
+            if (!navPhone()) return;
+            // نافذة مفتوحة؟ أغلقها أولاً وأعد الإدخال حتى لا نخسر مستوى الشاشة
+            const md = Array.from(document.querySelectorAll('[id^="modal-"]:not(.hidden)')).filter(m => m.offsetParent !== null || getComputedStyle(m).position === 'fixed');
+            if (md.length) { md[md.length - 1].classList.add('hidden'); history.pushState({ k: 'karni', s: window.__curScreen || 'x' }, ''); return; }
+            navDepth = Math.max(0, navDepth - 1);
+            navMute = true;
+            try {
+                const sec = document.querySelector('main section[id^="screen-"]:not(.hidden)');
+                const bb = sec && sec.querySelector('.btn-back');
+                if (sec && sec.id !== 'screen-home') { if (bb) bb.click(); else showScreen('home'); }
+            } finally { navMute = false; }
+            if (window.__curScreen === 'home' && navDepth > 0) { const d = navDepth; navDepth = 0; navIgnore++; history.go(-d); }
+        });
 
         function openSection(type) {
             state.activeSection = type;
@@ -4344,8 +4400,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
 
             if (person.initialBalance) {
                 const initEl = document.createElement('div');
-                initEl.className = 'bg-slate-100 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center text-xs text-slate-600 dark:text-slate-300';
-                initEl.innerHTML = `<span>رصيد افتتاحي</span><span class="font-bold">${formatAmount(parseFloat(person.initialBalance))}</span>`;
+                initEl.className = 'tx-open';
+                initEl.innerHTML = `<span class="tx-open-l">رصيد افتتاحي</span><span class="tx-open-v">${formatAmount(parseFloat(person.initialBalance))}</span>`;
                 container.appendChild(initEl);
             }
 
@@ -5267,6 +5323,34 @@ html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justif
 }
 html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6rem}
 
+/* ===== رصيد افتتاحي أوضح (هاتف وويندوز) ===== */
+.tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
+.tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
+.tx-open-v{font-size:1.5rem;font-weight:900;color:var(--pri,#1d4ed8);font-variant-numeric:tabular-nums;white-space:nowrap}.dark .tx-open-v{color:#93c5fd}
+/* ===== الهاتف فقط ===== */
+@media(max-width:640px){
+ .btn-back{width:2.5rem;height:2.5rem;padding:0;justify-content:center;font-size:0!important;gap:0;flex:0 0 auto}
+ .btn-back::before{content:"←";font-size:1.3rem;font-weight:800;line-height:1}
+ .btn-back:hover{transform:none}
+ .screen-bar{padding:.55rem .7rem;gap:.4rem}
+ #screen-detail .screen-bar{justify-content:flex-start}
+ .pr-short{display:inline}.pr-long{display:none}
+ #screen-detail .screen-bar{flex-wrap:nowrap}
+ #screen-detail .screen-bar>div.flex{gap:.25rem;flex-wrap:nowrap;flex:1;min-width:0;justify-content:space-between}
+ #screen-detail .screen-bar .fn-btn,#screen-detail .screen-bar button.bg-slate-800{padding:.4rem .35rem;font-size:.63rem;border-radius:.65rem;gap:.15rem;white-space:nowrap;flex:0 1 auto;min-width:0}
+ #screen-detail .screen-bar{padding:.5rem .45rem;gap:.3rem}
+ .hero-balance-card{flex-direction:row!important;align-items:center!important;gap:.6rem!important;padding:.9rem .85rem!important}
+ .hero-balance-card>div:first-child{flex:1;min-width:0}
+ .hero-balance-card h2{font-size:1.2rem!important;line-height:1.3}
+ .hero-balance-card #person-phone{font-size:.68rem}
+ .hero-balance-card #person-balance{font-size:1.6rem!important}
+ .hero-balance-card>div.flex-col{flex:0 0 auto;gap:.4rem}
+ .hero-balance-card>div.flex-col button{padding:.4rem .7rem!important;font-size:.8rem;border-radius:.7rem;white-space:nowrap}
+ .tx-top>span.font-bold.text-base{display:none}
+ .tx-amt{display:flex;align-items:center;font-weight:800;font-size:1.2rem;white-space:nowrap;padding:0 .3rem;font-variant-numeric:tabular-nums}
+ .tx-open{padding:.8rem .9rem}
+}
+
 /* ===== ملاحظات المعاينة 3 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) #transactions-container>div.bg-red-50{background:#fddede;border-color:#f0a3a3;color:#991b1b}
 html:not([data-theme]) #transactions-container>div.bg-green-50{background:#d3f5de;border-color:#8bd8a8;color:#166534}
@@ -5975,6 +6059,34 @@ html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justif
 }
 html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6rem}
 
+/* ===== رصيد افتتاحي أوضح (هاتف وويندوز) ===== */
+.tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
+.tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
+.tx-open-v{font-size:1.5rem;font-weight:900;color:var(--pri,#1d4ed8);font-variant-numeric:tabular-nums;white-space:nowrap}.dark .tx-open-v{color:#93c5fd}
+/* ===== الهاتف فقط ===== */
+@media(max-width:640px){
+ .btn-back{width:2.5rem;height:2.5rem;padding:0;justify-content:center;font-size:0!important;gap:0;flex:0 0 auto}
+ .btn-back::before{content:"←";font-size:1.3rem;font-weight:800;line-height:1}
+ .btn-back:hover{transform:none}
+ .screen-bar{padding:.55rem .7rem;gap:.4rem}
+ #screen-detail .screen-bar{justify-content:flex-start}
+ .pr-short{display:inline}.pr-long{display:none}
+ #screen-detail .screen-bar{flex-wrap:nowrap}
+ #screen-detail .screen-bar>div.flex{gap:.25rem;flex-wrap:nowrap;flex:1;min-width:0;justify-content:space-between}
+ #screen-detail .screen-bar .fn-btn,#screen-detail .screen-bar button.bg-slate-800{padding:.4rem .35rem;font-size:.63rem;border-radius:.65rem;gap:.15rem;white-space:nowrap;flex:0 1 auto;min-width:0}
+ #screen-detail .screen-bar{padding:.5rem .45rem;gap:.3rem}
+ .hero-balance-card{flex-direction:row!important;align-items:center!important;gap:.6rem!important;padding:.9rem .85rem!important}
+ .hero-balance-card>div:first-child{flex:1;min-width:0}
+ .hero-balance-card h2{font-size:1.2rem!important;line-height:1.3}
+ .hero-balance-card #person-phone{font-size:.68rem}
+ .hero-balance-card #person-balance{font-size:1.6rem!important}
+ .hero-balance-card>div.flex-col{flex:0 0 auto;gap:.4rem}
+ .hero-balance-card>div.flex-col button{padding:.4rem .7rem!important;font-size:.8rem;border-radius:.7rem;white-space:nowrap}
+ .tx-top>span.font-bold.text-base{display:none}
+ .tx-amt{display:flex;align-items:center;font-weight:800;font-size:1.2rem;white-space:nowrap;padding:0 .3rem;font-variant-numeric:tabular-nums}
+ .tx-open{padding:.8rem .9rem}
+}
+
 /* ===== ملاحظات المعاينة 3 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) #transactions-container>div.bg-red-50{background:#fddede;border-color:#f0a3a3;color:#991b1b}
 html:not([data-theme]) #transactions-container>div.bg-green-50{background:#d3f5de;border-color:#8bd8a8;color:#166534}
@@ -6270,6 +6382,34 @@ html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justif
  html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex:0 0 auto;flex-wrap:nowrap}
 }
 html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6rem}
+
+/* ===== رصيد افتتاحي أوضح (هاتف وويندوز) ===== */
+.tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
+.tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
+.tx-open-v{font-size:1.5rem;font-weight:900;color:var(--pri,#1d4ed8);font-variant-numeric:tabular-nums;white-space:nowrap}.dark .tx-open-v{color:#93c5fd}
+/* ===== الهاتف فقط ===== */
+@media(max-width:640px){
+ .btn-back{width:2.5rem;height:2.5rem;padding:0;justify-content:center;font-size:0!important;gap:0;flex:0 0 auto}
+ .btn-back::before{content:"←";font-size:1.3rem;font-weight:800;line-height:1}
+ .btn-back:hover{transform:none}
+ .screen-bar{padding:.55rem .7rem;gap:.4rem}
+ #screen-detail .screen-bar{justify-content:flex-start}
+ .pr-short{display:inline}.pr-long{display:none}
+ #screen-detail .screen-bar{flex-wrap:nowrap}
+ #screen-detail .screen-bar>div.flex{gap:.25rem;flex-wrap:nowrap;flex:1;min-width:0;justify-content:space-between}
+ #screen-detail .screen-bar .fn-btn,#screen-detail .screen-bar button.bg-slate-800{padding:.4rem .35rem;font-size:.63rem;border-radius:.65rem;gap:.15rem;white-space:nowrap;flex:0 1 auto;min-width:0}
+ #screen-detail .screen-bar{padding:.5rem .45rem;gap:.3rem}
+ .hero-balance-card{flex-direction:row!important;align-items:center!important;gap:.6rem!important;padding:.9rem .85rem!important}
+ .hero-balance-card>div:first-child{flex:1;min-width:0}
+ .hero-balance-card h2{font-size:1.2rem!important;line-height:1.3}
+ .hero-balance-card #person-phone{font-size:.68rem}
+ .hero-balance-card #person-balance{font-size:1.6rem!important}
+ .hero-balance-card>div.flex-col{flex:0 0 auto;gap:.4rem}
+ .hero-balance-card>div.flex-col button{padding:.4rem .7rem!important;font-size:.8rem;border-radius:.7rem;white-space:nowrap}
+ .tx-top>span.font-bold.text-base{display:none}
+ .tx-amt{display:flex;align-items:center;font-weight:800;font-size:1.2rem;white-space:nowrap;padding:0 .3rem;font-variant-numeric:tabular-nums}
+ .tx-open{padding:.8rem .9rem}
+}
 
 /* ===== ملاحظات المعاينة 3 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) #transactions-container>div.bg-red-50{background:#fddede;border-color:#f0a3a3;color:#991b1b}
