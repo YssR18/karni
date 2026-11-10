@@ -929,6 +929,7 @@ html:not([data-theme]) .dash-card h3{font-weight:900;text-align:center}
 html:not([data-theme]) .dash-card[onclick="openSales()"] p{display:none}
 html:not([data-theme]) .screen-bar h2{flex-basis:100%;order:-1;text-align:center;margin:0 0 .2rem;font-weight:900}
 html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justify-content:space-between;flex:1 1 100%}
+@media(max-width:899px){html:not([data-theme]) .screen-bar>div:first-child:has(h2){display:contents}}
 @media(min-width:900px){
  html:not([data-theme]) .screen-bar{position:relative;min-height:3.4rem}
  html:not([data-theme]) .screen-bar h2{position:absolute;inset-inline:0;top:50%;transform:translateY(-50%);flex-basis:auto;order:0;margin:0;pointer-events:none;width:auto}
@@ -937,6 +938,19 @@ html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justif
 html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6rem}
 
 /* ===== رصيد افتتاحي أوضح (هاتف وويندوز) ===== */
+.vc-card{flex-direction:column;align-items:stretch;gap:.55rem}
+.vc-head{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem}
+.vc-name{font-size:1.1rem;font-weight:800;word-break:break-word;min-width:0}
+.vc-amt{font-size:1.35rem;font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
+.vc-chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.vc-chip{font-size:.75rem;font-weight:700;padding:.18rem .6rem;border-radius:999px;border:1px solid var(--border-soft);background:rgba(148,163,184,.14)}
+.vc-type.in{background:#d1fae5;border-color:#6ee7b7;color:#065f46}.vc-type.out{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.vc-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.4rem}
+.vc-meta>div,.vc-note{border:1px solid var(--border-soft);border-radius:.8rem;padding:.4rem .65rem;background:rgba(148,163,184,.1)}
+.vc-meta small,.vc-note small{display:block;font-size:.68rem;opacity:.75}.vc-meta b{font-size:.92rem;font-weight:800}
+.vc-note{font-size:.9rem;line-height:1.5;word-break:break-word}
+.vc-acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr));gap:.35rem}
+.vc-acts .tx-btn{width:100%;justify-content:center}
 .pr-short{display:none}
 .tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
 .tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
@@ -5316,6 +5330,7 @@ html:not([data-theme]) .dash-card h3{font-weight:900;text-align:center}
 html:not([data-theme]) .dash-card[onclick="openSales()"] p{display:none}
 html:not([data-theme]) .screen-bar h2{flex-basis:100%;order:-1;text-align:center;margin:0 0 .2rem;font-weight:900}
 html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justify-content:space-between;flex:1 1 100%}
+@media(max-width:899px){html:not([data-theme]) .screen-bar>div:first-child:has(h2){display:contents}}
 @media(min-width:900px){
  html:not([data-theme]) .screen-bar{position:relative;min-height:3.4rem}
  html:not([data-theme]) .screen-bar h2{position:absolute;inset-inline:0;top:50%;transform:translateY(-50%);flex-basis:auto;order:0;margin:0;pointer-events:none;width:auto}
@@ -6052,6 +6067,7 @@ html:not([data-theme]) .dash-card h3{font-weight:900;text-align:center}
 html:not([data-theme]) .dash-card[onclick="openSales()"] p{display:none}
 html:not([data-theme]) .screen-bar h2{flex-basis:100%;order:-1;text-align:center;margin:0 0 .2rem;font-weight:900}
 html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justify-content:space-between;flex:1 1 100%}
+@media(max-width:899px){html:not([data-theme]) .screen-bar>div:first-child:has(h2){display:contents}}
 @media(min-width:900px){
  html:not([data-theme]) .screen-bar{position:relative;min-height:3.4rem}
  html:not([data-theme]) .screen-bar h2{position:absolute;inset-inline:0;top:50%;transform:translateY(-50%);flex-basis:auto;order:0;margin:0;pointer-events:none;width:auto}
@@ -6376,6 +6392,7 @@ html:not([data-theme]) .dash-card h3{font-weight:900;text-align:center}
 html:not([data-theme]) .dash-card[onclick="openSales()"] p{display:none}
 html:not([data-theme]) .screen-bar h2{flex-basis:100%;order:-1;text-align:center;margin:0 0 .2rem;font-weight:900}
 html:not([data-theme]) .screen-bar>div:first-child:has(h2){flex-wrap:wrap;justify-content:space-between;flex:1 1 100%}
+@media(max-width:899px){html:not([data-theme]) .screen-bar>div:first-child:has(h2){display:contents}}
 @media(min-width:900px){
  html:not([data-theme]) .screen-bar{position:relative;min-height:3.4rem}
  html:not([data-theme]) .screen-bar h2{position:absolute;inset-inline:0;top:50%;transform:translateY(-50%);flex-basis:auto;order:0;margin:0;pointer-events:none;width:auto}
@@ -6856,7 +6873,13 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const sum = t => fnRound(base.filter(x => x.type === t).reduce((a, x) => a + (x.amount || 0), 0));
             document.getElementById('vch-sum').style.gridTemplateColumns = 'repeat(3,1fr)';
             document.getElementById('vch-sum').innerHTML = rpBox('عدد السندات', base.length) + rpBox('إجمالي سندات القبض', esc(formatAmount(sum('receipt'))), 'text-emerald-600') + rpBox('إجمالي سندات الصرف', esc(formatAmount(sum('payment'))), 'text-red-600');
-            document.getElementById('vch-list').innerHTML = list.length ? list.map(x => `<div class="fn-inv" style="cursor:default"><div class="tx-info"><div class="tx-top"><div class="font-bold" data-notr style="word-break:break-word">${esc(x.name || '—')}</div><div class="fn-amt ${x.type === 'receipt' ? 'text-emerald-600' : 'text-red-600'}" dir="ltr">${esc(formatAmount(x.amount))}</div></div><div class="text-xs text-slate-500" style="margin-top:.2rem"><span dir="ltr" data-notr>${esc(x.number)}</span> · ${esc(i18nT(VCH[x.type].one))} · ${esc(isoToDisplay(x.date))}${x.by ? ' · ' + esc(i18nT('المحاسب')) + ': <span data-notr>' + esc(x.by) + '</span>' : ''}${x.balAfter != null ? ' · ' + esc(i18nT('المتبقي')) + ': ' + esc(formatAmount(x.balAfter)) : ''}${x.note ? ' · <span data-notr>' + esc(x.note) + '</span>' : ''}</div></div><div class="tx-acts"><button type="button" class="tx-btn" onclick="vchShare('${esc(x.id)}')"><i>🖼️</i><span>صورة</span></button><button type="button" class="tx-btn" onclick="vchPdf('${esc(x.id)}')"><i>📄</i><span>PDF</span></button><button type="button" class="tx-btn" onclick="vchPrint('${esc(x.id)}')"><i>🖨️</i><span>طباعة</span></button>${isOwner() ? `<button type="button" class="tx-btn del" onclick="vchDelete('${esc(x.id)}')"><i>🗑️</i><span>حذف</span></button>` : ''}</div></div>`).join('')
+            document.getElementById('vch-list').innerHTML = list.length ? list.map(x => `<div class="fn-inv vc-card" style="cursor:default">
+                <div class="vc-head"><div class="vc-name" data-notr>${esc(x.name || '—')}</div><div class="vc-amt ${x.type === 'receipt' ? 'text-emerald-600' : 'text-red-600'}" dir="ltr">${esc(formatAmount(x.amount))}</div></div>
+                <div class="vc-chips"><span class="vc-chip vc-type ${x.type === 'receipt' ? 'in' : 'out'}">${esc(i18nT(VCH[x.type].one))}</span><span class="vc-chip" dir="ltr" data-notr>${esc(x.number)}</span><span class="vc-chip">${esc(isoToDisplay(x.date))}</span></div>
+                <div class="vc-meta">${x.by ? `<div><small>${esc(i18nT('المحاسب'))}</small><b data-notr>${esc(x.by)}</b></div>` : ''}${x.balAfter != null ? `<div><small>${esc(i18nT('المتبقي'))}</small><b>${esc(formatAmount(x.balAfter))}</b></div>` : ''}</div>
+                ${x.note ? `<div class="vc-note"><small>${esc(i18nT('ملاحظة'))}</small><span data-notr>${esc(x.note)}</span></div>` : ''}
+                <div class="vc-acts"><button type="button" class="tx-btn" onclick="vchShare('${esc(x.id)}')"><i>🖼️</i><span>صورة</span></button><button type="button" class="tx-btn" onclick="vchPdf('${esc(x.id)}')"><i>📄</i><span>PDF</span></button><button type="button" class="tx-btn" onclick="vchPrint('${esc(x.id)}')"><i>🖨️</i><span>طباعة</span></button>${isOwner() ? `<button type="button" class="tx-btn del" onclick="vchDelete('${esc(x.id)}')"><i>🗑️</i><span>حذف</span></button>` : ''}</div>
+            </div>`).join('')
                 : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد سندات بعد. اضغط «سند جديد» لتحرير أول سند.'))}</div>`;
         }
         function vchNew() {
