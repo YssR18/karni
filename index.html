@@ -968,6 +968,48 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 #vch-sum>div+div{border-inline-start-width:1.5px!important}
 .vc-old .tx-acts{display:none}
 .wk-head{justify-content:center;text-align:center}.wk-contacts{justify-content:center}.wk-chip,.wk-it{text-align:center}.wk-notes{text-align:center}
+/* ===== ترتيب مشترك لكل المظاهر (التخطيط فقط، بلا ألوان) ===== */
+.dash-card span.inline-block{display:none}
+.dash-card>.flex>div:first-child{flex:1;text-align:center}
+.dash-card h3{font-weight:900;text-align:center}
+.dash-card[onclick="openSales()"] p{display:none}
+.dash-card[onclick="openSales()"] h3{font-size:3.2rem!important;line-height:1.15}
+.dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:4.2rem}
+@media(max-width:640px){.dash-card[onclick="openSales()"] h3{font-size:1.45rem!important;line-height:1.3}.dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:0}.dash-card>.flex>div:first-child{padding-inline-start:0}}
+@media(min-width:1024px){
+ .home-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .home-grid>.dash-card{grid-column:span 2}
+ .home-grid>.dash-card.lg\:col-span-3{grid-column:span 6}
+ .home-grid>.dash-card[onclick*="'customers'"],.home-grid>.dash-card[onclick*="'suppliers'"]{grid-column:span 3}
+}
+.rf-welcome{text-align:start}
+.screen-bar h2{flex-basis:100%;order:-1;text-align:center;margin:0 0 .2rem;font-weight:900}
+.screen-bar>div:first-child:has(h2){flex-wrap:wrap;justify-content:space-between;flex:1 1 100%}
+@media(max-width:899px){.screen-bar>div:first-child:has(h2){display:contents}}
+@media(min-width:900px){
+ .screen-bar{position:relative;min-height:3.4rem}
+ .screen-bar h2{position:absolute;inset-inline:0;top:50%;transform:translateY(-50%);flex-basis:auto;order:0;margin:0;pointer-events:none;width:auto}
+ .screen-bar>div:first-child:has(h2){flex:0 0 auto;flex-wrap:nowrap}
+}
+.tx-top>span.font-bold.text-base{display:none}
+.tx-amt{display:flex;align-items:center;font-weight:800;font-size:1.45rem;white-space:nowrap;padding:0 .6rem;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.tx-amt{font-size:1.2rem;padding:0 .3rem}}
+#rp-range>div:first-child{justify-content:center;gap:.6rem}
+@media(min-width:641px){
+ #prod-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:start}
+ #prod-list>*{margin:0!important}
+ #prod-list .pr-card{padding:.55rem}
+ #prod-list .pr-top{flex-direction:column-reverse;align-items:stretch;gap:.35rem}
+ #prod-list .pr-nm{text-align:center;font-size:.98rem}
+ #prod-list .fn-mini{display:flex;justify-content:center;gap:.25rem;flex-wrap:nowrap}
+ #prod-list .fn-mini .fn-btn{padding:.25rem .45rem;font-size:.8rem;min-width:0;flex:1}
+ #prod-list .pr-meta,#prod-list .pr-top>div:first-child>div:not(.pr-nm){font-size:.8rem;margin-top:.15rem;text-align:center}
+ #prod-list .pr-prices{grid-template-columns:repeat(2,1fr);gap:.3rem;margin-top:.4rem}
+ #prod-list .pr-p{padding:.25rem .2rem}
+ #prod-list .pr-p small{font-size:.62rem}
+ #prod-list .pr-p b{font-size:.85rem}
+}
+#screen-products .pr-top>div:first-child{flex:1;min-width:0}
 .pr-short{display:none}
 .tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
 .tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
@@ -1016,7 +1058,7 @@ html:not([data-theme]).dark #screen-products .pr-top>div:first-child>div:not(.pr
 
 /* ===== ملاحظات المعاينة 4 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:3.6rem!important;line-height:1.1;font-weight:900}
-@media(max-width:520px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:2.6rem!important}}
+@media(max-width:640px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:1.45rem!important}html:not([data-theme]) .dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:0}}
 @media(min-width:641px){
 html:not([data-theme]) #prod-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:start}
 html:not([data-theme]) #prod-list>*{margin:0!important}
@@ -5415,7 +5457,7 @@ html:not([data-theme]).dark #screen-products .pr-top>div:first-child>div:not(.pr
 
 /* ===== ملاحظات المعاينة 4 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:3.6rem!important;line-height:1.1;font-weight:900}
-@media(max-width:520px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:2.6rem!important}}
+@media(max-width:640px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:1.45rem!important}html:not([data-theme]) .dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:0}}
 @media(min-width:641px){
 html:not([data-theme]) #prod-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:start}
 html:not([data-theme]) #prod-list>*{margin:0!important}
@@ -6152,7 +6194,7 @@ html:not([data-theme]).dark #screen-products .pr-top>div:first-child>div:not(.pr
 
 /* ===== ملاحظات المعاينة 4 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:3.6rem!important;line-height:1.1;font-weight:900}
-@media(max-width:520px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:2.6rem!important}}
+@media(max-width:640px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:1.45rem!important}html:not([data-theme]) .dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:0}}
 @media(min-width:641px){
 html:not([data-theme]) #prod-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:start}
 html:not([data-theme]) #prod-list>*{margin:0!important}
@@ -6477,7 +6519,7 @@ html:not([data-theme]).dark #screen-products .pr-top>div:first-child>div:not(.pr
 
 /* ===== ملاحظات المعاينة 4 (الكلاسيكي فقط) ===== */
 html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:3.6rem!important;line-height:1.1;font-weight:900}
-@media(max-width:520px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:2.6rem!important}}
+@media(max-width:640px){html:not([data-theme]) .dash-card[onclick="openSales()"] h3{font-size:1.45rem!important}html:not([data-theme]) .dash-card[onclick="openSales()"]>.flex>div:first-child{padding-inline-start:0}}
 @media(min-width:641px){
 html:not([data-theme]) #prod-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;align-items:start}
 html:not([data-theme]) #prod-list>*{margin:0!important}
