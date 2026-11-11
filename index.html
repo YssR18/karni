@@ -1070,6 +1070,7 @@ body.ro-products #screen-products [onclick="openProductForm()"],body.ro-products
 body.ro-invoices #screen-invoices [onclick^="openInvForm"]{display:none!important}
 body.ro-vouchers #screen-vouchers [onclick="vchNew()"]{display:none!important}
 body.ro-expenses #screen-expenses form{display:none!important}
+@media(max-width:639px){.home-grid>.dash-card[onclick="openSales()"],.home-grid>.nt-card{grid-column:1/-1}.home-grid>.dash-card[onclick="openSales()"],.home-grid>.nt-card{min-height:5.4rem!important}.home-grid>.dash-card[onclick="openSales()"]>.flex,.home-grid>.nt-card>.flex{flex-direction:row!important;align-items:center!important}}
 .pr-short{display:none}
 .tx-open{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.9rem 1.1rem;border-radius:1rem;background:var(--card-bg);border:2px solid var(--pri,#2563eb);box-shadow:var(--shadow-soft)}
 .tx-open-l{font-size:1.05rem;font-weight:800;color:#334155}.dark .tx-open-l{color:#e2e8f0}
