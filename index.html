@@ -973,9 +973,11 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .vc-acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr));gap:.35rem}
 .vc-acts .tx-btn{width:100%;justify-content:center}
 .vc-old{display:none}
-.vcd-ov{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
+.vcd-ov{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.5);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);display:flex;align-items:center;justify-content:center;padding:1rem}
 .vcd-ov.hidden{display:none}
-.vcd-box{width:100%;max-width:30rem;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:.6rem}
+.vcd-box{width:100%;max-width:30rem;max-height:calc(100vh - 2rem);max-height:calc(100dvh - 2rem);overflow:auto;display:flex;flex-direction:column;gap:.6rem;padding:3px;box-sizing:border-box}
+.vcd-box .txd,.vcd-box .vc-card{margin-top:2px}
+@media(max-width:640px){#transactions-container .tx-acts{display:none}}
 .vcd-x{width:100%;justify-content:center}
 @media(max-width:640px){.vc-card{flex-direction:row;align-items:center;gap:.75rem}.vc-full{display:none}.vc-old{display:flex;align-items:center;gap:.75rem;width:100%}.vc-old .tx-info{flex:1;min-width:0}.vc-more{opacity:.7}.vcd-box .vc-card{flex-direction:column;align-items:stretch}.vcd-box .vc-full{display:flex;flex-direction:column;gap:.55rem}}
 @media(min-width:641px){.vc-full{display:flex;flex-direction:column;gap:.55rem}.vc-card{flex-direction:column}}
