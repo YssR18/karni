@@ -2949,24 +2949,28 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // تعديل قائمة الحركات: معاملة آمنة عند الاتصال، وكتابة محلية مؤجلة بدون اتصال
         async function commitTransactions(section, person, mutator) {
             const ref = db.collection(section).doc(person.id);
+            const local = state[section].find(p => p.id === person.id) || person;
+            const before = local.transactions || [], after = mutator(before);
+            // إضافة فقط: كتابة محلية فورية بـ arrayUnion (تُدمج مع حركات الآخرين وتُرفع للسحابة في الخلفية بلا انتظار)
+            const sameHead = after.length > before.length && before.every((t, i) => JSON.stringify(t) === JSON.stringify(after[i]));
+            if (sameHead) { dbWrite(ref.update({ transactions: firebase.firestore.FieldValue.arrayUnion(...after.slice(before.length)) })); return; }
+            // تعديل أو حذف: معاملة آمنة لمدة قصيرة عند وجود اتصال، ثم كتابة محلية مؤجلة إن تأخّر الاتصال
             if (navigator.onLine) {
                 try {
-                    await db.runTransaction(async (tr) => {
-                        const snap = await tr.get(ref);
-                        if (!snap.exists) throw new Error('هذا الحساب لم يعد موجوداً');
-                        tr.update(ref, { transactions: mutator(snap.data().transactions || []) });
-                    });
+                    await Promise.race([
+                        db.runTransaction(async (tr) => {
+                            const snap = await tr.get(ref);
+                            if (!snap.exists) throw new Error('هذا الحساب لم يعد موجوداً');
+                            tr.update(ref, { transactions: mutator(snap.data().transactions || []) });
+                        }),
+                        new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('network timeout'), { code: 'deadline-exceeded' })), 3500))
+                    ]);
                     return;
                 } catch (err) {
                     if (!isOfflineError(err)) throw err;
                 }
             }
-            const local = state[section].find(p => p.id === person.id) || person;
-            const before = local.transactions || [], after = mutator(before);
-            // إضافة فقط: نستعمل arrayUnion فتُدمج مع حركات الآخرين في السحابة بدل أن تمحوها عند عودة الاتصال
-            const sameHead = after.length > before.length && before.every((t, i) => JSON.stringify(t) === JSON.stringify(after[i]));
-            if (sameHead) dbWrite(ref.update({ transactions: firebase.firestore.FieldValue.arrayUnion(...after.slice(before.length)) }));
-            else dbWrite(ref.update({ transactions: after }));
+            dbWrite(ref.update({ transactions: after }));
         }
 
         function toISODate(d) {
