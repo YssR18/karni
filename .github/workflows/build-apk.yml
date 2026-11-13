@@ -269,6 +269,7 @@ jobs:
       - name: 5b. ودجت الشاشة الرئيسية (ملخص اليوم + الديون + تنبيهات + أزرار سريعة)
         run: |
           RES=android/app/src/main/res
+          rm -f $RES/drawable/karni_widget_bg.xml $RES/drawable/karni_widget_btn.xml
           mkdir -p $RES/layout $RES/xml $RES/drawable
           cat << 'EOF' > android/app/src/main/java/com/yasser/karni/KarniWidget.java
           package com.yasser.karni;
@@ -280,21 +281,25 @@ jobs:
           import android.content.Context;
           import android.content.Intent;
           import android.os.Build;
+          import android.view.View;
           import android.widget.RemoteViews;
           import org.json.JSONObject;
 
           public class KarniWidget extends AppWidgetProvider {
 
+              protected int layoutRes() { return R.layout.karni_widget; }
+
               @Override
               public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
-                  for (int id : ids) mgr.updateAppWidget(id, build(ctx));
+                  for (int id : ids) mgr.updateAppWidget(id, build(ctx, layoutRes()));
               }
 
               public static void refresh(Context ctx) {
                   AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
-                  int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, KarniWidget.class));
-                  if (ids == null || ids.length == 0) return;
-                  for (int id : ids) mgr.updateAppWidget(id, build(ctx));
+                  int[] d = mgr.getAppWidgetIds(new ComponentName(ctx, KarniWidget.class));
+                  if (d != null) for (int id : d) mgr.updateAppWidget(id, build(ctx, R.layout.karni_widget));
+                  int[] l = mgr.getAppWidgetIds(new ComponentName(ctx, KarniWidgetLight.class));
+                  if (l != null) for (int id : l) mgr.updateAppWidget(id, build(ctx, R.layout.karni_widget_light));
               }
 
               private static PendingIntent act(Context ctx, String a, int code) {
@@ -305,11 +310,12 @@ jobs:
                   return PendingIntent.getActivity(ctx, code, it, fl);
               }
 
-              private static RemoteViews build(Context ctx) {
-                  RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.karni_widget);
-                  String shop = "KARNI", sales = "-", count = "0", cust = "-", supp = "-", alertTxt = "";
-                  String lS = "Sales", lC = "Invoices", lCu = "Customers", lSu = "Suppliers", lOk = "", b1 = "Sale", b2 = "Customers", b3 = "Vouchers", b4 = "Scan";
+              private static RemoteViews build(Context ctx, int layout) {
+                  RemoteViews v = new RemoteViews(ctx.getPackageName(), layout);
+                  String shop = "KARNI", sales = "-", count = "0", cust = "-", supp = "-";
+                  String lS = "Sales", lC = "Invoices", lCu = "Customers", lSu = "Suppliers", lOk = "", lLow = "", lPend = "", b1 = "Sale", b2 = "Customers", b3 = "Vouchers", b4 = "Scan";
                   String upd = "";
+                  int low = 0, pend = 0;
                   try {
                       String js = ctx.getSharedPreferences("karni_widget", Context.MODE_PRIVATE).getString("data", "");
                       if (js.length() > 0) {
@@ -321,37 +327,49 @@ jobs:
                           cust = o.optString("cust", cust);
                           supp = o.optString("supp", supp);
                           lS = l.optString("sales", lS); lC = l.optString("count", lC); lCu = l.optString("cust", lCu); lSu = l.optString("supp", lSu);
-                          lOk = l.optString("ok", lOk);
+                          lOk = l.optString("ok", lOk); lLow = l.optString("low", lLow); lPend = l.optString("pend", lPend);
                           b1 = l.optString("b1", b1); b2 = l.optString("b2", b2); b3 = l.optString("b3", b3); b4 = l.optString("b4", b4);
-                          int low = o.optInt("low", 0), pend = o.optInt("pend", 0);
-                          StringBuilder sb = new StringBuilder();
-                          if (low > 0) sb.append("⚠️ ").append(l.optString("low", "")).append(": ").append(low);
-                          if (pend > 0) { if (sb.length() > 0) sb.append("   "); sb.append("🔔 ").append(l.optString("pend", "")).append(": ").append(pend); }
-                          alertTxt = sb.length() > 0 ? sb.toString() : "✅ " + lOk;
+                          low = o.optInt("low", 0); pend = o.optInt("pend", 0);
                           long at = o.optLong("at", 0);
                           if (at > 0) upd = new java.text.SimpleDateFormat("HH:mm").format(new java.util.Date(at));
                       }
                   } catch (Exception e) {}
                   v.setTextViewText(R.id.kw_shop, shop);
-                  v.setTextViewText(R.id.kw_time, upd);
-                  v.setTextViewText(R.id.kw_sales_l, lS + " · " + count + " " + lC);
+                  v.setTextViewText(R.id.kw_time, upd.length() > 0 ? "\u21BB " + upd : "");
+                  v.setTextViewText(R.id.kw_cnt, count + " " + lC);
+                  v.setTextViewText(R.id.kw_sales_l, lS);
                   v.setTextViewText(R.id.kw_sales, sales);
                   v.setTextViewText(R.id.kw_cust_l, lCu);
                   v.setTextViewText(R.id.kw_cust, cust);
                   v.setTextViewText(R.id.kw_supp_l, lSu);
                   v.setTextViewText(R.id.kw_supp, supp);
-                  v.setTextViewText(R.id.kw_alert, alertTxt);
-                  v.setTextViewText(R.id.kw_b1, "🛒\n" + b1);
-                  v.setTextViewText(R.id.kw_b2, "👥\n" + b2);
-                  v.setTextViewText(R.id.kw_b3, "🧾\n" + b3);
-                  v.setTextViewText(R.id.kw_b4, "📷\n" + b4);
+                  v.setTextViewText(R.id.kw_low, "\u26A0 " + lLow + ": " + low);
+                  v.setTextViewText(R.id.kw_pend, "\uD83D\uDD14 " + lPend + ": " + pend);
+                  v.setTextViewText(R.id.kw_ok, "\u2705 " + lOk);
+                  v.setViewVisibility(R.id.kw_low, low > 0 ? View.VISIBLE : View.GONE);
+                  v.setViewVisibility(R.id.kw_pend, pend > 0 ? View.VISIBLE : View.GONE);
+                  v.setViewVisibility(R.id.kw_ok, (low == 0 && pend == 0) ? View.VISIBLE : View.GONE);
+                  v.setTextViewText(R.id.kw_b1, "\uD83D\uDED2  " + b1);
+                  v.setTextViewText(R.id.kw_b2, "\uD83D\uDC65  " + b2);
+                  v.setTextViewText(R.id.kw_b3, "\uD83E\uDDFE  " + b3);
+                  v.setTextViewText(R.id.kw_b4, "\uD83D\uDCF7  " + b4);
                   v.setOnClickPendingIntent(R.id.kw_root, act(ctx, null, 10));
                   v.setOnClickPendingIntent(R.id.kw_b1, act(ctx, "sale", 11));
                   v.setOnClickPendingIntent(R.id.kw_b2, act(ctx, "cust", 12));
                   v.setOnClickPendingIntent(R.id.kw_b3, act(ctx, "vch", 13));
                   v.setOnClickPendingIntent(R.id.kw_b4, act(ctx, "scan", 14));
+                  v.setOnClickPendingIntent(R.id.kw_sales_c, act(ctx, "sale", 15));
+                  v.setOnClickPendingIntent(R.id.kw_cust_c, act(ctx, "cust", 16));
                   return v;
               }
+          }
+          EOF
+          cat << 'EOF' > android/app/src/main/java/com/yasser/karni/KarniWidgetLight.java
+          package com.yasser.karni;
+
+          public class KarniWidgetLight extends KarniWidget {
+              @Override
+              protected int layoutRes() { return R.layout.karni_widget_light; }
           }
           EOF
           cat << 'EOF' > $RES/layout/karni_widget.xml
@@ -361,45 +379,207 @@ jobs:
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="12dp"
-              android:background="@drawable/karni_widget_bg">
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                  <TextView android:id="@+id/kw_shop" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" android:singleLine="true" />
+              android:layoutDirection="rtl"
+              android:padding="11dp"
+              android:background="@drawable/kwd_bg">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layoutDirection="rtl">
+                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="●" android:textColor="#10B981" android:textSize="10sp" android:layout_marginEnd="5dp" />
+                  <TextView android:id="@+id/kw_shop" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F1F5F9" android:textSize="13sp" android:textStyle="bold" android:singleLine="true" android:maxWidth="110dp" android:layout_marginEnd="6dp" />
+                  <TextView android:id="@+id/kw_cnt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#6EE7B7" android:background="@drawable/kwd_chip_g" android:singleLine="true" />
+                  <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                  <TextView android:id="@+id/kw_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#FCD34D" android:background="@drawable/kwd_chip_a" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_pend" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#FDA4AF" android:background="@drawable/kwd_chip_r" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_ok" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#6EE7B7" android:background="@drawable/kwd_chip_g" android:singleLine="true" />
                   <TextView android:id="@+id/kw_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" />
               </LinearLayout>
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
-                  <LinearLayout android:layout_width="0dp" android:layout_weight="1.3" android:layout_height="wrap_content" android:orientation="vertical">
-                      <TextView android:id="@+id/kw_sales_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" />
-                      <TextView android:id="@+id/kw_sales" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#34D399" android:textSize="22sp" android:textStyle="bold" android:singleLine="true" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.15" android:orientation="horizontal" android:layout_marginTop="7dp" android:layoutDirection="rtl">
+                  <LinearLayout android:id="@+id/kw_sales_c" android:layout_width="0dp" android:layout_weight="1.35" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwd_card_s">
+                      <TextView android:id="@+id/kw_sales_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#6EE7B7" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_sales" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#34D399" android:textSize="20sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="20sp" />
                   </LinearLayout>
-                  <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
-                      <TextView android:id="@+id/kw_cust_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" />
-                      <TextView android:id="@+id/kw_cust" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FCA5A5" android:textSize="14sp" android:textStyle="bold" android:singleLine="true" />
-                      <TextView android:id="@+id/kw_supp_l" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" android:layout_marginTop="2dp" />
-                      <TextView android:id="@+id/kw_supp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FDE68A" android:textSize="14sp" android:textStyle="bold" android:singleLine="true" />
+                  <LinearLayout android:id="@+id/kw_cust_c" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwd_card">
+                      <TextView android:id="@+id/kw_cust_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_cust" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FB7185" android:textSize="15sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" />
+                  </LinearLayout>
+                  <LinearLayout android:id="@+id/kw_supp_c" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwd_card">
+                      <TextView android:id="@+id/kw_supp_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#94A3B8" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_supp" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FBBF24" android:textSize="15sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" />
                   </LinearLayout>
               </LinearLayout>
-              <TextView android:id="@+id/kw_alert" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FDBA74" android:textSize="11sp" android:singleLine="true" android:layout_marginTop="4dp" />
-              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="6dp">
-                  <TextView android:id="@+id/kw_b1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:background="@drawable/karni_widget_btn" />
-                  <TextView android:id="@+id/kw_b2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
-                  <TextView android:id="@+id/kw_b3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
-                  <TextView android:id="@+id/kw_b4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginLeft="4dp" android:background="@drawable/karni_widget_btn" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.85" android:orientation="horizontal" android:layout_marginTop="6dp" android:layoutDirection="rtl">
+                  <TextView android:id="@+id/kw_b1" android:layout_width="0dp" android:layout_weight="1.35" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwd_btn_main" />
+                  <TextView android:id="@+id/kw_b2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#F1F5F9" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwd_btn" />
+                  <TextView android:id="@+id/kw_b3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#F1F5F9" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwd_btn" />
+                  <TextView android:id="@+id/kw_b4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#F1F5F9" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwd_btn" />
               </LinearLayout>
           </LinearLayout>
           EOF
-          cat << 'EOF' > $RES/drawable/karni_widget_bg.xml
+          cat << 'EOF' > $RES/layout/karni_widget_light.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/kw_root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:layoutDirection="rtl"
+              android:padding="11dp"
+              android:background="@drawable/kwl_bg">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layoutDirection="rtl">
+                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="●" android:textColor="#10B981" android:textSize="10sp" android:layout_marginEnd="5dp" />
+                  <TextView android:id="@+id/kw_shop" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#0F172A" android:textSize="13sp" android:textStyle="bold" android:singleLine="true" android:maxWidth="110dp" android:layout_marginEnd="6dp" />
+                  <TextView android:id="@+id/kw_cnt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#065F46" android:background="@drawable/kwl_chip_g" android:singleLine="true" />
+                  <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+                  <TextView android:id="@+id/kw_low" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#92400E" android:background="@drawable/kwl_chip_a" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_pend" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#9F1239" android:background="@drawable/kwl_chip_r" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_ok" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="10sp" android:textStyle="bold" android:textColor="#065F46" android:background="@drawable/kwl_chip_g" android:singleLine="true" />
+                  <TextView android:id="@+id/kw_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#475569" android:textSize="10sp" />
+              </LinearLayout>
+              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.15" android:orientation="horizontal" android:layout_marginTop="7dp" android:layoutDirection="rtl">
+                  <LinearLayout android:id="@+id/kw_sales_c" android:layout_width="0dp" android:layout_weight="1.35" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwl_card_s">
+                      <TextView android:id="@+id/kw_sales_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#047857" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_sales" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#047857" android:textSize="20sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="20sp" />
+                  </LinearLayout>
+                  <LinearLayout android:id="@+id/kw_cust_c" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwl_card">
+                      <TextView android:id="@+id/kw_cust_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#475569" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_cust" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#BE123C" android:textSize="15sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" />
+                  </LinearLayout>
+                  <LinearLayout android:id="@+id/kw_supp_c" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:orientation="vertical" android:gravity="center_vertical" android:paddingStart="9dp" android:paddingEnd="9dp" android:background="@drawable/kwl_card">
+                      <TextView android:id="@+id/kw_supp_l" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#475569" android:textSize="10sp" android:singleLine="true" android:gravity="start" />
+                      <TextView android:id="@+id/kw_supp" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#B45309" android:textSize="15sp" android:textStyle="bold" android:singleLine="true" android:gravity="start" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" />
+                  </LinearLayout>
+              </LinearLayout>
+              <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.85" android:orientation="horizontal" android:layout_marginTop="6dp" android:layoutDirection="rtl">
+                  <TextView android:id="@+id/kw_b1" android:layout_width="0dp" android:layout_weight="1.35" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#FFFFFF" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwl_btn_main" />
+                  <TextView android:id="@+id/kw_b2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#0F172A" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwl_btn" />
+                  <TextView android:id="@+id/kw_b3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#0F172A" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwl_btn" />
+                  <TextView android:id="@+id/kw_b4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:layout_marginEnd="5dp" android:gravity="center" android:textColor="#0F172A" android:textSize="11sp" android:textStyle="bold" android:singleLine="true" android:background="@drawable/kwl_btn" />
+              </LinearLayout>
+          </LinearLayout>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_bg.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#E60F172A" />
-              <corners android:radius="20dp" />
+              <solid android:color="#F00B1220" />
+              <stroke android:width="1.5dp" android:color="#263047" />
+              <corners android:radius="22dp" />
           </shape>
           EOF
-          cat << 'EOF' > $RES/drawable/karni_widget_btn.xml
+          cat << 'EOF' > $RES/drawable/kwd_card.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#334155" />
-              <corners android:radius="12dp" />
+              <solid android:color="#1A2235" />
+              <stroke android:width="1dp" android:color="#2A3550" />
+              <corners android:radius="14dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_card_s.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#0F3D33" />
+              <stroke android:width="1dp" android:color="#1E6B57" />
+              <corners android:radius="14dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_btn.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#1A2235" />
+              <stroke android:width="1dp" android:color="#2A3550" />
+              <corners android:radius="13dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_btn_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#10B981" />
+              <corners android:radius="13dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_chip_g.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#12392F" />
+              <stroke android:width="1dp" android:color="#1E6B57" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_chip_a.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#3A2C0E" />
+              <stroke android:width="1dp" android:color="#7A5A12" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwd_chip_r.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#3D1522" />
+              <stroke android:width="1dp" android:color="#7F2540" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_bg.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#F8FAFC" />
+              <stroke android:width="1.5dp" android:color="#CBD5E1" />
+              <corners android:radius="22dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_card.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#FFFFFF" />
+              <stroke android:width="1dp" android:color="#CBD5E1" />
+              <corners android:radius="14dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_card_s.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#ECFDF5" />
+              <stroke android:width="1dp" android:color="#6EE7B7" />
+              <corners android:radius="14dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_btn.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#E2E8F0" />
+              <stroke android:width="1dp" android:color="#CBD5E1" />
+              <corners android:radius="13dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_btn_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#059669" />
+              <corners android:radius="13dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_chip_g.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#D1FAE5" />
+              <stroke android:width="1dp" android:color="#6EE7B7" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_chip_a.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#FEF3C7" />
+              <stroke android:width="1dp" android:color="#FCD34D" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF
+          cat << 'EOF' > $RES/drawable/kwl_chip_r.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#FFE4E6" />
+              <stroke android:width="1dp" android:color="#FDA4AF" />
+              <corners android:radius="10dp" />
           </shape>
           EOF
           cat << 'EOF' > $RES/xml/karni_widget_info.xml
@@ -414,7 +594,19 @@ jobs:
               android:resizeMode="horizontal|vertical"
               android:widgetCategory="home_screen" />
           EOF
-          sed -i 's#</application>#    <receiver android:name=".KarniWidget" android:exported="false">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/karni_widget_info" />\n        </receiver>\n    </application>#' android/app/src/main/AndroidManifest.xml
+          cat << 'EOF' > $RES/xml/karni_widget_light_info.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="140dp"
+              android:targetCellWidth="4"
+              android:targetCellHeight="2"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/karni_widget_light"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+          sed -i 's#</application>#    <receiver android:name=".KarniWidget" android:label="KARNI داكن" android:exported="false">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/karni_widget_info" />\n        </receiver>\n        <receiver android:name=".KarniWidgetLight" android:label="KARNI نهاري" android:exported="false">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/karni_widget_light_info" />\n        </receiver>\n    </application>#' android/app/src/main/AndroidManifest.xml
           grep -n "KarniWidget" android/app/src/main/AndroidManifest.xml
 
       - name: 6. تثبيت مفتاح التوقيع الثابت (ليُحدَّث التطبيق فوق النسخة القديمة)
