@@ -1,21 +1,18 @@
 {
- "version": "v28",
- "date": "2026-11-16",
+ "version": "v29",
+ "date": "2026-11-17",
  "notes": {
   "ar": [
-   "ورقة إغلاق اليوم صارت بطاقات بدل سطور.",
-   "ملخص الشهر المطوي: الصافي أكبر وأوضح، وعدد المصاريف وأعلى يوم في بطاقتين واضحتين.",
-   "إضافة تتبّع الأخطاء (Sentry) لإصلاح المشكلات أسرع، بلا أي بيانات حسابات."
+   "إرسال موحّد: نافذة واحدة وزر واحد. الفواتير والسندات والكشوفات تُرسل كصورة عبر واتساب (على الهاتف بالمشاركة، وعلى الحاسوب تُنسخ الصورة وتُفتح المحادثة).",
+   "إغلاق اليوم: المصاريف للمراجعة فقط ولا تُخصم من المدخول، وقائمة العملاء الذين سدّدوا ديونهم ذلك اليوم بتفاصيلهم."
   ],
   "fr": [
-   "La feuille de clôture du jour s'affiche désormais en cartes.",
-   "Résumé du mois replié : net plus grand et deux cartes claires (nombre de dépenses, jour le plus élevé).",
-   "Ajout du suivi des erreurs (Sentry) pour corriger plus vite, sans aucune donnée comptable."
+   "Envoi unifié : une fenêtre, un bouton. Factures, reçus et relevés partent en image sur WhatsApp (partage sur téléphone ; sur PC l'image est copiée et la discussion s'ouvre).",
+   "Clôture du jour : les dépenses sont pour suivi seulement (non déduites) et la liste des clients ayant payé leurs dettes s'affiche avec détails."
   ],
   "en": [
-   "The day-close sheet now uses cards instead of rows.",
-   "Collapsed month summary: bigger, clearer net and two clear cards (count and top day).",
-   "Added error tracking (Sentry) for faster fixes, with no accounting data sent."
+   "Unified sending: one window, one button. Invoices, vouchers and statements are sent as an image on WhatsApp (share sheet on phone; on PC the image is copied and the chat opens).",
+   "Day close: expenses are for review only (not deducted) and customers who paid debts that day are listed with details."
   ]
  }
 }
