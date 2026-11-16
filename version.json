@@ -1,18 +1,21 @@
 {
- "version": "v27",
+ "version": "v28",
  "date": "2026-11-16",
  "notes": {
   "ar": [
-   "نظام تحديثات جديد: بطاقة تشرح ما الجديد مع زر «تحديث الآن» أو «لاحقاً».",
-   "خانة «التحقق من التحديثات» في الإعدادات (تبويب المظهر)."
+   "ورقة إغلاق اليوم صارت بطاقات بدل سطور.",
+   "ملخص الشهر المطوي: الصافي أكبر وأوضح، وعدد المصاريف وأعلى يوم في بطاقتين واضحتين.",
+   "إضافة تتبّع الأخطاء (Sentry) لإصلاح المشكلات أسرع، بلا أي بيانات حسابات."
   ],
   "fr": [
-   "Nouveau système de mises à jour : une carte explique les nouveautés avec « Mettre à jour » ou « Plus tard ».",
-   "Option « Rechercher des mises à jour » dans les paramètres (onglet Apparence)."
+   "La feuille de clôture du jour s'affiche désormais en cartes.",
+   "Résumé du mois replié : net plus grand et deux cartes claires (nombre de dépenses, jour le plus élevé).",
+   "Ajout du suivi des erreurs (Sentry) pour corriger plus vite, sans aucune donnée comptable."
   ],
   "en": [
-   "New update system: a card explains what's new with “Update now” or “Later”.",
-   "A “Check for updates” option in Settings (Appearance tab)."
+   "The day-close sheet now uses cards instead of rows.",
+   "Collapsed month summary: bigger, clearer net and two clear cards (count and top day).",
+   "Added error tracking (Sentry) for faster fixes, with no accounting data sent."
   ]
  }
 }

@@ -509,7 +509,23 @@
         .fx-mini small{display:block;font-size:.62rem;color:#64748b}.fx-mini b{font-size:.78rem;color:var(--c)}
         .fx-cd{padding:.45rem .8rem;border-top:1px solid var(--border-soft);font-size:.75rem;text-align:center}
         .fx-tg{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;padding:.5rem .9rem;margin-bottom:.55rem;border-radius:.9rem;background:var(--card-bg);border:1px solid var(--border-soft);font-weight:800;font-size:.8rem;box-shadow:var(--shadow-soft)}
-        .fx-tgv{color:#059669;font-weight:900}
+        .fx-tgv{color:#059669;font-weight:900;font-size:1.3rem;letter-spacing:.01em}
+        .fx-tg{font-size:.95rem;padding:.75rem 1rem}
+        .fx-pills{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.6rem}
+        .fx-pill{flex:1 1 150px;display:flex;flex-direction:column;align-items:center;gap:.1rem;background:var(--card-bg);border:1px solid var(--border-soft);border-radius:1rem;padding:.65rem .8rem;box-shadow:var(--shadow-soft);text-align:center}
+        .fx-pill span{font-size:.85rem;font-weight:700;color:#64748b}.dark .fx-pill span{color:#94a3b8}
+        .fx-pill b{font-size:1.25rem;font-weight:900}
+        .fx-pill em{font-style:normal;font-size:1rem;font-weight:800;color:#dc2626}
+        .fx-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+        @media(min-width:640px){.fx-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+        .fx-tile{position:relative;display:flex;flex-direction:column;gap:.25rem;background:var(--card-bg);border:1px solid var(--border-soft);border-radius:1rem;padding:.75rem .85rem;box-shadow:var(--shadow-soft);overflow:hidden;min-width:0}
+        .fx-tile::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--c)}
+        .fx-tile.open{grid-column:1/-1}
+        .fx-th{display:flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:800}.fx-ti{font-size:1.25rem;line-height:1}
+        .fx-tv{font-size:1.3rem;font-weight:900;color:var(--c);white-space:nowrap}
+        .fx-tile small{color:#64748b;font-size:.68rem;line-height:1.35}
+        .fx-tile .fx-plus{align-self:flex-start;margin-top:.25rem}
+        .fx-tile .fx-q{padding:.5rem 0 0}
         .fx-q{display:flex;flex-wrap:wrap;gap:.4rem;padding:.1rem 0 .65rem}
         .fx-q.hidden{display:none}
         .fx-q .fn-in{flex:1 1 110px;min-width:0}.fx-q .fx-qn{flex:2 1 140px}
@@ -7079,7 +7095,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             let top = null; dayKeys.forEach(k => { if (!top || days[k].total > days[top].total) top = k; });
             const tg = `<button type="button" class="fx-tg" onclick="fxHeroToggle()"><span>📊 ${esc(i18nT('ملخص الشهر'))}</span><span class="fx-tgv" dir="ltr" style="color:${d.expected >= 0 ? '#059669' : '#dc2626'}">${fxHeroOff ? '🧮 ' + esc(formatAmount(d.expected)) : ''}</span><span>${fxHeroOff ? '▾' : '▴'}</span></button>`;
             return tg + (fxHeroOff ? '' : `<div class="fx-grid">${fxChip(FX_COL.sales, '🏪', 'المحل الرئيسي', d.main)}${fxChip(FX_COL.branch, '🏬', 'مدخول الفرع', d.branch)}${fxChip(FX_COL.debt, '💰', 'ديون محصَّلة', d.debt)}${fxChip(FX_COL.other, '➕', 'مداخيل أخرى', d.other)}${fxChip(FX_COL.exp, '💸', 'المصاريف', d.exp)}${fxChip(d.expected >= 0 ? '#059669' : '#dc2626', '🧮', 'الصافي', d.expected)}</div>`)
-                + (expKind === 'close' ? '' : `<div class="fx-note">${esc(i18nT(isInc() ? 'عدد المداخيل' : 'عدد المصاريف'))}: <b>${list.length}</b> · ${esc(i18nT(isInc() ? 'أعلى يوم دخلاً' : 'أعلى يوم صرفاً'))}: <b>${top ? esc(isoToDisplay(top)) + ' · ' + esc(formatAmount(days[top].total)) : '—'}</b></div>`);
+                + (expKind === 'close' ? '' : `<div class="fx-pills"><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'عدد المداخيل' : 'عدد المصاريف'))}</span><b>${list.length}</b></div><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'أعلى يوم دخلاً' : 'أعلى يوم صرفاً'))}</span><b>${top ? esc(isoToDisplay(top)) : '—'}</b>${top ? `<em dir="ltr">${esc(formatAmount(days[top].total))}</em>` : ''}</div></div>`);
         }
         function renderExpenses() {
             const cur = toISODate(new Date()).slice(0, 7), isC = expKind === 'close';
@@ -7115,17 +7131,17 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const box = document.getElementById('exp-close'), v = fxView(fxDate), c = v.c, d = v.live, handed = c && c.st === 'handed';
             fxCurExpected = d.expected;
             const st = fxStatus(c), T = s => esc(i18nT(s));
-            const line = (col, ic, l, sub, val, neg, add) => `<div class="fx-line" style="--c:${col}"><span class="fx-dot"></span><div class="fx-ln"><b>${ic} ${T(l)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>${add || ''}<div class="fx-lv" dir="ltr" style="color:${col}">${neg ? '−' : ''}${esc(formatAmount(val))}</div></div>`;
+            const line = (col, ic, l, sub, val, neg, add, k) => `<div class="fx-tile${k && fxOpenQ.has(k) ? ' open' : ''}"${k ? ` id="fxc-${k}"` : ''} style="--c:${col}"><div class="fx-th"><span class="fx-ti">${ic}</span><span>${T(l)}</span></div><div class="fx-tv" dir="ltr">${neg ? '−' : ''}${esc(formatAmount(val))}</div>${sub ? `<small>${esc(sub)}</small>` : ''}${add || ''}${k ? qrow(k) : ''}</div>`;
             const plus = (k, t) => `<button type="button" class="fx-act fx-plus" onclick="fxQToggle('${k}')">＋ ${T(t)}</button>`;
             const qrow = k => `<div class="fx-q fx-act${fxOpenQ.has(k) ? '' : ' hidden'}" id="fxq-${k}" style="--c:${k === 'exp' ? FX_COL.exp : k === 'branch' ? FX_COL.branch : FX_COL.sales}"><input id="fxq-${k}-a" type="number" inputmode="decimal" step="any" min="0" placeholder="${esc(i18nT('المبلغ'))}" class="fn-in" onkeydown="if(event.key==='Enter'){event.preventDefault();fxQuickSave('${k}')}"><input id="fxq-${k}-n" type="text" maxlength="200" autocomplete="off" placeholder="${esc(i18nT(k === 'exp' ? 'فيما صُرف؟' : 'ملاحظة (اختياري)'))}" class="fn-in fx-qn" onkeydown="if(event.key==='Enter'){event.preventDefault();fxQuickSave('${k}')}"><button type="button" class="fx-ok" onclick="fxQuickSave('${k}')">✅</button></div>`;
             let h = `<div class="fn-card fx-card space-y-3">
                 <div class="flex items-center justify-between gap-2 flex-wrap"><div class="flex items-center gap-2"><span class="font-extrabold">📒 ${T('إغلاق اليوم')}</span><span class="fx-badge" style="--c:${st[1]}">${T(st[0])}</span></div>
                 <input id="fx-date" type="date" class="fn-in" style="width:auto" value="${esc(fxDate)}" onchange="fxPick(this.value)"></div>
-                <div>${line(FX_COL.sales, '🏪', 'مبيعات المحل الرئيسي', d.mainMan || d.mainInv ? i18nT('نقد الفواتير') + ' ' + formatAmount(d.mainInv) + ' + ' + i18nT('مسجَّل يدوياً') + ' ' + formatAmount(d.mainMan) : '', d.main, false, plus('sales', 'تسجيل'))}${qrow('sales')}
-                ${line(FX_COL.branch, '🏬', 'مدخول الفرع', '', d.branch, false, plus('branch', 'تسجيل'))}${qrow('branch')}
+                <div class="fx-tiles">${line(FX_COL.sales, '🏪', 'مبيعات المحل الرئيسي', d.mainMan || d.mainInv ? i18nT('نقد الفواتير') + ' ' + formatAmount(d.mainInv) + ' + ' + i18nT('مسجَّل يدوياً') + ' ' + formatAmount(d.mainMan) : '', d.main, false, plus('sales', 'تسجيل'), 'sales')}
+                ${line(FX_COL.branch, '🏬', 'مدخول الفرع', '', d.branch, false, plus('branch', 'تسجيل'), 'branch')}
                 ${line(FX_COL.debt, '💰', 'ديون محصَّلة', i18nT('تُؤخذ تلقائياً من حسابات العملاء'), d.debt)}
                 ${d.other ? line(FX_COL.other, '➕', 'مداخيل أخرى', '', d.other) : ''}
-                ${line(FX_COL.exp, '💸', 'المصاريف', '', d.exp, true, plus('exp', 'مصروف'))}${qrow('exp')}
+                ${line(FX_COL.exp, '💸', 'المصاريف', '', d.exp, true, plus('exp', 'مصروف'), 'exp')}
                 ${d.retCash ? line(FX_COL.exp, '↩️', 'مرتجعات نقدية', '', d.retCash, true) : ''}</div>
                 <div class="fx-exp-box"><div class="fx-l">${T('المبلغ المتوقع في الصندوق')}</div><div class="text-3xl font-extrabold" dir="ltr" style="color:${d.expected >= 0 ? '#059669' : '#dc2626'}">${esc(formatAmount(d.expected))}</div></div>`;
             if (!c) {
@@ -7152,7 +7168,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         var fxOpenQ = new Set();
         function fxQToggle(k) {
             const el = document.getElementById('fxq-' + k); if (!el) return;
-            const open = el.classList.contains('hidden'); el.classList.toggle('hidden', !open);
+            const open = el.classList.contains('hidden'); el.classList.toggle('hidden', !open); const cd = document.getElementById('fxc-' + k); if (cd) cd.classList.toggle('open', open);
             if (open) { fxOpenQ.add(k); const a = document.getElementById('fxq-' + k + '-a'); if (a) { try { a.focus({ preventScroll: true }); } catch (x) { a.focus(); } } } else fxOpenQ.delete(k);
         }
         function fxQuickSave(k) {
@@ -9962,9 +9978,43 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         updateSyncBadge();
 
         // تسجيل service worker ليعمل التطبيق بدون إنترنت
+        // ---- Sentry: تتبّع أخطاء التطبيق (يعمل فقط إذا وُضع DSN أدناه) ----
+        // الخصوصية: دفتر حسابات ⇒ لا بيانات شخصية ولا تسجيل شاشة ولا أداء؛ يُرسل نص الخطأ والمكان والإصدار ومعرّف المستخدم فقط
+        (function () {
+            const SENTRY_DSN = ''; // ← الصق هنا DSN من Sentry (Project Settings → Client Keys). فارغ = معطّل
+            if (!SENTRY_DSN || !/^https?:$/.test(location.protocol)) return;
+            const q = [], early = e => q.push(e.error || e.reason || new Error(e.message || 'error'));
+            window.addEventListener('error', early); window.addEventListener('unhandledrejection', early);
+            const s = document.createElement('script');
+            s.src = 'https://browser.sentry-cdn.com/8.55.0/bundle.min.js'; s.crossOrigin = 'anonymous'; s.async = true;
+            s.onload = () => {
+                try {
+                    window.removeEventListener('error', early); window.removeEventListener('unhandledrejection', early);
+                    Sentry.init({
+                        dsn: SENTRY_DSN, release: 'karni@' + (typeof APP_VER !== 'undefined' ? APP_VER : '?'),
+                        environment: /github\.io$/.test(location.hostname) ? 'production' : 'dev',
+                        sendDefaultPii: false, tracesSampleRate: 0, maxBreadcrumbs: 20,
+                        integrations: [Sentry.breadcrumbsIntegration({ console: false, dom: false })],
+                        ignoreErrors: ['ResizeObserver loop', 'Non-Error promise rejection', 'Failed to fetch', 'NetworkError', 'Load failed', 'client is offline', 'Could not reach Cloud Firestore', 'network-request-failed'],
+                        denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
+                        beforeSend(ev) {
+                            try {
+                                ev.user = { id: (me && me.uid) || undefined };
+                                ev.tags = Object.assign({}, ev.tags, { tenant: (typeof TENANT !== 'undefined' && TENANT) ? 'own' : 'legacy', role: me && me.role, lang: (function () { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } })() });
+                                if (ev.request && ev.request.url) ev.request.url = ev.request.url.split('?')[0];
+                            } catch (e) { }
+                            return ev;
+                        }
+                    });
+                    q.forEach(x => { try { Sentry.captureException(x); } catch (e) { } });
+                    window.sentryTest = () => { Sentry.captureException(new Error('KARNI Sentry test')); return 'sent'; };
+                } catch (e) { }
+            };
+            window.addEventListener('load', () => { try { document.head.appendChild(s); } catch (e) { } });
+        })();
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
-        const APP_VER = 'v27';
+        const APP_VER = 'v28';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
