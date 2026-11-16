@@ -1,0 +1,18 @@
+{
+ "version": "v27",
+ "date": "2026-11-16",
+ "notes": {
+  "ar": [
+   "نظام تحديثات جديد: بطاقة تشرح ما الجديد مع زر «تحديث الآن» أو «لاحقاً».",
+   "خانة «التحقق من التحديثات» في الإعدادات (تبويب المظهر)."
+  ],
+  "fr": [
+   "Nouveau système de mises à jour : une carte explique les nouveautés avec « Mettre à jour » ou « Plus tard ».",
+   "Option « Rechercher des mises à jour » dans les paramètres (onglet Apparence)."
+  ],
+  "en": [
+   "New update system: a card explains what's new with “Update now” or “Later”.",
+   "A “Check for updates” option in Settings (Appearance tab)."
+  ]
+ }
+}
