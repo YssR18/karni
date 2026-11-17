@@ -1068,6 +1068,19 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .vcd-x{width:100%;justify-content:center}
 @media(max-width:640px){.vc-card{flex-direction:row;align-items:center;gap:.75rem}.vc-full{display:none}.vc-old{display:flex;align-items:center;gap:.75rem;width:100%}.vc-old .tx-info{flex:1;min-width:0}.vc-more{opacity:.7}.vcd-box .vc-card{flex-direction:column;align-items:stretch}.vcd-box .vc-full{display:flex;flex-direction:column;gap:.55rem}}
 @media(min-width:641px){.vc-full{display:flex;flex-direction:column;gap:.55rem}.vc-card{flex-direction:column}}
+/* v32: سندات أوضح ومضغوطة، السلة بأزرار ثابتة، ويندوز أصغر، تاريخ الساعة أوضح */
+.vc-name{font-size:1.3rem}.vc-amt{font-size:1.75rem}
+.vc-chip{font-size:.88rem;padding:.22rem .7rem}
+.vc-meta{display:flex;flex-wrap:nowrap;gap:.4rem}
+.vc-meta>div{flex:1 1 0;min-width:0;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.vc-meta small{display:inline;font-size:.9rem;opacity:.8}.vc-meta b{font-size:1.1rem}
+.vc-note{font-size:1.05rem}.vc-note small{display:block;font-size:.85rem;margin-bottom:.1rem}
+#sl-lines{max-height:46vh;overflow-y:auto}
+@media(min-width:900px){#sl-lines{min-height:18rem;max-height:52vh}}
+.sl-clock small{font-size:.9rem;font-weight:700;color:#334155;letter-spacing:.03em}.dark .sl-clock small{color:#e2e8f0}
+@media(max-width:700px){.sl-clock small{font-size:.7rem}}
+.is-desk .sl-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:.4rem}
+.is-desk .sl-tile{min-height:70px;padding:.45rem .55rem;border-radius:.8rem}.is-desk .sl-tile .t-n{font-size:.78rem}.is-desk .sl-tile .t-p{font-size:.85rem}.is-desk .sl-tile .t-s{font-size:.64rem}
 #vch-sum{grid-template-columns:1fr 1fr!important;gap:.6rem;padding:.8rem;text-align:center}
 .vs-tile{border-radius:1rem;padding:.75rem .5rem;display:flex;flex-direction:column;gap:.2rem;align-items:center;justify-content:center;border:1.5px solid}
 .vs-tile small{font-size:.78rem;font-weight:700}.vs-tile b{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums}
@@ -2626,7 +2639,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
     </div>
 
     <!-- Modal: المستخدمون -->
-    <div id="modal-perms" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[90] no-print">
+    <div id="modal-perms" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[140] no-print">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-3 max-h-[92vh] overflow-y-auto">
             <h3 class="text-lg font-extrabold text-slate-800 dark:text-slate-100">🔐 صلاحيات <span id="pm-name"></span></h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">حدّد لكل قسم: ممنوع (لا يظهر له)، عرض فقط، أو تعديل. تُطبَّق عند دخول المستخدم القادم.</p>
@@ -3055,7 +3068,13 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     if (!isOfflineError(err)) throw err;
                 }
             }
-            dbWrite(ref.update({ transactions: after }));
+            // بلا اتصال: لا نكتب القائمة كاملة (كانت تمحو حركات الأجهزة الأخرى عند المزامنة) بل الفرق فقط
+            const js = x => JSON.stringify(x);
+            const diff = (A, B) => { const m = {}; B.forEach(x => { const k = js(x); m[k] = (m[k] || 0) + 1; }); return A.filter(x => { const k = js(x); if (m[k] > 0) { m[k]--; return false; } return true; }); };
+            const removed = diff(before, after), added = diff(after, before);
+            const F = firebase.firestore.FieldValue;
+            if (removed.length) dbWrite(ref.update({ transactions: F.arrayRemove(...removed) }));
+            if (added.length) dbWrite(ref.update({ transactions: F.arrayUnion(...added) }));
         }
 
         function toISODate(d) {
@@ -4105,7 +4124,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                         if (typeof d.dec === 'number') localStorage.setItem('app_dec', String(d.dec));
                         if (typeof d.logo === 'string') { try { if (d.logo) localStorage.setItem('app_shop_logo', d.logo); else localStorage.removeItem('app_shop_logo'); } catch (e) {} }
                         updateHomeShopNameDisplay();
-                    } else if (isOwner() && me && !me.legacy && localStorage.getItem('app_shop_name')) {
+                    } else if (isOwner() && me && !me.legacy && !(snap.metadata && snap.metadata.fromCache) && localStorage.getItem('app_shop_name')) {
                         pushShopSettings();   // أول مرة: ارفع إعدادات المدير الحالية
                     }
                 }, () => {});
@@ -4245,7 +4264,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         function obPatch() {
             try {
                 const F = firebase.firestore.FieldValue;
-                ['arrayUnion', 'arrayRemove', 'serverTimestamp', 'delete'].forEach(m => {
+                ['arrayUnion', 'arrayRemove', 'serverTimestamp', 'delete', 'increment'].forEach(m => {
                     const orig = F[m]; if (typeof orig !== 'function') return;
                     F[m] = function () { const r = orig.apply(this, arguments); try { r.__kv = { m, a: Array.prototype.slice.call(arguments) }; } catch (e) {} return r; };
                 });
@@ -7495,6 +7514,22 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             Object.keys(st).forEach(k => { if (!st[k] && k !== main) delete st[k]; });
             return { ...p, stock: st, qty: fnRound(Object.values(st).reduce((s, v) => s + v, 0)) };
         }
+        // تعديل المخزون كفرق (increment) لا بكتابة الوثيقة كاملة: حتى لا تمحو جهازاً قديماً/بلا إنترنت تعديلات الأجهزة الأخرى عند المزامنة
+        function finStockApply(p, np) {
+            const cur = state.products.find(x => x.id === p.id) || p;
+            if (!db || !cur.stock || typeof cur.stock !== 'object') { finSave('products', np); return; }
+            const a = pStock(cur), b = pStock(np), patch = {}; let net = 0, ok = true;
+            new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => {
+                const d = fnRound((+b[k] || 0) - (+a[k] || 0)); if (!d) return;
+                if (!k || /[.~*\/\[\]`]/.test(k)) ok = false;
+                net = fnRound(net + d); patch['stock.' + k] = firebase.firestore.FieldValue.increment(d);
+            });
+            if (!ok) { finSave('products', np); return; }
+            if (!Object.keys(patch).length) return;
+            patch.qty = firebase.firestore.FieldValue.increment(net);
+            const i = state.products.findIndex(x => x.id === p.id); if (i >= 0) state.products[i] = np;
+            dbWrite(db.collection('products').doc(p.id).update(patch));
+        }
         function invStockSync(type, oldI, newI) {
             if (type !== 'purchases' && type !== 'sales') return;
             const m = {}, add = (arr, sg) => (arr || []).forEach(i => { const k = prodKey(i.name); if (k) m[k] = (m[k] || 0) + sg * iPcs(i); });
@@ -7502,7 +7537,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             Object.keys(m).forEach(k => {
                 const d = fnRound(m[k]); if (!d) return;
                 const p = prodItems().find(x => (x.key || prodKey(x.name)) === k); if (!p) return;
-                finSave('products', stockAdjust(p, type === 'purchases' ? d : -d));
+                finStockApply(p, stockAdjust(p, type === 'purchases' ? d : -d));
             });
         }
         // ---- الباركود ----
@@ -10144,7 +10179,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         })();
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
-        const APP_VER = 'v31';
+        try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
+        const APP_VER = 'v32';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
