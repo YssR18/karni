@@ -5,7 +5,7 @@
  * - طلبات Firestore و Auth لا تُعترض أبداً (Firebase يدير تخزينها بنفسه)
  * عند تغيير هذا الملف أو الحاجة لتفريغ التخزين، ارفع رقم VERSION.
  */
-const VERSION = 'v29';
+const VERSION = 'v30';
 const CACHE = 'daftar-' + VERSION;
 
 const PRECACHE_PAGES = ['./', './index.html', './tailwind.css', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
@@ -134,6 +134,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (url.origin === self.location.origin) {
+    if (request.cache === 'no-store' || request.cache === 'reload') return; // طلبات التحديث اليدوي تذهب للشبكة مباشرة
     if (request.mode === 'navigate') {
       event.respondWith(shellFirst(event, './index.html').catch(() => caches.match('./index.html').then((r) => r || Response.error())));
     } else if (/\/(tailwind\.css|manifest\.webmanifest)$/.test(url.pathname)) {

@@ -140,6 +140,41 @@ jobs:
                       return a;
                   }
 
+                  @JavascriptInterface
+                  public boolean shareWa(String b64, String phone, String caption) {
+                      try {
+                          byte[] data = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+                          java.io.File dir = new java.io.File(MainActivity.this.getCacheDir(), "karni_share");
+                          dir.mkdirs();
+                          java.io.File[] olds = dir.listFiles();
+                          if (olds != null) {
+                              for (int k = 0; k < olds.length; k++) {
+                                  if (System.currentTimeMillis() - olds[k].lastModified() > 3600000L) olds[k].delete();
+                              }
+                          }
+                          java.io.File f = new java.io.File(dir, "karni-" + System.currentTimeMillis() + ".jpg");
+                          java.io.FileOutputStream o = new java.io.FileOutputStream(f);
+                          o.write(data);
+                          o.close();
+                          android.net.Uri u = androidx.core.content.FileProvider.getUriForFile(MainActivity.this, MainActivity.this.getPackageName() + ".fileprovider", f);
+                          String[] pk = new String[] { "com.whatsapp", "com.whatsapp.w4b" };
+                          for (int i = 0; i < pk.length; i++) {
+                              try {
+                                  Intent it = new Intent(Intent.ACTION_SEND);
+                                  it.setType("image/jpeg");
+                                  it.putExtra(Intent.EXTRA_STREAM, u);
+                                  if (caption != null && caption.length() > 0) it.putExtra(Intent.EXTRA_TEXT, caption);
+                                  it.putExtra("jid", phone + "@s.whatsapp.net");
+                                  it.setPackage(pk[i]);
+                                  it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                  MainActivity.this.startActivity(it);
+                                  return true;
+                              } catch (android.content.ActivityNotFoundException e) {}
+                          }
+                      } catch (Exception e) {}
+                      return false;
+                  }
+
                   private boolean btPermOk() {
                       if (Build.VERSION.SDK_INT >= 31) {
                           if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {

@@ -1,18 +1,21 @@
 {
- "version": "v29",
+ "version": "v30",
  "date": "2026-11-17",
  "notes": {
   "ar": [
-   "إرسال موحّد: نافذة واحدة وزر واحد. الفواتير والسندات والكشوفات تُرسل كصورة عبر واتساب (على الهاتف بالمشاركة، وعلى الحاسوب تُنسخ الصورة وتُفتح المحادثة).",
-   "إغلاق اليوم: المصاريف للمراجعة فقط ولا تُخصم من المدخول، وقائمة العملاء الذين سدّدوا ديونهم ذلك اليوم بتفاصيلهم."
+   "إغلاق اليوم: علامة ✓ أمام كل دين محصَّل لنقله إلى «حساب الشاحنة» فلا يختلط بمدخول المحل والفرع.",
+   "نافذة الإرسال: زر «تحميل» بجانب واتساب، ويُفتح واتساب مباشرة على محادثة الزبون دون المتصفح (ويندوز الآن، والهاتف بعد تثبيت APK الجديد).",
+   "إصلاح زر «تحديث الآن»: يُطبَّق التحديث فورًا دون الحاجة للخروج من البرنامج."
   ],
   "fr": [
-   "Envoi unifié : une fenêtre, un bouton. Factures, reçus et relevés partent en image sur WhatsApp (partage sur téléphone ; sur PC l'image est copiée et la discussion s'ouvre).",
-   "Clôture du jour : les dépenses sont pour suivi seulement (non déduites) et la liste des clients ayant payé leurs dettes s'affiche avec détails."
+   "Clôture du jour : une coche ✓ sur chaque dette encaissée la transfère au « compte camion », sans mélange avec le magasin et la succursale.",
+   "Fenêtre d'envoi : bouton « Télécharger » à côté de WhatsApp ; sous Windows, WhatsApp s'ouvre directement sur la discussion du client.",
+   "Correction du bouton « Mettre à jour » : la mise à jour s'applique immédiatement."
   ],
   "en": [
-   "Unified sending: one window, one button. Invoices, vouchers and statements are sent as an image on WhatsApp (share sheet on phone; on PC the image is copied and the chat opens).",
-   "Day close: expenses are for review only (not deducted) and customers who paid debts that day are listed with details."
+   "Day close: a ✓ on each collected debt moves it to the “truck account”, so it doesn't mix with shop and branch income.",
+   "Send window: a “Download” button next to WhatsApp; on Windows WhatsApp opens directly on the customer's chat.",
+   "Fixed “Update now”: the update applies immediately without restarting the app."
   ]
  }
 }
