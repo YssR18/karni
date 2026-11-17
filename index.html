@@ -1538,13 +1538,13 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             <div id="exp-summary"></div>
             <form id="exp-form" onsubmit="saveExpense(event)" class="fn-card space-y-3">
                 <div id="exp-form-title" class="font-bold text-sm text-slate-700 dark:text-slate-200">➕ مصروف جديد</div>
+                <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><input type="hidden" id="exp-cat" value="sales"><div class="fn-tabs"><button type="button" id="exp-c-sales" class="fn-tab on" onclick="expCatTab('sales')">مدخول المبيعات</button><button type="button" id="exp-c-branch" class="fn-tab" onclick="expCatTab('branch')">مدخول الفرع</button><button type="button" id="exp-c-other" class="fn-tab" onclick="expCatTab('other')">مدخول خارج المبيعات</button></div></div>
+                <div id="exp-br-w" class="hidden"><label class="fn-lbl">اسم الفرع (اختياري)</label><input id="exp-br" type="text" maxlength="60" autocomplete="off" placeholder="مثال: فرع السوق" class="fn-in"></div>
+                <div><label id="exp-note-l" class="fn-lbl">فيما صُرف هذا المبلغ؟</label><input id="exp-note" type="text" required maxlength="200" autocomplete="off" placeholder="مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة..." class="fn-in"></div>
                 <div class="grid grid-cols-2 gap-2.5">
                     <div><label class="fn-lbl">التاريخ</label><input id="exp-date" type="date" required class="fn-in"></div>
                     <div><label class="fn-lbl">المبلغ</label><input id="exp-amount" type="number" inputmode="decimal" min="0" step="any" required placeholder="0" class="fn-in"></div>
                 </div>
-                <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><input type="hidden" id="exp-cat" value="sales"><div class="fn-tabs"><button type="button" id="exp-c-sales" class="fn-tab on" onclick="expCatTab('sales')">مدخول المبيعات</button><button type="button" id="exp-c-branch" class="fn-tab" onclick="expCatTab('branch')">مدخول الفرع</button><button type="button" id="exp-c-other" class="fn-tab" onclick="expCatTab('other')">مدخول خارج المبيعات</button></div></div>
-                <div id="exp-br-w" class="hidden"><label class="fn-lbl">اسم الفرع (اختياري)</label><input id="exp-br" type="text" maxlength="60" autocomplete="off" placeholder="مثال: فرع السوق" class="fn-in"></div>
-                <div><label id="exp-note-l" class="fn-lbl">فيما صُرف هذا المبلغ؟</label><input id="exp-note" type="text" required maxlength="200" autocomplete="off" placeholder="مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة..." class="fn-in"></div>
                 <div class="flex gap-2">
                     <button type="submit" id="exp-submit" class="fn-btn primary flex-1">✅ تأكيد المصروف</button>
                     <button type="button" id="exp-cancel" onclick="resetExpenseForm()" class="fn-btn hidden">إلغاء التعديل</button>
@@ -10144,7 +10144,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         })();
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
-        const APP_VER = 'v30';
+        const APP_VER = 'v31';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
