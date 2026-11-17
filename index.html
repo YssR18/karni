@@ -1081,6 +1081,26 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 @media(max-width:700px){.sl-clock small{font-size:.7rem}}
 .is-desk .sl-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:.4rem}
 .is-desk .sl-tile{min-height:70px;padding:.45rem .55rem;border-radius:.8rem}.is-desk .sl-tile .t-n{font-size:.78rem}.is-desk .sl-tile .t-p{font-size:.85rem}.is-desk .sl-tile .t-s{font-size:.64rem}
+/* v33: استلام المخزن */
+.gr-box{display:flex;flex-direction:column;gap:.6rem;width:100%;max-width:28rem;max-height:calc(100dvh - 2rem);overflow:auto}
+.gr-ln{display:grid;grid-template-columns:minmax(0,1.7fr) 4.2rem 4.5rem 6.5rem;gap:.35rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border-soft)}
+.gr-box .gr-ln{grid-template-columns:minmax(0,1.6fr) 4.2rem 4.5rem 1.8rem}
+.gr-hd{font-size:.72rem;font-weight:700;opacity:.7}
+.gr-ln .fn-in{padding:.3rem .4rem;font-size:.85rem;text-align:center;min-width:0}
+.gr-nm{min-width:0;font-weight:700;font-size:.9rem;word-break:break-word}
+.gr-got{display:flex;align-items:center;gap:.3rem}
+.gr-df{font-size:.8rem;font-weight:800;min-width:1.5rem;text-align:center}.gr-df.ok{color:#059669}.gr-df.bad{color:#dc2626}
+.gr-card{flex-direction:column;align-items:stretch;gap:.5rem}
+.gr-me{border-color:#0ea5e9!important;box-shadow:0 0 0 2px rgba(14,165,233,.25)}
+.gr-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem;cursor:pointer;width:100%}
+.gr-chip{font-size:.78rem;font-weight:800;padding:.25rem .7rem;border-radius:999px;white-space:nowrap}
+.gr-chip.a{background:#fef3c7;color:#92400e}.gr-chip.s{background:#e0f2fe;color:#075985}.gr-chip.r{background:#fee2e2;color:#991b1b}.gr-chip.o{background:#ffedd5;color:#9a3412}.gr-chip.g{background:#d1fae5;color:#065f46}.gr-chip.d{background:#e2e8f0;color:#334155}
+.gr-body{display:flex;flex-direction:column;gap:.5rem;width:100%}
+.gr-hist{display:flex;flex-direction:column;gap:.1rem;font-size:.72rem;opacity:.7}
+.gr-acts{display:flex;flex-wrap:wrap;gap:.4rem}
+.gr-h{font-weight:800;font-size:.95rem;margin-top:.4rem}
+.gr-badge{display:inline-block;min-width:1.3rem;text-align:center;padding:0 .4rem;border-radius:999px;background:#ef4444;color:#fff;font-size:.72rem;font-weight:800;margin-inline-start:.3rem}.gr-badge.hidden{display:none}
+@media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
 #vch-sum{grid-template-columns:1fr 1fr!important;gap:.6rem;padding:.8rem;text-align:center}
 .vs-tile{border-radius:1rem;padding:.75rem .5rem;display:flex;flex-direction:column;gap:.2rem;align-items:center;justify-content:center;border:1.5px solid}
 .vs-tile small{font-size:.78rem;font-weight:700}.vs-tile b{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums}
@@ -1324,6 +1344,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         <button type="button" class="sn" data-sn="list-suppliers" onclick="openSection('suppliers')">🏬 <span>الموردين</span></button>
         <div class="sn-h">المخزون والفواتير</div>
         <button type="button" class="sn" data-sn="products" onclick="openProducts()">📦 <span>المنتجات</span></button>
+        <button type="button" class="sn" data-sn="grn" onclick="openGrn()">🏭 <span>استلام المخزن</span> <b class="gr-badge hidden" data-grn-n></b></button>
         <button type="button" class="sn" data-sn="invoices" onclick="openInvoices()">🧾 <span>الفواتير</span></button>
         <button type="button" class="sn" data-sn="vouchers" onclick="openVouchers()">📋 <span>السندات</span></button>
         <div class="sn-h">المال</div>
@@ -1414,6 +1435,19 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                         </div>
                         <div id="total-suppliers-balance" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">****</div>
                     </div>
+                </div>
+
+                <!-- بطاقة استلام المخزن -->
+                <div onclick="openGrn()" style="--accent:#0ea5e9" class="dash-card group">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2" style="background:#e0f2fe;color:#075985">قسم المخزن</span>
+                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100">استلام المخزن</h3>
+                            <p class="text-sm text-slate-500 mt-1">وصول السلع، مطابقة الفاتورة، الإدخال</p>
+                        </div>
+                        <div class="dash-ico" style="background:#e0f2fe">🏭</div>
+                    </div>
+                    <div class="dash-foot"><span class="gr-badge hidden" data-grn-n></span></div>
                 </div>
 
                 <!-- بطاقة مرتبات العمال -->
@@ -1587,6 +1621,17 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         </section>
 
         <!-- شاشة السندات -->
+        <section id="screen-grn" class="hidden space-y-4">
+            <div class="screen-bar">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('home')" class="btn-back">← العودة</button>
+                    <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 استلام المخزن</h2>
+                </div>
+                <button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button>
+            </div>
+            <div id="grn-list" class="space-y-2"></div>
+        </section>
+
         <section id="screen-vouchers" class="hidden space-y-4">
             <div class="screen-bar">
                 <div class="flex items-center gap-3">
@@ -2671,6 +2716,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 <input type="text" id="nu-pass" required dir="ltr" placeholder="كلمة المرور (6 أحرف على الأقل)" class="fn-in">
                 <select id="nu-role" class="fn-in">
                     <option value="accountant">محاسب (يضيف ويسدد، بدون حذف)</option>
+                    <option value="store">عامل مخزن (يستلم السلع ويطابق الفواتير ويعدّ)</option>
                     <option value="owner">مدير (كل الصلاحيات، والرواتب تُمنح بشكل منفصل)</option>
                 </select>
                 <label class="owner-only flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold"><input type="checkbox" id="nu-payroll"> 💰 صلاحية رؤية وإدارة مرتبات العمال</label>
@@ -4078,7 +4124,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const snap = await ref.get();
                 if (snap.exists) {
                     const d = snap.data() || {};
-                    prof = { uid, name: d.name || nameFrom(), role: d.role === 'owner' ? 'owner' : 'accountant', active: d.active !== false, payroll: d.payroll === true, perms: d.perms || null, tid: TENANT || undefined };
+                    prof = { uid, name: d.name || nameFrom(), role: d.role === 'owner' ? 'owner' : 'accountant', active: d.active !== false, payroll: d.payroll === true, store: d.store === true, perms: d.perms || null, tid: TENANT || undefined };
                 } else {
                     const any = await db.collection('users').limit(1).get();
                     if (any.empty && !TENANT) {      // أول دخول للنظام: هذا الحساب يصبح المدير
@@ -4465,11 +4511,11 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     return `<div class="border dark:border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2 ${active ? '' : 'opacity-50'}">
                         <div class="min-w-0">
                             <div class="font-bold truncate">${esc(u.name)} ${self ? '<span class="text-[11px] text-slate-400">(أنت)</span>' : ''}</div>
-                            <div class="text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">${esc(u.username || u.email || '')} · ${ROLE_LABEL[u.role === 'owner' ? 'owner' : 'accountant']}${u.payroll === true ? ' · 💰 الرواتب' : ''}${active ? '' : ' · معطّل'}</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">${esc(u.username || u.email || '')} · ${ROLE_LABEL[u.role === 'owner' ? 'owner' : 'accountant']}${u.payroll === true ? ' · 💰 الرواتب' : ''}${u.store === true ? ' · 🏭 عامل مخزن' : ''}${active ? '' : ' · معطّل'}</div>
                         </div>
                         <div class="flex gap-1 shrink-0">
                             <button type="button" onclick="renameUser('${esc(u.id)}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تغيير الاسم">✏️</button>
-                            ${isOwner() && u.role !== 'owner' ? `<button type="button" onclick="openPermsModal('${esc(u.id)}')" class="text-xs bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 rounded-lg" title="الصلاحيات">🔐</button>` : ''}
+                            ${isOwner() && u.role !== 'owner' ? `<button type="button" onclick="toggleUserStore('${esc(u.id)}',${u.store === true ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="عامل مخزن">🏭</button><button type="button" onclick="openPermsModal('${esc(u.id)}')" class="text-xs bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 rounded-lg" title="الصلاحيات">🔐</button>` : ''}
                             ${self ? '' : `<button type="button" onclick="toggleUserRole('${esc(u.id)}','${u.role === 'owner' ? 'accountant' : 'owner'}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تبديل الصلاحية">🔁</button>
                             <button type="button" onclick="toggleUserActive('${esc(u.id)}',${active ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="${active ? 'تعطيل' : 'تفعيل'}">${active ? '🚫' : '✅'}</button>`}
                         </div>
@@ -4516,7 +4562,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { k: 'vouchers', t: '📑 السندات', lv: ['n', 'v', 'e'] },
             { k: 'expenses', t: '💸 المصاريف والمداخيل', lv: ['n', 'v', 'e'] },
             { k: 'reports', t: '📊 التقارير', lv: ['n', 'v'] },
-            { k: 'workers', t: '👷 مرتبات العمال', lv: ['n', 'v', 'e'] }
+            { k: 'workers', t: '👷 مرتبات العمال', lv: ['n', 'v', 'e'] },
+            { k: 'store', t: '🏭 المخزن (استلام السلع والمطابقة)', lv: ['n', 'v', 'e'] }
         ];
         const PERM_LBL = { n: 'ممنوع', v: 'عرض', e: 'تعديل' };
         const PERM_FULL = { n: 'none', v: 'view', e: 'edit' };
@@ -4525,6 +4572,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const v = me.perms && me.perms[k];
             if (v) return v;
             if (k === 'workers') return me.payroll === true ? 'edit' : 'none';
+            if (me.store === true) return k === 'store' ? 'edit' : k === 'products' ? 'view' : 'none';
             return k === 'reports' ? 'view' : 'edit';
         }
         function canEditF(k) { return permLevel(k) === 'edit'; }
@@ -4532,7 +4580,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         let permToastAt = 0;
         function permDeny(msg) { if (Date.now() - permToastAt < 1500) return; permToastAt = Date.now(); try { appToast('🔒 ' + i18nT(msg || 'لا تملك صلاحية لهذا الإجراء')); } catch (e) {} }
         // مجموعات الأقسام التي تسمح بالكتابة في كل مجموعة بيانات (البيع يعدّل المخزون والفواتير وديون العملاء، إلخ)
-        const PERM_COL = { customers: ['customers', 'vouchers', 'sales', 'invoices'], suppliers: ['suppliers', 'vouchers', 'invoices'], products: ['products', 'sales', 'invoices'], invoices: ['invoices', 'sales'], expenses: ['expenses'], workers: ['workers'] };
+        const PERM_COL = { customers: ['customers', 'vouchers', 'sales', 'invoices'], suppliers: ['suppliers', 'vouchers', 'invoices'], products: ['products', 'sales', 'invoices'], invoices: ['invoices', 'sales', 'store'], expenses: ['expenses'], workers: ['workers'] };
         function permWriteOk(col, op) {
             if (!me || me.legacy || me.role === 'owner') return true;
             const feats = PERM_COL[col];
@@ -4555,7 +4603,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         })();
         const PERM_ONCLICK = [
             ['openSales(', 'sales'], ["openSection('customers')", 'customers'], ["openSection('suppliers')", 'suppliers'], ['openExpenses(', 'expenses'],
-            ['openInvoices(', 'invoices'], ['openProducts(', 'products'], ['openReports(', 'reports'], ['openVouchers(', 'vouchers']
+            ['openInvoices(', 'invoices'], ['openGrn(', 'store'], ['openProducts(', 'products'], ['openReports(', 'reports'], ['openVouchers(', 'vouchers']
         ];
         function applyPerms() {
             document.querySelectorAll('.perm-hide').forEach(el => el.classList.remove('perm-hide'));
@@ -4572,7 +4620,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             on('ro-people', permLevel(act) !== 'edit'); on('ro-products', permLevel('products') !== 'edit');
             on('ro-invoices', permLevel('invoices') !== 'edit'); on('ro-vouchers', permLevel('vouchers') !== 'edit'); on('ro-expenses', permLevel('expenses') !== 'edit');
         }
-        const PERM_SCREEN = { list: () => state.activeSection, detail: () => state.activeSection, products: () => 'products', count: () => 'products', invoices: () => 'invoices', invform: () => 'invoices', invview: () => 'invoices', sales: () => 'sales', expenses: () => 'expenses', vouchers: () => 'vouchers', reports: () => 'reports' };
+        const PERM_SCREEN = { list: () => state.activeSection, detail: () => state.activeSection, products: () => 'products', count: () => 'products', invoices: () => 'invoices', invform: () => 'invoices', invview: () => 'invoices', sales: () => 'sales', expenses: () => 'expenses', vouchers: () => 'vouchers', reports: () => 'reports', grn: () => 'store' };
         (function wrapPermNav() {
             const o = showScreen;
             window.showScreen = showScreen = function (id) {
@@ -4599,7 +4647,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
 
         // --- نافذة صلاحيات مستخدم ---
         let pmId = null, pmState = {};
-        function permDefaults(u) { const o = {}; PERM_FEATS.forEach(f => { o[f.k] = f.k === 'workers' ? (u.payroll === true ? 'e' : 'n') : (f.k === 'reports' ? 'v' : 'e'); }); return o; }
+        function permDefaults(u) { const o = {}; PERM_FEATS.forEach(f => { o[f.k] = u.store === true ? (f.k === 'store' ? 'e' : f.k === 'products' ? 'v' : 'n') : f.k === 'workers' ? (u.payroll === true ? 'e' : 'n') : (f.k === 'reports' ? 'v' : 'e'); }); return o; }
         function openPermsModal(id) {
             if (!isOwner()) return;
             const u = (window.__users || []).find(x => x.id === id); if (!u) return;
@@ -4636,7 +4684,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const name = document.getElementById('nu-name').value.trim();
             const username = document.getElementById('nu-username').value.trim().toLowerCase();
             const pass = document.getElementById('nu-pass').value;
-            const role = document.getElementById('nu-role').value === 'owner' ? 'owner' : 'accountant';
+            const roleSel = document.getElementById('nu-role').value, role = roleSel === 'owner' ? 'owner' : 'accountant', isStoreU = roleSel === 'store';
             const err = document.getElementById('nu-error');
             const btn = document.getElementById('nu-btn');
             err.classList.add('hidden');
@@ -4651,7 +4699,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 try { sec = firebase.app('secondary'); } catch (x) { sec = firebase.initializeApp(firebaseConfig, 'secondary'); }
                 const cred = await sec.auth().createUserWithEmailAndPassword(email, pass);
                 await db.collection('users').doc(cred.user.uid).set({
-                    name, username, email, role, active: true, ...(isOwner() && document.getElementById('nu-payroll').checked ? { payroll: true } : {}), createdBy: me ? me.name : '', createdAt: Date.now()
+                    name, username, email, role, active: true, ...(isStoreU ? { store: true, perms: STORE_PERMS() } : {}), ...(isOwner() && document.getElementById('nu-payroll').checked ? { payroll: true } : {}), createdBy: me ? me.name : '', createdAt: Date.now()
                 });
                 if (TENANT) { await _dbCol('userIndex').doc(cred.user.uid).set({ tid: TENANT }); }
                 try { await sec.auth().signOut(); } catch (x) {}
@@ -4800,7 +4848,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // --- 6. التنقل الشاشات ---
         function showScreen(screenId) {
             if (!['worker', 'wsummary', 'wpayout'].includes(screenId)) lockWorkerSalaries();
-            ['home', 'list', 'detail', 'workers', 'worker', 'wsummary', 'wpayout', 'notes', 'expenses', 'invoices', 'invform', 'invview', 'products', 'sales', 'reports', 'count', 'vouchers', 'reset'].forEach(id => {
+            ['home', 'list', 'detail', 'workers', 'worker', 'wsummary', 'wpayout', 'notes', 'expenses', 'invoices', 'invform', 'invview', 'products', 'sales', 'reports', 'count', 'vouchers', 'grn', 'reset'].forEach(id => {
                 const el = document.getElementById(`screen-${id}`);
                 if (el) el.classList.add('hidden');
             });
@@ -6522,6 +6570,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const npc = (state.invoices || []).filter(x => x.type === 'purchases' && x.noParty).length;
             if (nc) { nc.innerText = '⚠️ ' + i18nT('بدون مورّد') + ': ' + npc; nc.classList.toggle('hidden', !npc); }
             if (screenVisible('expenses')) renderExpenses();
+            try { grnRefresh(); } catch (e) { console.warn(e); }
             const pc = document.getElementById('home-prod-count'); if (pc) pc.innerText = String(prodItems().length);
             rpHomeLow();
             if (screenVisible('products')) renderProducts();
@@ -9128,7 +9177,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
 
         function openInvForm(type, id, preset) {
             const old = id ? invById(id) : null;
-            invDraft = { type, id: id || null, old, fromOrder: preset && preset.fromOrder || null };
+            invDraft = { type, id: id || null, old, fromOrder: preset && preset.fromOrder || null, fromGrn: preset && preset.fromGrn || null };
             const T = INV_T[type];
             document.getElementById('invform-title').innerText = (old ? '✏️ ' : '➕ ') + i18nT(old ? 'تعديل' : 'إنشاء') + ' ' + i18nT(T.one);
             const isPur = type === 'purchases';
@@ -9347,6 +9396,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     logActivity('add_tx', T.section, person, `${i18nT(T.one)} ${number} — ${moneyMsg(owedAmt)}`);
                 }
                 finSave('invoices', inv);
+                if (invDraft.fromGrn) grnDone(invDraft.fromGrn, inv);
                 if (type === 'purchases') {
                     const same = old && JSON.stringify(old.items || []) === JSON.stringify(items);
                     if (same) prodItems().filter(pp => pp.lastInvoice === number && pp.supplier !== inv.name).forEach(pp => finSave('products', { ...pp, supplier: inv.name || '' }));
@@ -10180,7 +10230,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v32';
+        const APP_VER = 'v33';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10278,6 +10328,184 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             window.addEventListener('online', ping);
             window.addEventListener('beforeunload', (e) => { if (anyPending() && !window.__updating) { e.preventDefault(); e.returnValue = ''; } });
         }
+        // ================= عامل المخزن: استلام السلع ومطابقة الفاتورة (v33) =================
+        // وثيقة واحدة (invoices / type:'grn') تمر بالحالات: arrived → invoiced → (review | mismatch → claimed) → done
+        const isStore = () => !!(me && !me.legacy && me.store === true);
+        const GRN_ST = {
+            arrived: ['📥', 'وصلت — بانتظار فاتورة المدير', 'a'], invoiced: ['🧾', 'الفاتورة وصلت — بانتظار العدّ', 's'], mismatch: ['⚠️', 'عدم تطابق — بانتظار قرار المدير', 'r'],
+            claimed: ['📞', 'طُولب المورّد — بانتظار القرار', 'o'], review: ['✅', 'متطابقة — بانتظار إدخال العامل الرئيسي', 'g'], done: ['🏁', 'أُدخلت في المشتريات', 'd']
+        };
+        const grnList = () => (state.invoices || []).filter(x => x.type === 'grn').sort((a, b) => (b.arrivedAt || 0) - (a.arrivedAt || 0));
+        const grnCanCount = () => canEditF('store');
+        const grnCanEnter = () => isOwner() || (!isStore() && canEditF('invoices'));
+        // هل الوثيقة تنتظر إجراءً مني؟
+        function grnNeedsMe(x) {
+            if (x.st === 'arrived' || x.st === 'mismatch' || x.st === 'claimed') return isOwner();
+            if (x.st === 'invoiced') return grnCanCount() && (isStore() || isOwner());
+            if (x.st === 'review') return grnCanEnter();
+            return false;
+        }
+        let grnOpenId = null, grnSeen = null;
+        function openGrn() { showScreen('grn'); renderGrn(); }
+        function grnHist(x, st, note) { return [...(x.hist || []), { st, by: (me && me.name) || '', at: Date.now(), n: note || '' }]; }
+        function grnSaveDoc(x, st, note, extra) { finSave('invoices', { ...x, ...(extra || {}), st, hist: grnHist(x, st, note) }); renderGrn(); }
+        function grnDiffs(x) { return (x.lines || []).filter(l => +l.got !== +l.qty).map(l => ({ name: l.name, qty: +l.qty || 0, got: +l.got || 0, d: fnRound((+l.got || 0) - (+l.qty || 0)), extra: !!l.extra })); }
+        function grnReport(x) {
+            const d = grnDiffs(x), shop = (typeof shopHead === 'function' ? shopHead().name : '') || '';
+            return (shop ? shop + '\n' : '') + '⚠️ ' + i18nT('تقرير عدم تطابق استلام') + ' ' + x.number + (x.sup ? ' — ' + x.sup : '') + '\n' +
+                d.map(r => '• ' + r.name + ': ' + (r.extra ? i18nT('غير موجودة في الفاتورة') + ' — ' + i18nT('الفعلي') + ' ' + fnNum(r.got) : i18nT('الفاتورة') + ' ' + fnNum(r.qty) + ' ← ' + i18nT('الفعلي') + ' ' + fnNum(r.got) + ' (' + (r.d > 0 ? '+' : '') + fnNum(r.d) + ')')).join('\n') + (x.cntNote ? '\n' + i18nT('ملاحظة') + ': ' + x.cntNote : '');
+        }
+        function grnModalEl() {
+            let m = document.getElementById('modal-grn');
+            if (!m) { m = document.createElement('div'); m.id = 'modal-grn'; m.className = 'fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[130] no-print'; m.onclick = (e) => { if (e.target === m) m.classList.add('hidden'); }; document.body.appendChild(m); }
+            return m;
+        }
+        const grnClose = () => { const m = document.getElementById('modal-grn'); if (m) m.classList.add('hidden'); };
+        function grnSuppliersOpts(sel) { return `<option value="">${esc(i18nT('— مورّد غير مسجّل —'))}</option>` + (state.suppliers || []).slice().sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(s => `<option value="${esc(s.id)}"${s.id === sel ? ' selected' : ''} data-notr>${esc(s.name)}</option>`).join(''); }
+        // ---- 1) وصلت سلعة (عامل المخزن) ----
+        function grnNew() {
+            if (!grnCanCount()) { permDeny(); return; }
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">📥 ${esc(i18nT('تسجيل وصول سلعة'))}</div>
+                <label class="fn-lbl">${esc(i18nT('المورّد'))}</label><select id="grn-sup" class="fn-in">${grnSuppliersOpts('')}</select>
+                <input id="grn-supn" class="fn-in" placeholder="${esc(i18nT('أو اكتب اسم المورّد'))}">
+                <label class="fn-lbl">${esc(i18nT('ما الذي وصل؟ (نوع السلعة)'))}</label><textarea id="grn-desc" class="fn-in" rows="3" placeholder="${esc(i18nT('مثال: 40 كرتونة حليب + 10 أكياس سكر'))}"></textarea>
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="grnCreate()">✅ ${esc(i18nT('تسجيل وإبلاغ المدير'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden');
+        }
+        function grnCreate() {
+            const sid = document.getElementById('grn-sup').value, su = (state.suppliers || []).find(s => s.id === sid), desc = document.getElementById('grn-desc').value.trim();
+            const sup = su ? su.name : document.getElementById('grn-supn').value.trim();
+            if (!desc && !sup) { appAlert('اكتب نوع السلعة أو اسم المورّد.'); return; }
+            const n = grnList().length + 1, st = actorStamp();
+            const x = { id: finNewId('invoices'), type: 'grn', number: 'GRN-' + String(n).padStart(4, '0'), st: 'arrived', sup, partyId: su ? su.id : '', desc, lines: [], date: toISODate(new Date()), arrivedBy: (me && me.name) || '', arrivedAt: Date.now(), hist: [], ...st };
+            x.hist = [{ st: 'arrived', by: (me && me.name) || '', at: Date.now(), n: '' }];
+            grnOpenId = x.id; finSave('invoices', x); grnClose(); renderGrn(); appToast('✔ ' + i18nT('تم إبلاغ المدير'));
+        }
+        // ---- 2) فاتورة المدير (إنشاء / تعديل) ----
+        let grnEd = null;
+        function grnEditInvoice(id) {
+            const x = invById(id); if (!x || !isOwner()) return;
+            grnEd = { id, lines: (x.lines || []).filter(l => !l.extra).map(l => ({ name: l.name, qty: l.qty, price: l.price })) };
+            if (!grnEd.lines.length) grnEd.lines.push({ name: '', qty: '', price: '' });
+            grnEdDraw(x);
+        }
+        function grnEdDraw(x) {
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box" style="max-width:34rem"><div class="font-extrabold text-lg">🧾 ${esc(i18nT('فاتورة الاستلام'))} ${esc(x.number)}</div>
+                <label class="fn-lbl">${esc(i18nT('المورّد'))}</label><select id="gre-sup" class="fn-in">${grnSuppliersOpts(x.partyId)}</select>
+                <input id="gre-supn" class="fn-in" value="${esc(x.partyId ? '' : (x.sup || ''))}" placeholder="${esc(i18nT('أو اكتب اسم المورّد'))}">
+                <datalist id="gre-prods">${(typeof prodItems === 'function' ? prodItems() : []).map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>
+                <div class="gr-ln gr-hd"><span>${esc(i18nT('المنتج'))}</span><span>${esc(i18nT('الكمية'))}</span><span>${esc(i18nT('سعر الشراء'))}</span><span></span></div>
+                <div id="gre-lines">${grnEd.lines.map((l, i) => `<div class="gr-ln"><input class="fn-in" list="gre-prods" value="${esc(l.name)}" oninput="grnEd.lines[${i}].name=this.value" placeholder="${esc(i18nT('المنتج'))}"><input class="fn-in" type="number" inputmode="decimal" min="0" step="any" value="${esc(l.qty)}" oninput="grnEd.lines[${i}].qty=this.value"><input class="fn-in" type="number" inputmode="decimal" min="0" step="any" value="${esc(l.price)}" oninput="grnEd.lines[${i}].price=this.value"><button type="button" class="fn-x" onclick="grnEdDel(${i})">✕</button></div>`).join('')}</div>
+                <button type="button" class="fn-btn" onclick="grnEdAdd()">➕ ${esc(i18nT('إضافة سطر'))}</button>
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="grnEdSave()">📤 ${esc(i18nT('حفظ وإرسال لعامل المخزن'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden');
+        }
+        function grnEdAdd() { grnEd.lines.push({ name: '', qty: '', price: '' }); grnEdDraw(invById(grnEd.id)); }
+        function grnEdDel(i) { grnEd.lines.splice(i, 1); if (!grnEd.lines.length) grnEd.lines.push({ name: '', qty: '', price: '' }); grnEdDraw(invById(grnEd.id)); }
+        function grnEdSave() {
+            const x = invById(grnEd.id); if (!x) return;
+            const lines = grnEd.lines.filter(l => (l.name || '').trim() && +l.qty > 0).map(l => ({ name: l.name.trim(), qty: fnRound(+l.qty), price: l.price === '' ? '' : fnRound(+l.price), got: '' }));
+            if (!lines.length) { appAlert('أضف سطراً واحداً على الأقل (المنتج والكمية).'); return; }
+            const sid = document.getElementById('gre-sup').value, su = (state.suppliers || []).find(s => s.id === sid);
+            const sup = su ? su.name : document.getElementById('gre-supn').value.trim() || x.sup || '';
+            grnSaveDoc(x, 'invoiced', '', { lines, sup, partyId: su ? su.id : '', invBy: (me && me.name) || '', invAt: Date.now(), cntNote: '' });
+            grnClose(); appToast('✔ ' + i18nT('أُرسلت الفاتورة لعامل المخزن'));
+        }
+        // ---- 3) العدّ والمطابقة (عامل المخزن) ----
+        function grnSet(id, i, v) {
+            const x = invById(id); if (!x || !x.lines[i]) return; x.lines[i].got = v === '' ? '' : +v;
+            const el = document.getElementById('gd-' + id + '-' + i), l = x.lines[i];
+            if (el) { const ok = l.got !== '' && +l.got === +l.qty; el.className = 'gr-df ' + (l.got === '' ? '' : ok ? 'ok' : 'bad'); el.innerText = l.got === '' ? '' : ok ? '✓' : ((l.got - l.qty > 0 ? '+' : '') + fnNum(fnRound(l.got - l.qty))); }
+        }
+        function grnPersist(id) { const x = invById(id); if (x) finSave('invoices', x); }
+        function grnName(id, i, v) { const x = invById(id); if (x && x.lines[i]) x.lines[i].name = v; }
+        function grnAddExtra(id) { const x = invById(id); if (!x) return; x.lines = [...(x.lines || []), { name: '', qty: 0, price: '', got: '', extra: true }]; grnPersist(id); renderGrn(); }
+        function grnNote(id, v) { const x = invById(id); if (x) { x.cntNote = v; } }
+        function grnFinish(id) {
+            const x = invById(id); if (!x) return;
+            if ((x.lines || []).some(l => l.extra && !(l.name || '').trim())) { appAlert('اكتب اسم السلعة الإضافية أو احذف سطرها.'); return; }
+            if ((x.lines || []).some(l => l.got === '' || l.got == null)) { appAlert('أدخل الكمية الفعلية لكل الأسطر قبل إنهاء العدّ.'); return; }
+            const bad = grnDiffs(x).length;
+            grnSaveDoc(x, bad ? 'mismatch' : 'review', bad ? 'عدم تطابق' : 'متطابقة', { cntBy: (me && me.name) || '', cntAt: Date.now() });
+            appToast(bad ? '⚠️ ' + i18nT('أُرسل تقرير الفروقات للمدير') : '✅ ' + i18nT('الفاتورة متطابقة — أُرسلت للعامل الرئيسي'));
+        }
+        function grnWaReport(id) { const x = invById(id); if (x) pendWaOpen(grnReport(x)); }
+        // ---- 4) قرار المدير عند عدم التطابق ----
+        function grnAccept(id) {
+            const x = invById(id); if (!x || !isOwner()) return;
+            const lines = (x.lines || []).filter(l => +l.got > 0 || !l.extra).map(l => ({ ...l, qty0: l.qty, qty: +l.got || 0 })).filter(l => l.qty > 0);
+            grnSaveDoc(x, 'review', 'قُبل بالكمية المعدودة', { lines });
+        }
+        function grnClaim(id) {
+            const x = invById(id); if (!x || !isOwner()) return;
+            const su = (state.suppliers || []).find(s => s.id === x.partyId), num = su ? normalizePhone(su.phone || '') : '';
+            window.open('https://wa.me/' + (num.length >= 9 ? num : '') + '?text=' + encodeURIComponent(grnReport(x)), '_blank', 'noopener');
+            grnSaveDoc(x, 'claimed', 'مطالبة المورّد');
+        }
+        function grnRecount(id) { const x = invById(id); if (!x || !isOwner()) return; grnSaveDoc(x, 'invoiced', 'إعادة العدّ', { lines: (x.lines || []).filter(l => !l.extra).map(l => ({ ...l, got: '' })) }); }
+        async function grnDelete(id) { const x = invById(id); if (!x || !isOwner()) return; if (await appConfirm(i18nT('حذف هذه الوثيقة؟'))) { finRemove('invoices', id); renderGrn(); } }
+        // ---- 5) إدخال العامل الرئيسي في المشتريات ----
+        function grnEnter(id) {
+            const x = invById(id); if (!x || !grnCanEnter()) return;
+            const su = (state.suppliers || []).find(s => s.id === x.partyId);
+            const items = (x.lines || []).filter(l => +l.got > 0).map(l => ({ name: l.name, qty: +l.got, price: l.price === '' ? '' : l.price }));
+            openInvForm('purchases', null, { partyId: su ? su.id : '', name: su ? su.name : (x.sup || ''), phone: su ? (su.phone || '') : '', address: su ? (su.address || '') : '', items, fromGrn: id });
+        }
+        function grnDone(id, inv) { const x = invById(id); if (x) { finSave('invoices', { ...x, st: 'done', invId: inv.id, invNo: inv.number, hist: grnHist(x, 'done', inv.number) }); } }
+        // ---- العرض ----
+        function grnActions(x) {
+            const b = [];
+            if (x.st === 'arrived' && isOwner()) b.push(`<button class="fn-btn primary" onclick="grnEditInvoice('${x.id}')">🧾 ${esc(i18nT('إرسال الفاتورة'))}</button>`);
+            if (x.st === 'invoiced' && grnCanCount() && (isStore() || isOwner())) b.push(`<button class="fn-btn ok" onclick="grnFinish('${x.id}')">✅ ${esc(i18nT('إنهاء العدّ والمطابقة'))}</button><button class="fn-btn" onclick="grnAddExtra('${x.id}')">➕ ${esc(i18nT('سلعة غير موجودة في الفاتورة'))}</button>`);
+            if (x.st === 'mismatch' || x.st === 'claimed') {
+                b.push(`<button class="fn-btn" onclick="grnWaReport('${x.id}')">📲 ${esc(i18nT('مشاركة التقرير'))}</button>`);
+                if (isOwner()) b.push(`<button class="fn-btn ok" onclick="grnAccept('${x.id}')">✅ ${esc(i18nT('قبول كما عُدّ'))}</button><button class="fn-btn" onclick="grnEditInvoice('${x.id}')">✏️ ${esc(i18nT('تعديل الفاتورة'))}</button><button class="fn-btn" onclick="grnRecount('${x.id}')">🔄 ${esc(i18nT('إعادة العدّ'))}</button>` + (x.st === 'mismatch' ? `<button class="fn-btn" onclick="grnClaim('${x.id}')">📞 ${esc(i18nT('مطالبة المورّد'))}</button>` : ''));
+            }
+            if (x.st === 'review' && grnCanEnter()) b.push(`<button class="fn-btn primary" onclick="grnEnter('${x.id}')">📥 ${esc(i18nT('مراجعة الأسعار وإدخالها في المشتريات'))}</button>`);
+            if (isOwner()) b.push(`<button class="fn-btn del" onclick="grnDelete('${x.id}')">🗑️</button>`);
+            return b.join('');
+        }
+        function grnLinesHtml(x) {
+            const L = x.lines || []; if (!L.length) return '';
+            const counting = x.st === 'invoiced' && grnCanCount() && (isStore() || isOwner()), showGot = counting || ['mismatch', 'claimed', 'review', 'done'].includes(x.st);
+            return `<div class="gr-ln gr-hd"><span>${esc(i18nT('المنتج'))}</span><span>${esc(i18nT('الفاتورة'))}</span><span>${esc(i18nT('السعر'))}</span><span>${showGot ? esc(i18nT('الفعلي')) : ''}</span></div>` + L.map((l, i) => {
+                const ok = l.got !== '' && l.got != null && +l.got === +l.qty, df = (l.got === '' || l.got == null) ? '' : ok ? '✓' : ((l.got - l.qty > 0 ? '+' : '') + fnNum(fnRound(l.got - l.qty)));
+                const nm = l.extra && counting ? `<input class="fn-in" value="${esc(l.name)}" placeholder="${esc(i18nT('اسم السلعة'))}" oninput="grnName('${x.id}',${i},this.value)" onchange="grnPersist('${x.id}')">` : `<span data-notr>${esc(l.name)}${l.extra ? ' ⚠️' : ''}</span>`;
+                const gt = counting ? `<input class="fn-in" type="number" inputmode="decimal" min="0" step="any" value="${esc(l.got)}" oninput="grnSet('${x.id}',${i},this.value)" onchange="grnPersist('${x.id}')"><b id="gd-${x.id}-${i}" class="gr-df ${df === '' ? '' : ok ? 'ok' : 'bad'}">${esc(df)}</b>` : (showGot ? `<span>${esc(fnNum(l.got))} <b class="gr-df ${ok ? 'ok' : 'bad'}">${esc(df)}</b></span>` : '<span></span>');
+                return `<div class="gr-ln"><div class="gr-nm">${nm}</div><span>${esc(fnNum(l.qty))}</span><span>${l.price === '' || l.price == null ? '—' : esc(fnNum(l.price))}</span><div class="gr-got">${gt}</div></div>`;
+            }).join('') + (counting ? `<textarea class="fn-in" rows="2" placeholder="${esc(i18nT('ملاحظة عن الاستلام (اختياري)'))}" oninput="grnNote('${x.id}',this.value)" onchange="grnPersist('${x.id}')">${esc(x.cntNote || '')}</textarea>` : (x.cntNote ? `<div class="vc-note"><small>${esc(i18nT('ملاحظة'))}</small><span data-notr>${esc(x.cntNote)}</span></div>` : ''));
+        }
+        function renderGrn() {
+            const box = document.getElementById('grn-list'); if (!box) return;
+            const nb = document.getElementById('grn-new'); if (nb) nb.classList.toggle('hidden', !grnCanCount());
+            const L = grnList(), mine = L.filter(grnNeedsMe), rest = L.filter(x => !grnNeedsMe(x));
+            if (grnOpenId === null && mine.length) grnOpenId = mine[0].id;
+            const card = x => {
+                const S = GRN_ST[x.st] || GRN_ST.arrived, open = grnOpenId === x.id, me_ = grnNeedsMe(x);
+                const hist = (x.hist || []).map(h => `<span>${(GRN_ST[h.st] || ['•'])[0]} ${esc(h.by || '')} · ${esc(new Date(h.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }))}${h.n ? ' · ' + esc(h.n) : ''}</span>`).join('');
+                return `<div class="fn-inv gr-card ${me_ ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" onclick="grnOpenId=${open ? 'null' : `'${x.id}'`};renderGrn()"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.sup || i18nT('مورّد غير محدد'))}</div><div class="text-xs text-slate-500" data-notr>${esc(x.desc || '')}</div></div><span class="gr-chip ${S[2]}">${S[0]} ${esc(i18nT(S[1]))}</span></div>
+                    ${open ? `<div class="gr-body">${grnLinesHtml(x)}${x.invNo ? `<div class="text-xs text-slate-500">🏁 ${esc(i18nT('فاتورة المشتريات'))}: ${esc(x.invNo)}</div>` : ''}<div class="gr-hist">${hist}</div><div class="gr-acts">${grnActions(x)}</div></div>` : ''}</div>`;
+            };
+            box.innerHTML = L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
+                : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`;
+        }
+        // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
+        function grnRefresh() {
+            const L = grnList(), n = L.filter(grnNeedsMe).length;
+            document.querySelectorAll('[data-grn-n]').forEach(e => { e.innerText = n ? String(n) : ''; e.classList.toggle('hidden', !n); });
+            const seen = {}; L.forEach(x => seen[x.id] = x.st);
+            if (grnSeen) L.forEach(x => { if (grnSeen[x.id] !== x.st && grnNeedsMe(x) && !(x.hist && x.hist.length && x.hist[x.hist.length - 1].by === ((me && me.name) || '#'))) { try { appToast('🏭 ' + (GRN_ST[x.st] || ['', ''])[1] + ' — ' + x.number); } catch (e) {} } });
+            grnSeen = seen;
+            if (screenVisible('grn') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#grn-list') && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) renderGrn();
+        }
+        async function toggleUserStore(id, on) {
+            if (!isOwner()) return;
+            if (!await appConfirm(on ? 'جعل هذا المستخدم «عامل مخزن»؟ (يستلم السلع ويطابق الفواتير)' : 'إلغاء صفة عامل المخزن عن هذا المستخدم؟')) return;
+            await userUpdate(id, on ? { store: true, perms: STORE_PERMS() } : { store: false, perms: null, payroll: false }, 'user_edit', on ? 'تعيين عامل مخزن' : 'إلغاء عامل مخزن');
+        }
+        function STORE_PERMS() { const p = { delete: false }; PERM_FEATS.forEach(f => { p[f.k] = f.k === 'store' ? 'edit' : f.k === 'products' ? 'view' : 'none'; }); return p; }
         updateHomeTotals();
         initAuth();
     </script>
