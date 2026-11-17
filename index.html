@@ -1082,6 +1082,7 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .is-desk .sl-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:.4rem}
 .is-desk .sl-tile{min-height:70px;padding:.45rem .55rem;border-radius:.8rem}.is-desk .sl-tile .t-n{font-size:.78rem}.is-desk .sl-tile .t-p{font-size:.85rem}.is-desk .sl-tile .t-s{font-size:.64rem}
 /* v33: استلام المخزن */
+.home-grid>.dash-card.rs-center{grid-column:1/-1!important;justify-self:center;width:min(100%,24rem)}
 .gr-box{display:flex;flex-direction:column;gap:.6rem;width:100%;max-width:28rem;max-height:calc(100dvh - 2rem);overflow:auto}
 .gr-ln{display:grid;grid-template-columns:minmax(0,1.7fr) 4.2rem 4.5rem 6.5rem;gap:.35rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--border-soft)}
 .gr-box .gr-ln{grid-template-columns:minmax(0,1.6fr) 4.2rem 4.5rem 1.8rem}
@@ -1535,7 +1536,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 </div>
 
                 <!-- بطاقة إعادة الضبط -->
-                <div onclick="openReset()" style="--accent:#dc2626" class="owner-only dash-card group">
+                <div onclick="openReset()" style="--accent:#dc2626" class="owner-only dash-card group rs-center">
                     <div class="flex justify-between items-start gap-3">
                         <div>
                             <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded-full text-xs font-bold mb-2">منطقة خطرة</span>
@@ -7453,7 +7454,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 ['main', 'branch', 'other', 'debt', 'truck', 'exp', 'retCash', 'expected'].forEach(k => tot[k] += v[k] || 0);
                 if (c) tot.diff += (c.diff != null ? c.diff : 0);
                 const stl = c ? (c.st === 'handed' ? i18nT('مُسلَّم') + ' → ' + (c.handTo || '') : i18nT('مغلق')) : i18nT('مفتوح');
-                if (c && c.st === 'handed') hands.push(isoToDisplay(d) + ': ' + (c.handBy || '—') + ' → ' + (c.handTo || ''));
+                if (c && c.st === 'handed') hands.push({ d: isoToDisplay(d), by: c.handBy || '—', to: c.handTo || '' });
                 return `<tr><td>${esc(isoToDisplay(d))}</td><td class="r">${esc(fnNum(v.main))}</td><td class="r">${esc(fnNum(v.branch))}</td><td class="r">${esc(fnNum(v.debt))}</td><td class="r">${esc(fnNum(v.other))}</td><td class="r">${esc(fnNum(v.exp + (v.retCash || 0)))}</td><td class="r">${esc(fnNum(v.expected))}</td><td class="r">${c ? esc(fnNum(c.counted)) + ' (' + (c.diff > 0 ? '+' : '') + esc(fnNum(c.diff || 0)) + ')' : '—'}</td><td>${esc(stl)}</td></tr>`;
             }).join('');
             const S = (l, v) => `<tr><td>${esc(i18nT(l))}</td><td class="r"><b>${esc(fnNum(fnRound(v)))}</b></td></tr>`;
@@ -7462,10 +7463,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 <table><tr><th>${esc(i18nT('البند'))}</th><th class="r">${esc(i18nT('المبلغ'))}</th></tr>${S('مدخول المحل الرئيسي', tot.main)}${S('الديون المحصَّلة (المحل)', tot.debt)}${tot.truck ? S('ديون الشاحنة (حساب منفصل)', tot.truck) : ''}${S('مدخول الفرع', tot.branch)}${tot.other ? S('مداخيل أخرى', tot.other) : ''}${S('المصاريف (للمراجعة فقط)', tot.exp)}${tot.retCash ? S('مرتجعات نقدية (للمراجعة فقط)', tot.retCash) : ''}</table>
                 <div class="inv-tot"><div class="inv-sub">${esc(i18nT('إجمالي المدخول (المصاريف غير مخصومة)'))}</div><b>${esc(formatAmount(fnRound(tot.expected)))}</b></div>
                 ${(() => { const dr = fxDebtRows(f, t); return dr.length ? `<div class="inv-sub" style="margin:8px 0 4px">${esc(i18nT('تفصيل الديون المحصَّلة'))}</div><table style="font-size:11px"><tr><th>${esc(i18nT('التاريخ'))}</th><th>${esc(i18nT('العميل'))}</th><th>${esc(i18nT('ملاحظة'))}</th><th>${esc(i18nT('المصدر'))}</th><th class="r">${esc(i18nT('المبلغ'))}</th></tr>${dr.slice(0, 80).map(x => { const p = x.p, nm = x.p.name; return `<tr><td>${esc(isoToDisplay(x.date))}</td><td>${esc(nm)}</td><td>${esc(x.note && x.note !== nm ? x.note : '')}</td><td>${esc(i18nT(x.truck ? 'الشاحنة' : 'المحل'))}</td><td class="r">${esc(fnNum(x.amount))}</td></tr>`; }).join('')}</table>` : ''; })()}
-                <div class="inv-sub" style="margin:8px 0 4px">${esc(i18nT('تفصيل الأيام'))}</div>
-                <table style="font-size:11px"><tr><th>${esc(i18nT('التاريخ'))}</th><th class="r">${esc(i18nT('المحل'))}</th><th class="r">${esc(i18nT('الفرع'))}</th><th class="r">${esc(i18nT('ديون'))}</th><th class="r">${esc(i18nT('أخرى'))}</th><th class="r">${esc(i18nT('مصاريف'))}</th><th class="r">${esc(i18nT('المدخول'))}</th><th class="r">${esc(i18nT('المعدود (الفرق)'))}</th><th>${esc(i18nT('الحالة'))}</th></tr>${rows}</table>
                 <div class="inv-sub" style="margin-top:8px">${esc(i18nT('مجموع فروقات الجرد'))}: <b>${esc(fnNum(fnRound(tot.diff)))}</b></div>
-                ${hands.length ? `<div class="inv-sub" style="margin-top:4px">${esc(i18nT('التسليم'))}: ${esc(hands.join(' | '))}</div>` : ''}`, 'Manager ' + f);
+                ${hands.length ? `<div class="inv-sub" style="margin-top:8px">${esc(i18nT('التسليم'))}:</div>` + hands.map(h => `<div style="font-size:15px;margin-top:3px">${esc(h.d)} &nbsp; <b>${esc(h.by)}</b> <span style="font-size:22px;font-weight:900;line-height:1;vertical-align:-2px">&#8592;</span> <b>${esc(h.to)}</b></div>`).join('') : ''}`, 'Manager ' + f);
         }
         function printExpensesReport() {
             if (expKind === 'close') { fxPrintReport(expMonth + '-01', expMonth + '-31'); return; }
@@ -10230,7 +10229,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v33';
+        const APP_VER = 'v34';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
