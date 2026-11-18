@@ -1104,6 +1104,16 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
 .ord-prep{padding:.7rem 1rem;border-radius:.9rem;font-size:1rem;margin-bottom:.6rem}.ord-prep.ready{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.ord-prep.wait{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.ord-prep.hidden{display:none}
 .gr-oi{font-size:1rem;padding:.15rem 0}.gr-ol{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.gr-ol .fn-in{flex:1;min-width:10rem}
+.gr-tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.2rem}
+.gr-tab{flex:1;white-space:nowrap;padding:.6rem .5rem;border-radius:.9rem;font-weight:800;font-size:.85rem;border:1px solid var(--border-soft,#e2e8f0);background:transparent;color:inherit;cursor:pointer}
+.gr-tab.on{background:#0ea5e9;color:#fff;border-color:#0ea5e9}.gr-tab .gr-badge{background:#ef4444}
+.gr-sh{display:inline-block;background:#e0f2fe;color:#075985;border-radius:.5rem;padding:.05rem .45rem;font-weight:700;margin-inline-start:.3rem}
+.sh-top{display:grid;grid-template-columns:1fr 1.4fr;gap:.5rem}
+.sh-bulk{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.6rem;border-radius:.9rem;border:1px dashed var(--border-soft,#cbd5e1);position:sticky;top:.3rem;z-index:5;background:var(--card-bg,#fff)}.sh-bulk.on{border:1px solid #0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.2)}.sh-bulk .fn-in{flex:1;min-width:8rem}
+.sh-gh{display:flex;justify-content:space-between;align-items:center}
+.sh-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .3rem;border-bottom:1px solid var(--border-soft,#e2e8f0);cursor:pointer}.sh-row input{width:1.2rem;height:1.2rem}
+.sh-n{flex:1;min-width:0;font-weight:700;word-break:break-word}.sh-q{font-weight:800;opacity:.8;min-width:2.5rem;text-align:center}
+.sh-chip{background:#e0f2fe;color:#075985;border-radius:999px;padding:.2rem .7rem;font-size:.8rem;font-weight:800;white-space:nowrap}.sh-chip.none{background:#fef3c7;color:#92400e}
 #vch-sum{grid-template-columns:1fr 1fr!important;gap:.6rem;padding:.8rem;text-align:center}
 .vs-tile{border-radius:1rem;padding:.75rem .5rem;display:flex;flex-direction:column;gap:.2rem;align-items:center;justify-content:center;border:1.5px solid}
 .vs-tile small{font-size:.78rem;font-weight:700}.vs-tile b{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums}
@@ -1347,7 +1357,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         <button type="button" class="sn" data-sn="list-suppliers" onclick="openSection('suppliers')">🏬 <span>الموردين</span></button>
         <div class="sn-h">المخزون والفواتير</div>
         <button type="button" class="sn" data-sn="products" onclick="openProducts()">📦 <span>المنتجات</span></button>
-        <button type="button" class="sn" data-sn="grn" onclick="openGrn()">🏭 <span>استلام المخزن</span> <b class="gr-badge hidden" data-grn-n></b></button>
+        <button type="button" class="sn" data-sn="grn" onclick="openGrn()">🏭 <span>المخزن</span> <b class="gr-badge hidden" data-grn-n></b></button>
         <button type="button" class="sn" data-sn="invoices" onclick="openInvoices()">🧾 <span>الفواتير</span></button>
         <button type="button" class="sn" data-sn="vouchers" onclick="openVouchers()">📋 <span>السندات</span></button>
         <div class="sn-h">المال</div>
@@ -1445,8 +1455,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     <div class="flex justify-between items-start gap-3">
                         <div>
                             <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2" style="background:#e0f2fe;color:#075985">قسم المخزن</span>
-                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100">استلام المخزن</h3>
-                            <p class="text-sm text-slate-500 mt-1">وصول السلع، مطابقة الفاتورة، الإدخال</p>
+                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100">المخزن</h3>
+                            <p class="text-sm text-slate-500 mt-1">الاستلام، الطلبيات، النقل، الرفوف</p>
                         </div>
                         <div class="dash-ico" style="background:#e0f2fe">🏭</div>
                     </div>
@@ -1628,10 +1638,11 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             <div class="screen-bar">
                 <div class="flex items-center gap-3">
                     <button onclick="showScreen('home')" class="btn-back">← العودة</button>
-                    <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 استلام المخزن</h2>
+                    <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 المخزن</h2>
                 </div>
                 <div class="flex gap-2 flex-wrap"><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
             </div>
+            <div id="grn-tabs" class="gr-tabs"></div>
             <div id="grn-list" class="space-y-2"></div>
         </section>
 
@@ -4567,7 +4578,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { k: 'expenses', t: '💸 المصاريف والمداخيل', lv: ['n', 'v', 'e'] },
             { k: 'reports', t: '📊 التقارير', lv: ['n', 'v'] },
             { k: 'workers', t: '👷 مرتبات العمال', lv: ['n', 'v', 'e'] },
-            { k: 'store', t: '🏭 المخزن (استلام السلع والمطابقة)', lv: ['n', 'v', 'e'] }
+            { k: 'store', t: '🏭 المخزن (استلام، طلبيات، نقل، رفوف)', lv: ['n', 'v', 'e'] }
         ];
         const PERM_LBL = { n: 'ممنوع', v: 'عرض', e: 'تعديل' };
         const PERM_FULL = { n: 'none', v: 'view', e: 'edit' };
@@ -10254,7 +10265,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v38';
+        const APP_VER = 'v39';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10519,7 +10530,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const locs = [...new Set((state.invoices || []).map(x => x.prepLoc).filter(Boolean))];
             const dl = `<datalist id="ord-locs">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
             return `<div class="gr-h">🛒 ${esc(i18nT('طلبيات الزبائن للتجهيز'))} (${L.filter(o => o.prep === 'new').length})</div>${dl}` + L.map(o => {
-                const items = (o.items || []).map(i => `<div class="gr-oi"><b>${esc(fnNum(i.qty))}</b> × <span data-notr>${esc(i.name)}</span></div>`).join('');
+                const items = (o.items || []).map(i => { const sh = shelfText(i.name); return `<div class="gr-oi"><b>${esc(fnNum(i.qty))}</b> × <span data-notr>${esc(i.name)}</span>${sh ? ` <small class="gr-sh" data-notr>📍 ${esc(sh)}</small>` : ''}</div>`; }).join('');
                 const act = o.prep === 'new' ? (grnCanCount() ? `<div class="gr-ol"><input id="ordloc-${o.id}" class="fn-in" list="ord-locs" placeholder="${esc(i18nT('مكان تخزين الطلبية (رف، مخزن، ...)'))}"><button class="fn-btn ok" onclick="ordReady('${o.id}')">✅ ${esc(i18nT('تم التجهيز'))}</button></div>` : '') : `<div class="gr-ol"><span>✅ ${esc(i18nT('جاهزة'))} — ${esc(i18nT('المكان'))}: <b data-notr>${esc(o.prepLoc || '')}</b></span>${grnCanCount() ? `<button class="fn-btn" onclick="ordReopen('${o.id}')">↩️</button>` : ''}</div>`;
                 return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(o.number)} · ${esc(o.name || i18nT('زبون'))}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}${o.notes ? ' · ' + esc(o.notes) : ''}</div></div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-body">${items}${act}</div></div>`;
             }).join('');
@@ -10577,9 +10588,55 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             return `<div class="gr-h">🔁 ${esc(i18nT('آخر عمليات النقل'))}</div>` + L.map(x => `<div class="fn-inv gr-card" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.fromName || '')} ← ${esc(x.toName || '')}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(x.date || ''))} · ${esc(x.by || '')}</div></div><span class="gr-chip ${x.st === 'done' ? 'g' : 'd'}">${x.st === 'done' ? '✅ ' + esc(i18nT('تم')) : '↩️ ' + esc(i18nT('معكوس'))}</span></div>
                 <div class="gr-body">${(x.lines || []).map(l => `<div class="gr-oi"><b>${esc(fnNum(l.qty))}</b> × <span data-notr>${esc(l.name)}</span></div>`).join('')}${x.st === 'done' && isOwner() ? `<div class="gr-acts"><button class="fn-btn" onclick="xfUndo('${x.id}')">↩️ ${esc(i18nT('عكس النقل'))}</button></div>` : ''}</div></div>`).join('');
         }
+        let grnTab = null;
+        // ---- الرفوف: ترتيب السلع داخل كل مخزن ----
+        let shW = null, shQ = '', shSel = {};
+        const shOf = (p, w) => ((p.shelves || {})[w] || '').trim();
+        function shWhs() { const ids = whList().map(w => w.id); if (prodItems().some(p => (pStock(p)[NOWH] || 0) > 0)) ids.push(NOWH); return ids; }
+        function shelfSet(p, wh, name) {
+            const cur = state.products.find(x => x.id === p.id) || p, sh = { ...(cur.shelves || {}) };
+            if (name) sh[wh] = name; else delete sh[wh];
+            const nd = { ...cur, shelves: sh}, i = state.products.findIndex(x => x.id === p.id);
+            if (!db || !wh || /[.~*\/\[\]`]/.test(wh)) { finSave('products', nd); return; }
+            if (i >= 0) state.products[i] = nd;
+            const F = firebase.firestore.FieldValue;
+            dbWrite(db.collection('products').doc(p.id).update({ ['shelves.' + wh]: name ? name : F.delete() }));
+        }
+        function shelfNames(w) { return [...new Set(prodItems().map(p => shOf(p, w)).filter(Boolean))].sort((a, b) => ARC.compare(a, b)); }
+        function shelfText(name) { // موضع منتج في المخازن (للتجهيز)
+            const p = prodItems().find(x => (x.name || '') === name); if (!p) return '';
+            return Object.keys(p.shelves || {}).filter(w => (pStock(p)[w] || 0) > 0 && p.shelves[w]).map(w => whName(w) + ': ' + p.shelves[w]).join(' | ');
+        }
+        function shBulkHtml() {
+            const n = Object.keys(shSel).length;
+            return `<div class="sh-bulk ${n ? 'on' : ''}"><span class="font-bold">${n ? esc(i18nT('المحدد')) + ': ' + n : esc(i18nT('حدّد منتجات ثم اختر الرف'))}</span><input id="sh-name" class="fn-in" list="sh-names" placeholder="${esc(i18nT('اسم الرف (مثال: A3)'))}" ${n ? '' : 'disabled'}><datalist id="sh-names">${shelfNames(shW).map(x => `<option value="${esc(x)}">`).join('')}</datalist><button class="fn-btn ok" ${n ? '' : 'disabled'} onclick="shApply(document.getElementById('sh-name').value)">📍 ${esc(i18nT('وضعها في الرف'))}</button><button class="fn-btn" ${n ? '' : 'disabled'} onclick="shApply('')">🧹 ${esc(i18nT('إزالة من الرف'))}</button></div>`;
+        }
+        function shListHtml() {
+            const q = shQ.trim().toLowerCase();
+            const ps = prodItems().filter(p => (pStock(p)[shW] || 0) > 0 && (!q || (p.name || '').toLowerCase().includes(q) || shOf(p, shW).toLowerCase().includes(q)));
+            if (!ps.length) return `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد منتجات في هذا المخزن.'))}</div>`;
+            const g = {}; ps.forEach(p => { const k = shOf(p, shW); (g[k] = g[k] || []).push(p); });
+            const keys = Object.keys(g).sort((a, b) => a === '' ? -1 : b === '' ? 1 : ARC.compare(a, b));
+            return keys.map(k => `<div class="gr-h sh-gh"><span>${k ? '🗄️ ' + esc(k) : '⚠️ ' + esc(i18nT('بدون رف'))} <small>(${g[k].length})</small></span><button class="fn-btn" onclick="shSelGroup(${JSON.stringify(k).replace(/"/g, '&quot;')})">${esc(i18nT('تحديد الكل'))}</button></div>` + g[k].sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<label class="sh-row"><input type="checkbox" ${shSel[p.id] ? 'checked' : ''} onchange="shToggle('${p.id}',this.checked)"><span class="sh-n" data-notr>${esc(p.name)}</span><span class="sh-q">${esc(fnNum(pStock(p)[shW]))}</span><span class="sh-chip ${k ? '' : 'none'}" onclick="event.preventDefault();shPick('${p.id}')">📍 ${esc(k || i18nT('تعيين'))}</span></label>`).join('')).join('');
+        }
+        function shelfHtml() {
+            const whs = shWhs(); if (!whs.length) return `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('أضف مخزناً أولاً من تبويب المخازن في شاشة المنتجات.'))}</div>`;
+            if (!whs.includes(shW)) { shW = whs[0]; shSel = {}; }
+            return `<div class="sh-top"><select class="fn-in" onchange="shW=this.value;shSel={};renderGrn()">${whs.map(k => `<option value="${esc(k)}"${k === shW ? ' selected' : ''} data-notr>${esc(whName(k))}</option>`).join('')}</select><input class="fn-in" placeholder="🔍 ${esc(i18nT('بحث عن منتج أو رف'))}" value="${esc(shQ)}" oninput="shQ=this.value;document.getElementById('sh-list').innerHTML=shListHtml()"></div><div id="sh-bulkbox">${shBulkHtml()}</div><div id="sh-list">${shListHtml()}</div>`;
+        }
+        function shBulkRefresh() { const b = document.getElementById('sh-bulkbox'); if (b) b.innerHTML = shBulkHtml(); }
+        function shToggle(id, on) { if (on) shSel[id] = 1; else delete shSel[id]; shBulkRefresh(); }
+        function shSelGroup(k) { prodItems().filter(p => (pStock(p)[shW] || 0) > 0 && shOf(p, shW) === k).forEach(p => shSel[p.id] = 1); document.getElementById('sh-list').innerHTML = shListHtml(); shBulkRefresh(); }
+        function shPick(id) { shSel = { [id]: 1 }; document.getElementById('sh-list').innerHTML = shListHtml(); shBulkRefresh(); const i = document.getElementById('sh-name'); if (i) i.focus(); }
+        function shApply(name) {
+            if (!grnCanCount()) { permDeny(); return; }
+            name = (name || '').trim(); const ids = Object.keys(shSel); if (!ids.length) return;
+            ids.forEach(id => { const p = prodItems().find(x => x.id === id); if (p) shelfSet(p, shW, name); });
+            shSel = {}; appToast(name ? '📍 ' + i18nT('وُضعت في الرف') + ' ' + name : '🧹 ' + i18nT('أُزيلت من الرف')); renderGrn();
+        }
         function renderGrn() {
             const box = document.getElementById('grn-list'); if (!box) return;
-            const nb = document.getElementById('grn-new'); if (nb) nb.classList.toggle('hidden', !grnCanCount());
+            const nb = document.getElementById('grn-new');
             const L = grnList(), mine = L.filter(grnNeedsMe), rest = L.filter(x => !grnNeedsMe(x));
             if (grnOpenId === null && mine.length) grnOpenId = mine[0].id;
             const card = x => {
@@ -10588,13 +10645,22 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return `<div class="fn-inv gr-card ${me_ ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" onclick="grnOpenId=${open ? 'null' : `'${x.id}'`};renderGrn()"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.sup || i18nT('مورّد غير محدد'))}</div><div class="text-xs text-slate-500" data-notr>${esc(x.desc || '')}</div></div><span class="gr-chip ${S[2]}">${S[0]} ${esc(i18nT(S[1]))}</span></div>
                     ${open ? `<div class="gr-body">${grnLinesHtml(x)}${x.invNo ? `<div class="text-xs text-slate-500">🏁 ${esc(i18nT('فاتورة المشتريات'))}: ${esc(x.invNo)}</div>` : ''}<div class="gr-hist">${hist}</div><div class="gr-acts">${grnActions(x)}</div></div>` : ''}</div>`;
             };
-            const oc = ordCards();
-            const xb = document.getElementById('grn-xf'); if (xb) xb.classList.toggle('hidden', !grnCanCount());
-            box.innerHTML = oc + xfCards() + (L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
-                : (oc || xfList().length ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`));
+            const OPn = ordPrepList().filter(o => o.prep === 'new').length, empty = t => `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT(t))}</div>`;
+            if (!grnTab) grnTab = mine.length ? 'rcv' : OPn ? 'ord' : 'rcv';
+            const T = [['rcv', '📥', 'الاستلام', mine.length], ['ord', '🛒', 'الطلبيات', OPn], ['xf', '🔁', 'النقل', 0], ['shelf', '🗄️', 'الرفوف', 0]];
+            document.getElementById('grn-tabs').innerHTML = T.map(t => `<button type="button" class="gr-tab ${grnTab === t[0] ? 'on' : ''}" onclick="grnTab='${t[0]}';renderGrn()">${t[1]} ${esc(i18nT(t[2]))}${t[3] ? ` <b class="gr-badge">${t[3]}</b>` : ''}</button>`).join('');
+            const xb = document.getElementById('grn-xf'); if (xb) xb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'xf');
+            if (nb) nb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'rcv');
+            let html;
+            if (grnTab === 'ord') html = ordCards() || empty('لا توجد طلبيات للتجهيز.');
+            else if (grnTab === 'xf') html = xfCards() || empty('لا توجد عمليات نقل بعد.');
+            else if (grnTab === 'shelf') html = shelfHtml();
+            else html = L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '') : empty('لا توجد استلامات بعد.');
+            box.innerHTML = html;
         }
         // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
         function grnRefresh() {
+            if (isStore() && !window.__stLand) { window.__stLand = 1; try { openGrn(); } catch (e) { } }
             const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter())).length;
             document.querySelectorAll('[data-grn-n]').forEach(e => { e.innerText = n ? String(n) : ''; e.classList.toggle('hidden', !n); });
             const seen = {}; L.forEach(x => seen[x.id] = x.st);
