@@ -4520,7 +4520,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                             <button type="button" onclick="renameUser('${esc(u.id)}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تغيير الاسم">✏️</button>
                             ${isOwner() && u.role !== 'owner' ? `<button type="button" onclick="toggleUserStore('${esc(u.id)}',${u.store === true ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="عامل مخزن">🏭</button><button type="button" onclick="openPermsModal('${esc(u.id)}')" class="text-xs bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 rounded-lg" title="الصلاحيات">🔐</button>` : ''}
                             ${self ? '' : `<button type="button" onclick="toggleUserRole('${esc(u.id)}','${u.role === 'owner' ? 'accountant' : 'owner'}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="تبديل الصلاحية">🔁</button>
-                            <button type="button" onclick="toggleUserActive('${esc(u.id)}',${active ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="${active ? 'تعطيل' : 'تفعيل'}">${active ? '🚫' : '✅'}</button>`}
+                            <button type="button" onclick="toggleUserActive('${esc(u.id)}',${active ? 'false' : 'true'})" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg" title="${active ? 'تعطيل' : 'تفعيل'}">${active ? '🚫' : '✅'}</button>
+                            ${isOwner() ? `<button type="button" onclick="deleteUser('${esc(u.id)}')" class="text-xs bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded-lg" title="حذف المستخدم">🗑️</button>` : ''}`}
                         </div>
                     </div>`;
                 }).join('');
@@ -4680,6 +4681,20 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (await appConfirm(active ? 'تفعيل هذا الحساب؟' : 'تعطيل هذا الحساب؟ لن يستطيع الدخول للتطبيق.')) {
                 userUpdate(id, { active }, 'user_edit', active ? 'تفعيل مستخدم' : 'تعطيل مستخدم');
             }
+        }
+
+        async function deleteUser(id) {
+            if (!isOwner() || (me && id === me.uid)) return;
+            if (!navigator.onLine) { appAlert('حذف مستخدم يحتاج اتصالاً بالإنترنت.'); return; }
+            let nm = '';
+            try { const d = await db.collection('users').doc(id).get(); nm = (d.data() || {}).name || ''; } catch (e) { }
+            if (!await appConfirm('حذف المستخدم ' + (nm ? '«' + nm + '» ' : '') + 'نهائياً؟ لن يستطيع الدخول للتطبيق، وتبقى العمليات التي سجّلها في السجلات. (للإيقاف المؤقت استخدم التعطيل 🚫)', { danger: true })) return;
+            try {
+                await db.collection('users').doc(id).delete();
+                if (TENANT) { try { await _dbCol('userIndex').doc(id).delete(); } catch (e) { } }
+                logActivity('user_edit', '', null, 'حذف مستخدم ' + nm);
+                refreshUsers(); appToast('✔ تم حذف المستخدم');
+            } catch (err) { console.error(err); appAlert('تعذّر حذف المستخدم (قد تحتاج لتحديث قواعد Firebase).'); }
         }
 
         async function createUser(e) {
@@ -10239,7 +10254,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v37';
+        const APP_VER = 'v38';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }

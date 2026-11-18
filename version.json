@@ -1,1 +1,1 @@
-{"version": "v37", "date": "2026-11-17", "notes": {"ar": ["إصلاح: زر «تحديث الآن» كان يعلق عندما يكون النسخ الاحتياطي اليومي مستحقاً (كان يمنع إعادة التحميل)."], "fr": ["Correctif : le bouton « Mettre à jour » restait bloqué."], "en": ["Fix: \"Update now\" no longer hangs when the daily backup reminder was due."]}}
+{"version": "v38", "date": "2026-11-17", "notes": {"ar": ["خيار حذف المستخدم في إدارة المستخدمين (للمدير)."], "fr": ["Suppression d’utilisateur."], "en": ["Delete user option."]}}
