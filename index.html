@@ -6434,7 +6434,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             askBackupBeforeExit();
         });
         window.addEventListener('beforeunload', (e) => {
-            if (exitBypass || !backupDueToday()) return;
+            if (window.__updating || exitBypass || !backupDueToday()) return;
             e.preventDefault(); e.returnValue = '';   // رسالة المتصفح العامة (لا يمكن تخصيصها)
         });
 
@@ -10239,7 +10239,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v36';
+        const APP_VER = 'v37';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10290,7 +10290,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (!ok) { // احتياط: تفريغ التخزين وإلغاء الـ service worker ليُحمَّل كل شيء من الشبكة
                 try { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister())); const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } catch (e) { }
             } else { try { const r = await navigator.serviceWorker.getRegistration(); if (r) r.update().catch(() => { }); } catch (e) { } }
+            try { exitBypass = true; } catch (e) { }
             try { location.reload(); } catch (e) { location.href = location.pathname; }
+            setTimeout(() => { try { location.replace(location.pathname + '?v=' + Date.now()); } catch (e) { } }, 4000); // لو لم يُعَد التحميل
+            setTimeout(() => { window.__updating = false; updBusy = false; const bb = document.getElementById('upd-now'); if (bb) { bb.disabled = false; bb.textContent = '⬇️ ' + i18nT('تحديث الآن'); } }, 12000);
         }
         async function updAvailable(reason) {
             if (updAvail && document.getElementById('upd-ov')) return;
