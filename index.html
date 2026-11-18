@@ -1104,8 +1104,8 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
 .ord-prep{padding:.7rem 1rem;border-radius:.9rem;font-size:1rem;margin-bottom:.6rem}.ord-prep.ready{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.ord-prep.wait{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.ord-prep.hidden{display:none}
 .gr-oi{font-size:1rem;padding:.15rem 0}.gr-ol{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.gr-ol .fn-in{flex:1;min-width:10rem}
-.gr-tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.2rem}
-.gr-tab{flex:1;white-space:nowrap;padding:.6rem .5rem;border-radius:.9rem;font-weight:800;font-size:.85rem;border:1px solid var(--border-soft,#e2e8f0);background:transparent;color:inherit;cursor:pointer}
+.gr-tabs{display:flex;gap:.3rem;overflow-x:auto;padding-bottom:.2rem}
+.gr-tab{flex:1;white-space:nowrap;padding:.55rem .3rem;border-radius:.9rem;font-weight:800;font-size:.8rem;border:1px solid var(--border-soft,#e2e8f0);background:transparent;color:inherit;cursor:pointer}
 .gr-tab.on{background:#0ea5e9;color:#fff;border-color:#0ea5e9}.gr-tab .gr-badge{background:#ef4444}
 .gr-sh{display:inline-block;background:#e0f2fe;color:#075985;border-radius:.5rem;padding:.05rem .45rem;font-weight:700;margin-inline-start:.3rem}
 .sh-top{display:grid;grid-template-columns:1fr 1.4fr;gap:.5rem}
@@ -1114,6 +1114,8 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .sh-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .3rem;border-bottom:1px solid var(--border-soft,#e2e8f0);cursor:pointer}.sh-row input{width:1.2rem;height:1.2rem}
 .sh-n{flex:1;min-width:0;font-weight:700;word-break:break-word}.sh-q{font-weight:800;opacity:.8;min-width:2.5rem;text-align:center}
 .sh-chip{background:#e0f2fe;color:#075985;border-radius:999px;padding:.2rem .7rem;font-size:.8rem;font-weight:800;white-space:nowrap}.sh-chip.none{background:#fef3c7;color:#92400e}
+.cn-row{display:flex;align-items:center;gap:.5rem;padding:.4rem .2rem;border-bottom:1px solid var(--border-soft,#e2e8f0)}.cn-row.on{background:rgba(14,165,233,.07)}
+.cn-row .fn-in{width:5.2rem;text-align:center;padding:.35rem}
 #vch-sum{grid-template-columns:1fr 1fr!important;gap:.6rem;padding:.8rem;text-align:center}
 .vs-tile{border-radius:1rem;padding:.75rem .5rem;display:flex;flex-direction:column;gap:.2rem;align-items:center;justify-content:center;border:1.5px solid}
 .vs-tile small{font-size:.78rem;font-weight:700}.vs-tile b{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums}
@@ -1640,7 +1642,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     <button onclick="showScreen('home')" class="btn-back">← العودة</button>
                     <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 المخزن</h2>
                 </div>
-                <div class="flex gap-2 flex-wrap"><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
+                <div class="flex gap-2 flex-wrap"><button type="button" id="grn-cn" onclick="cnNew()" class="fn-btn primary">📋 <span>جرد جديد</span></button><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
             </div>
             <div id="grn-tabs" class="gr-tabs"></div>
             <div id="grn-list" class="space-y-2"></div>
@@ -8380,7 +8382,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (!ctRows().length) { appAlert('لم تعدّ أي منتج بعد.'); return; }
             if (!R.length) { appAlert('لا توجد فروقات: المخزون مطابق للجرد.'); return; }
             if (!await appConfirm(i18nT('سيتم تصحيح كمية') + ' ' + R.length + ' ' + i18nT('منتج في المخزن المختار لتطابق الجرد. هل تريد المتابعة؟'))) return;
-            R.forEach(r => { const st = { ...pStock(r.p), [w]: r.cnt }; Object.keys(st).forEach(k => { if (!st[k] && k !== (r.p.wh || NOWH)) delete st[k]; }); finSave('products', { ...r.p, stock: st, qty: fnRound(Object.values(st).reduce((a, v) => a + v, 0)), updatedAt: Date.now() }); });
+            R.forEach(r => stockDeltaApply(r.p, w, r.diff));
             const short = fnRound(R.reduce((a, r) => a + (r.diff < 0 ? -r.diff * (r.p.buyPrice || 0) : 0), 0));
             logActivity('stock_count', 'products', { id: 'count', name: whName(w) }, R.length + ' ' + i18nT('فرق') + ' — ' + i18nT('قيمة العجز') + ': ' + moneyMsg(short) + ' | ' + R.slice(0, 8).map(r => r.p.name + ' ' + (r.diff > 0 ? '+' : '') + fnNum(r.diff)).join('، '));
             appToast('✔ ' + i18nT('تم اعتماد الجرد')); ctReset();
@@ -10265,7 +10267,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v39';
+        const APP_VER = 'v40';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10634,6 +10636,86 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             ids.forEach(id => { const p = prodItems().find(x => x.id === id); if (p) shelfSet(p, shW, name); });
             shSel = {}; appToast(name ? '📍 ' + i18nT('وُضعت في الرف') + ' ' + name : '🧹 ' + i18nT('أُزيلت من الرف')); renderGrn();
         }
+        // ---- الجرد: العدّ (عامل المخزن) ثم اعتماد المدير للفروقات ----
+        function stockDeltaApply(p, wh, d) { // تصحيح بالفرق (increment) كي لا يمحو حركات حدثت بعد العدّ أو على جهاز آخر
+            const cur = state.products.find(x => x.id === p.id) || p, st = { ...pStock(cur) };
+            st[wh] = fnRound((st[wh] || 0) + d); if (!st[wh] && wh !== (cur.wh || NOWH)) delete st[wh];
+            const tot = fnRound(Object.values(st).reduce((a, v) => a + v, 0));
+            if (!db || !cur.stock || typeof cur.stock !== 'object' || !wh || /[.~*\/\[\]`]/.test(wh)) { finSave('products', { ...cur, stock: st, qty: tot, updatedAt: Date.now() }); return; }
+            const F = firebase.firestore.FieldValue, i = state.products.findIndex(x => x.id === p.id); if (i >= 0) state.products[i] = { ...cur, stock: st, qty: tot };
+            dbWrite(db.collection('products').doc(p.id).update({ ['stock.' + wh]: F.increment(d), qty: F.increment(d) }));
+        }
+        const cnList = () => (state.invoices || []).filter(x => x.type === 'cnt').sort((a, b) => (b.at || 0) - (a.at || 0));
+        const CN_ST = { counting: ['📝', 'قيد العدّ', 's'], submitted: ['📤', 'بانتظار اعتماد المدير', 'a'], approved: ['✅', 'اعتُمد وصُحّح المخزون', 'g'] };
+        let cnOpen = null, cnQ = '';
+        function cnScope(x) { return prodItems().filter(p => ((pStock(p)[x.wh] || 0) !== 0 || (p.wh || NOWH) === x.wh) && (!x.shelf || shOf(p, x.wh) === x.shelf)).sort((a, b) => ARC.compare(a.name || '', b.name || '')); }
+        function cnNew() {
+            if (!grnCanCount()) { permDeny(); return; }
+            const whs = shWhs(); if (!whs.length) { appAlert('أضف مخزناً أولاً.'); return; }
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">📋 ${esc(i18nT('جرد جديد'))}</div>
+                <label class="fn-lbl">${esc(i18nT('المخزن'))}</label><select id="cn-wh" class="fn-in">${whs.map(k => `<option value="${esc(k)}" data-notr>${esc(whName(k))}</option>`).join('')}</select>
+                <label class="fn-lbl">${esc(i18nT('رف محدد (اختياري — اتركه فارغاً لجرد المخزن كله)'))}</label><input id="cn-shelf" class="fn-in" list="cn-shelves" placeholder="${esc(i18nT('مثال: A3'))}"><datalist id="cn-shelves">${[...new Set(prodItems().flatMap(p => Object.values(p.shelves || {})))].map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="cnCreate()">▶ ${esc(i18nT('بدء العدّ'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden');
+        }
+        function cnCreate() {
+            const wh = document.getElementById('cn-wh').value, shelf = document.getElementById('cn-shelf').value.trim();
+            const x = { id: finNewId('invoices'), type: 'cnt', number: 'CNT-' + String(cnList().length + 1).padStart(4, '0'), st: 'counting', wh, whName: whName(wh), shelf, counts: {}, zero: false, date: toISODate(new Date()), at: Date.now(), by: (me && me.name) || '', ...actorStamp() };
+            cnOpen = x.id; finSave('invoices', x); grnClose(); cnQ = ''; renderGrn();
+        }
+        function cnRowsHtml(x) {
+            const q = cnQ.trim().toLowerCase(), blind = isStore(), sc = cnScope(x).filter(p => !q || (p.name || '').toLowerCase().includes(q) || String(p.barcode || '').includes(q));
+            if (!sc.length) return `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد منتجات.'))}</div>`;
+            return sc.map(p => { const c = x.counts[p.id], sh = shOf(p, x.wh); return `<div class="cn-row ${c != null ? 'on' : ''}"><div class="sh-n" data-notr>${esc(p.name)}${sh ? ` <small class="gr-sh">📍 ${esc(sh)}</small>` : ''}</div>${blind ? '' : `<span class="sh-q" title="${esc(i18nT('المسجَّل'))}">${esc(fnNum(pStock(p)[x.wh] || 0))}</span>`}<input class="fn-in" type="number" inputmode="decimal" min="0" step="any" value="${c != null ? esc(c) : ''}" placeholder="—" oninput="cnSet('${x.id}','${p.id}',this.value)" onchange="grnPersist('${x.id}')"><button class="fn-btn" onclick="cnAdd('${x.id}','${p.id}')">+1</button></div>`; }).join('');
+        }
+        function cnSet(id, pid, v) { const x = invById(id); if (!x) return; if (v === '' || isNaN(parseFloat(v))) delete x.counts[pid]; else x.counts[pid] = Math.max(0, fnRound(parseFloat(v))); }
+        function cnAdd(id, pid) { const x = invById(id); if (!x) return; x.counts[pid] = fnRound((x.counts[pid] || 0) + 1); grnPersist(id); const r = document.getElementById('cn-rows'); if (r) r.innerHTML = cnRowsHtml(x); }
+        function cnScan(e, id) {
+            if (e.key !== 'Enter') return; e.preventDefault(); const x = invById(id), v = e.target.value.trim(); if (!x || !v) return;
+            const p = cnScope(x).find(y => String(y.barcode || '') === v); if (!p) { appToast(i18nT('لا يوجد منتج بهذا الباركود في نطاق الجرد:') + ' ' + v); return; }
+            e.target.value = ''; cnQ = ''; cnAdd(id, p.id); appToast('✔ ' + p.name);
+        }
+        function cnZero(id, on) { const x = invById(id); if (x) { x.zero = on; grnPersist(id); } }
+        function cnRowsCalc(x) {
+            const rows = []; cnScope(x).forEach(p => { const has = x.counts[p.id] != null; if (!has && !x.zero) return; const cnt = has ? +x.counts[p.id] : 0, exp = fnRound(pStock(p)[x.wh] || 0); rows.push({ pid: p.id, name: p.name, exp, cnt, diff: fnRound(cnt - exp), buy: p.buyPrice || 0 }); });
+            return rows;
+        }
+        function cnSubmit(id) {
+            const x = invById(id); if (!x) return; const rows = cnRowsCalc(x);
+            if (!rows.length) { appAlert('لم تعدّ أي منتج بعد.'); return; }
+            const bad = rows.some(r => r.diff !== 0), me_ = (me && me.name) || '';
+            finSave('invoices', { ...x, rows, st: bad ? 'submitted' : 'approved', subBy: me_, subAt: Date.now(), ...(bad ? {} : { apBy: i18nT('مطابق'), apAt: Date.now() }) }); renderGrn();
+            appToast(bad ? '📤 ' + i18nT('أُرسل الجرد للمدير') : '✅ ' + i18nT('الجرد مطابق للمخزون'));
+        }
+        function cnTable(x) {
+            const R = (x.rows || []).filter(r => r.diff !== 0), short = fnRound(R.reduce((a, r) => a + (r.diff < 0 ? -r.diff * r.buy : 0), 0)), over = fnRound(R.reduce((a, r) => a + (r.diff > 0 ? r.diff * r.buy : 0), 0));
+            if (!R.length) return `<div class="text-sm text-slate-500">${esc(i18nT('لا توجد فروقات.'))} (${(x.rows || []).length} ${esc(i18nT('منتج'))})</div>`;
+            return `<div class="gr-ln gr-hd"><span>${esc(i18nT('المنتج'))}</span><span>${esc(i18nT('المسجَّل'))}</span><span>${esc(i18nT('المعدود'))}</span><span>${esc(i18nT('الفرق'))}</span></div>` + R.map(r => `<div class="gr-ln"><div class="gr-nm" data-notr>${esc(r.name)}</div><span>${esc(fnNum(r.exp))}</span><span>${esc(fnNum(r.cnt))}</span><b class="gr-df ${r.diff < 0 ? 'bad' : 'ok'}">${r.diff > 0 ? '+' : ''}${esc(fnNum(r.diff))}</b></div>`).join('') + (isOwner() || !isStore() ? `<div class="text-xs mt-1">${esc(i18nT('قيمة العجز'))}: <b class="gr-df bad">${esc(formatAmount(short))}</b> · ${esc(i18nT('قيمة الزيادة'))}: <b class="gr-df ok">${esc(formatAmount(over))}</b></div>` : '');
+        }
+        async function cnApprove(id) {
+            const x = invById(id); if (!x || !isOwner() || x.st !== 'submitted') return;
+            const R = (x.rows || []).filter(r => r.diff !== 0);
+            if (!await appConfirm(i18nT('سيتم تصحيح كمية') + ' ' + R.length + ' ' + i18nT('منتج لتطابق الجرد. هل تريد المتابعة؟'))) return;
+            R.forEach(r => { const p = prodItems().find(y => y.id === r.pid); if (p) stockDeltaApply(p, x.wh, r.diff); });
+            const short = fnRound(R.reduce((a, r) => a + (r.diff < 0 ? -r.diff * r.buy : 0), 0));
+            logActivity('stock_count', 'products', { id: 'count', name: x.whName || whName(x.wh) }, x.number + ' · ' + R.length + ' ' + i18nT('فرق') + ' — ' + i18nT('قيمة العجز') + ': ' + moneyMsg(short) + ' | ' + R.slice(0, 8).map(r => r.name + ' ' + (r.diff > 0 ? '+' : '') + fnNum(r.diff)).join('، '));
+            finSave('invoices', { ...x, st: 'approved', apBy: (me && me.name) || '', apAt: Date.now() }); renderGrn(); appToast('✔ ' + i18nT('تم اعتماد الجرد'));
+        }
+        function cnReopen(id) { const x = invById(id); if (!x || !isOwner()) return; finSave('invoices', { ...x, st: 'counting' }); cnOpen = id; renderGrn(); }
+        async function cnDelete(id) { const x = invById(id); if (!x || !isOwner()) return; if (await appConfirm(i18nT('حذف هذا الجرد؟'))) { finRemove('invoices', id); renderGrn(); } }
+        function cnHtml() {
+            const L = cnList(); if (!L.length) return `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد عمليات جرد بعد.'))}</div>`;
+            return L.map(x => {
+                const S = CN_ST[x.st] || CN_ST.counting, open = cnOpen === x.id, mine = x.st === 'submitted' && isOwner();
+                let body = '';
+                if (open) {
+                    if (x.st === 'counting') body = `<div class="gr-body"><input id="cn-q" class="fn-in" type="search" autocomplete="off" value="${esc(cnQ)}" placeholder="🔍 ${esc(i18nT('امسح الباركود (Enter) أو ابحث بالاسم'))}" oninput="cnQ=this.value;document.getElementById('cn-rows').innerHTML=cnRowsHtml(invById('${x.id}'))" onkeydown="cnScan(event,'${x.id}')"><div id="cn-rows">${cnRowsHtml(x)}</div><label class="fn-chk"><input type="checkbox" ${x.zero ? 'checked' : ''} onchange="cnZero('${x.id}',this.checked)"> <span>${esc(i18nT('المنتجات التي لم أعدّها تُعتبر صفراً'))}</span></label><div class="gr-acts"><button class="fn-btn primary" onclick="cnSubmit('${x.id}')">📤 ${esc(i18nT('إنهاء العدّ وإرسال للمدير'))}</button>${isOwner() ? `<button class="fn-btn del" onclick="cnDelete('${x.id}')">🗑️</button>` : ''}</div></div>`;
+                    else body = `<div class="gr-body">${cnTable(x)}<div class="text-xs text-slate-500">${esc(i18nT('العدّ'))}: ${esc(x.subBy || x.by || '')}${x.apBy ? ' · ' + esc(i18nT('الاعتماد')) + ': ' + esc(x.apBy) : ''}</div><div class="gr-acts">${x.st === 'submitted' && isOwner() ? `<button class="fn-btn ok" onclick="cnApprove('${x.id}')">✅ ${esc(i18nT('اعتماد وتصحيح المخزون'))}</button><button class="fn-btn" onclick="cnReopen('${x.id}')">🔄 ${esc(i18nT('إعادة العدّ'))}</button>` : ''}${isOwner() ? `<button class="fn-btn del" onclick="cnDelete('${x.id}')">🗑️</button>` : ''}</div></div>`;
+                }
+                return `<div class="fn-inv gr-card ${mine ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" onclick="cnOpen=${open ? 'null' : `'${x.id}'`};renderGrn()"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.whName || '')}${x.shelf ? ' · 📍' + esc(x.shelf) : ''}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(x.date || ''))} · ${esc(x.by || '')}</div></div><span class="gr-chip ${S[2]}">${S[0]} ${esc(i18nT(S[1]))}</span></div>${body}</div>`;
+            }).join('');
+        }
         function renderGrn() {
             const box = document.getElementById('grn-list'); if (!box) return;
             const nb = document.getElementById('grn-new');
@@ -10647,26 +10729,30 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             };
             const OPn = ordPrepList().filter(o => o.prep === 'new').length, empty = t => `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT(t))}</div>`;
             if (!grnTab) grnTab = mine.length ? 'rcv' : OPn ? 'ord' : 'rcv';
-            const T = [['rcv', '📥', 'الاستلام', mine.length], ['ord', '🛒', 'الطلبيات', OPn], ['xf', '🔁', 'النقل', 0], ['shelf', '🗄️', 'الرفوف', 0]];
+            const T = [['rcv', '📥', 'الاستلام', mine.length], ['ord', '🛒', 'الطلبيات', OPn], ['xf', '🔁', 'النقل', 0], ['shelf', '🗄️', 'الرفوف', 0], ['cnt', '📋', 'الجرد', isOwner() ? cnList().filter(x => x.st === 'submitted').length : 0]];
             document.getElementById('grn-tabs').innerHTML = T.map(t => `<button type="button" class="gr-tab ${grnTab === t[0] ? 'on' : ''}" onclick="grnTab='${t[0]}';renderGrn()">${t[1]} ${esc(i18nT(t[2]))}${t[3] ? ` <b class="gr-badge">${t[3]}</b>` : ''}</button>`).join('');
             const xb = document.getElementById('grn-xf'); if (xb) xb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'xf');
             if (nb) nb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'rcv');
+            const cb = document.getElementById('grn-cn'); if (cb) cb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'cnt');
             let html;
             if (grnTab === 'ord') html = ordCards() || empty('لا توجد طلبيات للتجهيز.');
             else if (grnTab === 'xf') html = xfCards() || empty('لا توجد عمليات نقل بعد.');
             else if (grnTab === 'shelf') html = shelfHtml();
+            else if (grnTab === 'cnt') html = cnHtml();
             else html = L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '') : empty('لا توجد استلامات بعد.');
             box.innerHTML = html;
         }
         // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
         function grnRefresh() {
             if (isStore() && !window.__stLand) { window.__stLand = 1; try { openGrn(); } catch (e) { } }
-            const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter())).length;
+            const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + (isOwner() ? cnList().filter(x => x.st === 'submitted').length : 0) + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter())).length;
             document.querySelectorAll('[data-grn-n]').forEach(e => { e.innerText = n ? String(n) : ''; e.classList.toggle('hidden', !n); });
             const seen = {}; L.forEach(x => seen[x.id] = x.st);
             if (grnSeen) L.forEach(x => { if (grnSeen[x.id] !== x.st && grnNeedsMe(x) && !(x.hist && x.hist.length && x.hist[x.hist.length - 1].by === ((me && me.name) || '#'))) { try { appToast('🏭 ' + (GRN_ST[x.st] || ['', ''])[1] + ' — ' + x.number); } catch (e) {} } });
             OP.forEach(o => seen['o' + o.id] = o.prep);
             if (grnSeen) OP.forEach(o => { const was = grnSeen['o' + o.id]; if (was !== o.prep) { const mineNew = o.prep === 'new' && grnCanCount() && (isStore() || isOwner()), mineReady = o.prep === 'ready' && grnCanEnter() && !isStore(); if ((mineNew || mineReady) && o.prepBy !== ((me && me.name) || '#') && o.by !== ((me && me.name) || '#')) { try { appToast(o.prep === 'new' ? '🛒 ' + i18nT('طلبية جديدة للتجهيز') + ' — ' + o.number : '✅ ' + i18nT('طلبية جاهزة') + ' — ' + o.number + (o.prepLoc ? ' (' + o.prepLoc + ')' : '')); } catch (e) {} } } });
+            cnList().forEach(x => seen['c' + x.id] = x.st);
+            if (grnSeen && isOwner()) cnList().forEach(x => { if (x.st === 'submitted' && grnSeen['c' + x.id] !== 'submitted' && x.subBy !== ((me && me.name) || '#')) { try { appToast('📋 ' + i18nT('جرد بانتظار اعتمادك') + ' — ' + x.number); } catch (e) { } } });
             grnSeen = seen;
             if (screenVisible('grn') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#grn-list') && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) renderGrn();
         }
