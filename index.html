@@ -882,7 +882,7 @@
         html[data-theme="studio"] .dark\:bg-slate-800{background-color:rgba(255,255,255,.06)!important}
         html[data-theme="studio"] .dark\:bg-slate-900{background-color:rgba(0,0,0,.28)!important}
         html[data-theme="studio"] .dark\:bg-slate-700{background-color:rgba(255,255,255,.09)!important}
-        html[data-theme="studio"] [id^="modal-"]>div,html[data-theme="studio"].dark .dlg{background:rgba(22,26,34,.94)!important;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid var(--border-soft);border-radius:1.5rem}
+        html[data-theme="studio"] [id^="modal-"]>div,html[data-theme="studio"].dark .dlg{background:#161a22!important;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid var(--border-soft);border-radius:1.5rem}
         html[data-theme="studio"] .app-header{background:rgba(18,22,29,.55)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid var(--border-soft)}
         html[data-theme="studio"] :is(.fn-in,.dlg-in){background:rgba(255,255,255,.05)!important;border-color:var(--border-soft)!important;color:#f1f5f9}
         html[data-theme="studio"] option{background:#1a1f28;color:#f1f5f9}
@@ -907,6 +907,7 @@
         html[data-theme="studio"]::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;transform:translateZ(0);background:radial-gradient(75% 50% at 12% 0%,var(--bg2),transparent 70%),radial-gradient(70% 55% at 100% 100%,color-mix(in srgb,var(--bg2) 65%,transparent),transparent 70%),var(--bg1)}
         html[data-theme="studio"] #side-nav{will-change:width;transition:width .22s cubic-bezier(.2,.7,.2,1)}
         html[data-theme="studio"] .app-header{background:rgba(18,22,29,.92)!important}
+        html[data-theme="studio"] #modal-grn>.fn-card,html[data-theme="studio"] #modal-grn>div{background:#161a22!important}
         html[data-theme="studio"] [id^="modal-"]>div{background:rgba(22,26,34,.98)!important}
         .sn-h{display:none}
         #quick-row{display:none}
@@ -10267,7 +10268,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v41';
+        const APP_VER = 'v42';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10617,6 +10618,35 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="shNewSave()">✔ ${esc(i18nT('إضافة'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
             m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('shn-name'); if (i) i.focus(); }, 50);
         }
+        function shRegSet(wh, list) {
+            const w = whList().find(x => x.id === wh); if (!w) return; const nd = { ...w, shelfList: list }, i = state.products.findIndex(x => x.id === wh);
+            if (!db) { finSave('products', nd); return; }
+            if (i >= 0) state.products[i] = nd; dbWrite(db.collection('products').doc(wh).update({ shelfList: list }));
+        }
+        function shEdit(k) {
+            if (!grnCanCount()) { permDeny(); return; }
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">✏️ ${esc(i18nT('تعديل الرف'))} <span data-notr>${esc(k)}</span></div>
+                <label class="fn-lbl">${esc(i18nT('الاسم الجديد'))}</label><input id="she-name" class="fn-in" value="${esc(k)}" onkeydown="if(event.key==='Enter'){event.preventDefault();shEditSave(this.dataset.k)}" data-k="${esc(k)}">
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="shEditSave(document.getElementById('she-name').dataset.k)">✔ ${esc(i18nT('حفظ'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('she-name'); if (i) { i.focus(); i.select(); } }, 50);
+        }
+        function shEditSave(k) {
+            const nn = document.getElementById('she-name').value.trim(); if (!nn) { appToast(i18nT('اكتب اسم الرف')); return; }
+            if (nn === k) { grnClose(); return; }
+            if (shelfNames(shW).includes(nn)) { appToast(i18nT('هذا الرف موجود مسبقاً')); return; }
+            prodItems().filter(p => shOf(p, shW) === k).forEach(p => shelfSet(p, shW, nn));
+            if (shReg(shW).includes(k)) shRegSet(shW, shReg(shW).map(x => x === k ? nn : x));
+            if (shF === k) shF = nn; shSel = {}; grnClose(); appToast('✏️ ' + i18nT('تم تعديل الرف')); renderGrn();
+        }
+        async function shDel(k) {
+            if (!grnCanCount()) { permDeny(); return; }
+            const ps = prodItems().filter(p => shOf(p, shW) === k);
+            if (!await appConfirm(i18nT('حذف الرف') + ' ' + k + '؟' + (ps.length ? ' ' + ps.length + ' ' + i18nT('منتج سيصبح بلا رف.') : ''))) return;
+            ps.forEach(p => shelfSet(p, shW, ''));
+            if (shReg(shW).includes(k)) shRegSet(shW, shReg(shW).filter(x => x !== k));
+            if (shF === k) shF = ''; shSel = {}; appToast('🗑️ ' + i18nT('حُذف الرف')); renderGrn();
+        }
         function shNewSave() {
             const wh = document.getElementById('shn-wh').value, name = document.getElementById('shn-name').value.trim();
             if (!name) { appToast(i18nT('اكتب اسم الرف')); return; }
@@ -10642,7 +10672,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (!ps.length && !Object.keys(g0).length) return `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد منتجات في هذا المخزن.'))}</div>`;
             const g = g0; ps.forEach(p => { const k = shOf(p, shW); (g[k] = g[k] || []).push(p); });
             const keys = Object.keys(g).sort((a, b) => a === '' ? -1 : b === '' ? 1 : ARC.compare(a, b));
-            return keys.map(k => `<div class="gr-h sh-gh"><span>${k ? '🗄️ ' + esc(k) : '⚠️ ' + esc(i18nT('بدون رف'))} <small>(${g[k].length})</small></span><button class="fn-btn" onclick="shSelGroup(${JSON.stringify(k).replace(/"/g, '&quot;')})">${esc(i18nT('تحديد الكل'))}</button></div>` + g[k].sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<label class="sh-row"><input type="checkbox" ${shSel[p.id] ? 'checked' : ''} onchange="shToggle('${p.id}',this.checked)"><span class="sh-n" data-notr>${esc(p.name)}</span><span class="sh-q">${esc(fnNum(pStock(p)[shW]))}</span><span class="sh-chip ${k ? '' : 'none'}" onclick="event.preventDefault();shPick('${p.id}')">📍 ${esc(k || i18nT('تعيين'))}</span></label>`).join('')).join('');
+            return keys.map(k => `<div class="gr-h sh-gh"><span>${k ? '🗄️ ' + esc(k) : '⚠️ ' + esc(i18nT('بدون رف'))} <small>(${g[k].length})</small></span><span class="flex gap-1">${k ? `<button class="fn-btn" title="${esc(i18nT('تعديل الرف'))}" onclick="shEdit(${JSON.stringify(k).replace(/"/g, '&quot;')})">✏️</button><button class="fn-btn" title="${esc(i18nT('حذف الرف'))}" onclick="shDel(${JSON.stringify(k).replace(/"/g, '&quot;')})">🗑️</button>` : ''}<button class="fn-btn" onclick="shSelGroup(${JSON.stringify(k).replace(/"/g, '&quot;')})">${esc(i18nT('تحديد الكل'))}</button></span></div>` + g[k].sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<label class="sh-row"><input type="checkbox" ${shSel[p.id] ? 'checked' : ''} onchange="shToggle('${p.id}',this.checked)"><span class="sh-n" data-notr>${esc(p.name)}</span><span class="sh-q">${esc(fnNum(pStock(p)[shW]))}</span><span class="sh-chip ${k ? '' : 'none'}" onclick="event.preventDefault();shPick('${p.id}')">📍 ${esc(k || i18nT('تعيين'))}</span></label>`).join('')).join('');
         }
         function shelfHtml() {
             const whs = shWhs(); if (!whs.length) return `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('أضف مخزناً أولاً من تبويب المخازن في شاشة المنتجات.'))}</div>`;
