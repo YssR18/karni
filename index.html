@@ -1108,7 +1108,7 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .gr-tab{flex:1;white-space:nowrap;padding:.55rem .3rem;border-radius:.9rem;font-weight:800;font-size:.8rem;border:1px solid var(--border-soft,#e2e8f0);background:transparent;color:inherit;cursor:pointer}
 .gr-tab.on{background:#0ea5e9;color:#fff;border-color:#0ea5e9}.gr-tab .gr-badge{background:#ef4444}
 .gr-sh{display:inline-block;background:#e0f2fe;color:#075985;border-radius:.5rem;padding:.05rem .45rem;font-weight:700;margin-inline-start:.3rem}
-.sh-top{display:grid;grid-template-columns:1fr 1.4fr;gap:.5rem}
+.sh-top{display:grid;grid-template-columns:.8fr .8fr 1.4fr;gap:.4rem}.sh-top select.fn-in{padding-inline:.4rem;font-size:.85rem;min-width:0}
 .sh-bulk{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.6rem;border-radius:.9rem;border:1px dashed var(--border-soft,#cbd5e1);position:sticky;top:.3rem;z-index:5;background:var(--card-bg,#fff)}.sh-bulk.on{border:1px solid #0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.2)}.sh-bulk .fn-in{flex:1;min-width:8rem}
 .sh-gh{display:flex;justify-content:space-between;align-items:center}
 .sh-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .3rem;border-bottom:1px solid var(--border-soft,#e2e8f0);cursor:pointer}.sh-row input{width:1.2rem;height:1.2rem}
@@ -1642,7 +1642,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     <button onclick="showScreen('home')" class="btn-back">← العودة</button>
                     <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 المخزن</h2>
                 </div>
-                <div class="flex gap-2 flex-wrap"><button type="button" id="grn-cn" onclick="cnNew()" class="fn-btn primary">📋 <span>جرد جديد</span></button><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
+                <div class="flex gap-2 flex-wrap"><button type="button" id="grn-sh" onclick="shNewOpen()" class="fn-btn primary hidden">🗄️ <span>إضافة رف</span></button><button type="button" id="grn-cn" onclick="cnNew()" class="fn-btn primary">📋 <span>جرد جديد</span></button><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
             </div>
             <div id="grn-tabs" class="gr-tabs"></div>
             <div id="grn-list" class="space-y-2"></div>
@@ -10267,7 +10267,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v40';
+        const APP_VER = 'v41';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10604,7 +10604,29 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const F = firebase.firestore.FieldValue;
             dbWrite(db.collection('products').doc(p.id).update({ ['shelves.' + wh]: name ? name : F.delete() }));
         }
-        function shelfNames(w) { return [...new Set(prodItems().map(p => shOf(p, w)).filter(Boolean))].sort((a, b) => ARC.compare(a, b)); }
+        const shReg = w => { const d = whList().find(x => x.id === w); return Array.isArray(d && d.shelfList) ? d.shelfList : []; };
+        function shelfNames(w) { return [...new Set(prodItems().map(p => shOf(p, w)).filter(Boolean).concat(shReg(w)))].sort((a, b) => ARC.compare(a, b)); }
+        let shF = '';
+        function shNewOpen() {
+            if (!grnCanCount()) { permDeny(); return; }
+            const whs = whList(); if (!whs.length) { appAlert('أضف مخزناً أولاً.'); return; }
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">🗄️ ${esc(i18nT('إضافة رف'))}</div>
+                <label class="fn-lbl">${esc(i18nT('المخزن'))}</label><select id="shn-wh" class="fn-in">${whs.map(w => `<option value="${esc(w.id)}"${w.id === shW ? ' selected' : ''} data-notr>${esc(w.name)}</option>`).join('')}</select>
+                <label class="fn-lbl">${esc(i18nT('اسم الرف'))}</label><input id="shn-name" class="fn-in" placeholder="${esc(i18nT('مثال: A3'))}" onkeydown="if(event.key==='Enter'){event.preventDefault();shNewSave()}">
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="shNewSave()">✔ ${esc(i18nT('إضافة'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('shn-name'); if (i) i.focus(); }, 50);
+        }
+        function shNewSave() {
+            const wh = document.getElementById('shn-wh').value, name = document.getElementById('shn-name').value.trim();
+            if (!name) { appToast(i18nT('اكتب اسم الرف')); return; }
+            const w = whList().find(x => x.id === wh); if (!w) return;
+            if (shelfNames(wh).includes(name)) { appToast(i18nT('هذا الرف موجود مسبقاً')); return; }
+            const nd = { ...w, shelfList: [...shReg(wh), name] }, i = state.products.findIndex(x => x.id === wh);
+            if (!db) finSave('products', nd);
+            else { if (i >= 0) state.products[i] = nd; dbWrite(db.collection('products').doc(wh).update({ shelfList: firebase.firestore.FieldValue.arrayUnion(name) })); }
+            shW = wh; shF = name; shSel = {}; grnClose(); grnTab = 'shelf'; appToast('🗄️ ' + i18nT('أُضيف الرف') + ' ' + name); renderGrn();
+        }
         function shelfText(name) { // موضع منتج في المخازن (للتجهيز)
             const p = prodItems().find(x => (x.name || '') === name); if (!p) return '';
             return Object.keys(p.shelves || {}).filter(w => (pStock(p)[w] || 0) > 0 && p.shelves[w]).map(w => whName(w) + ': ' + p.shelves[w]).join(' | ');
@@ -10615,16 +10637,18 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         function shListHtml() {
             const q = shQ.trim().toLowerCase();
-            const ps = prodItems().filter(p => (pStock(p)[shW] || 0) > 0 && (!q || (p.name || '').toLowerCase().includes(q) || shOf(p, shW).toLowerCase().includes(q)));
-            if (!ps.length) return `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد منتجات في هذا المخزن.'))}</div>`;
-            const g = {}; ps.forEach(p => { const k = shOf(p, shW); (g[k] = g[k] || []).push(p); });
+            const ps = prodItems().filter(p => (pStock(p)[shW] || 0) > 0 && (!q || (p.name || '').toLowerCase().includes(q) || shOf(p, shW).toLowerCase().includes(q)) && (!shF || (shF === '__none' ? !shOf(p, shW) : shOf(p, shW) === shF)));
+            const g0 = {}; if (!q) shReg(shW).filter(k => !shF || shF === k).forEach(k => g0[k] = []);
+            if (!ps.length && !Object.keys(g0).length) return `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد منتجات في هذا المخزن.'))}</div>`;
+            const g = g0; ps.forEach(p => { const k = shOf(p, shW); (g[k] = g[k] || []).push(p); });
             const keys = Object.keys(g).sort((a, b) => a === '' ? -1 : b === '' ? 1 : ARC.compare(a, b));
             return keys.map(k => `<div class="gr-h sh-gh"><span>${k ? '🗄️ ' + esc(k) : '⚠️ ' + esc(i18nT('بدون رف'))} <small>(${g[k].length})</small></span><button class="fn-btn" onclick="shSelGroup(${JSON.stringify(k).replace(/"/g, '&quot;')})">${esc(i18nT('تحديد الكل'))}</button></div>` + g[k].sort((a, b) => ARC.compare(a.name || '', b.name || '')).map(p => `<label class="sh-row"><input type="checkbox" ${shSel[p.id] ? 'checked' : ''} onchange="shToggle('${p.id}',this.checked)"><span class="sh-n" data-notr>${esc(p.name)}</span><span class="sh-q">${esc(fnNum(pStock(p)[shW]))}</span><span class="sh-chip ${k ? '' : 'none'}" onclick="event.preventDefault();shPick('${p.id}')">📍 ${esc(k || i18nT('تعيين'))}</span></label>`).join('')).join('');
         }
         function shelfHtml() {
             const whs = shWhs(); if (!whs.length) return `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('أضف مخزناً أولاً من تبويب المخازن في شاشة المنتجات.'))}</div>`;
             if (!whs.includes(shW)) { shW = whs[0]; shSel = {}; }
-            return `<div class="sh-top"><select class="fn-in" onchange="shW=this.value;shSel={};renderGrn()">${whs.map(k => `<option value="${esc(k)}"${k === shW ? ' selected' : ''} data-notr>${esc(whName(k))}</option>`).join('')}</select><input class="fn-in" placeholder="🔍 ${esc(i18nT('بحث عن منتج أو رف'))}" value="${esc(shQ)}" oninput="shQ=this.value;document.getElementById('sh-list').innerHTML=shListHtml()"></div><div id="sh-bulkbox">${shBulkHtml()}</div><div id="sh-list">${shListHtml()}</div>`;
+            const fn_ = shelfNames(shW); if (shF && shF !== '__none' && !fn_.includes(shF)) shF = '';
+            return `<div class="sh-top"><select class="fn-in" onchange="shW=this.value;shSel={};shF='';renderGrn()">${whs.map(k => `<option value="${esc(k)}"${k === shW ? ' selected' : ''} data-notr>${esc(whName(k))}</option>`).join('')}</select><select class="fn-in" onchange="shF=this.value;shSel={};renderGrn()"><option value="">${esc(i18nT('كل الرفوف'))}</option><option value="__none"${shF === '__none' ? ' selected' : ''}>${esc(i18nT('بدون رف'))}</option>${fn_.map(k => `<option value="${esc(k)}"${k === shF ? ' selected' : ''} data-notr>🗄️ ${esc(k)}</option>`).join('')}</select><input class="fn-in" placeholder="🔍 ${esc(i18nT('بحث عن منتج أو رف'))}" value="${esc(shQ)}" oninput="shQ=this.value;document.getElementById('sh-list').innerHTML=shListHtml()"></div><div id="sh-bulkbox">${shBulkHtml()}</div><div id="sh-list">${shListHtml()}</div>`;
         }
         function shBulkRefresh() { const b = document.getElementById('sh-bulkbox'); if (b) b.innerHTML = shBulkHtml(); }
         function shToggle(id, on) { if (on) shSel[id] = 1; else delete shSel[id]; shBulkRefresh(); }
@@ -10733,6 +10757,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             document.getElementById('grn-tabs').innerHTML = T.map(t => `<button type="button" class="gr-tab ${grnTab === t[0] ? 'on' : ''}" onclick="grnTab='${t[0]}';renderGrn()">${t[1]} ${esc(i18nT(t[2]))}${t[3] ? ` <b class="gr-badge">${t[3]}</b>` : ''}</button>`).join('');
             const xb = document.getElementById('grn-xf'); if (xb) xb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'xf');
             if (nb) nb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'rcv');
+            const sb_ = document.getElementById('grn-sh'); if (sb_) sb_.classList.toggle('hidden', !grnCanCount() || grnTab !== 'shelf');
             const cb = document.getElementById('grn-cn'); if (cb) cb.classList.toggle('hidden', !grnCanCount() || grnTab !== 'cnt');
             let html;
             if (grnTab === 'ord') html = ordCards() || empty('لا توجد طلبيات للتجهيز.');
