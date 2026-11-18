@@ -1102,6 +1102,8 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .gr-h{font-weight:800;font-size:.95rem;margin-top:.4rem}
 .gr-badge{display:inline-block;min-width:1.3rem;text-align:center;padding:0 .4rem;border-radius:999px;background:#ef4444;color:#fff;font-size:.72rem;font-weight:800;margin-inline-start:.3rem}.gr-badge.hidden{display:none}
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
+.ord-prep{padding:.7rem 1rem;border-radius:.9rem;font-size:1rem;margin-bottom:.6rem}.ord-prep.ready{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.ord-prep.wait{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.ord-prep.hidden{display:none}
+.gr-oi{font-size:1rem;padding:.15rem 0}.gr-ol{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.gr-ol .fn-in{flex:1;min-width:10rem}
 #vch-sum{grid-template-columns:1fr 1fr!important;gap:.6rem;padding:.8rem;text-align:center}
 .vs-tile{border-radius:1rem;padding:.75rem .5rem;display:flex;flex-direction:column;gap:.2rem;align-items:center;justify-content:center;border:1.5px solid}
 .vs-tile small{font-size:.78rem;font-weight:700}.vs-tile b{font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums}
@@ -9164,7 +9166,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     const mt = fnRound(mtot[ym] || 0);
                     html += `<div class="iv-mh"><span>${esc(monthLabel(ym))}</span><span>${esc(formatAmount(mt))}</span></div>`;
                 }
-                const badge = x.type === 'orders' ? (x.status === 'archived' ? `<span class="od-box gray">${esc(i18nT('مؤرشفة'))}</span>` : `<span class="od-box blue">${esc(i18nT('طلب مفتوح'))}</span>`)
+                const badge = x.type === 'orders' ? (x.status === 'archived' ? `<span class="od-box gray">${esc(i18nT('مؤرشفة'))}</span>` : (x.prep === 'new' ? `<span class="od-box warn">⏳ ${esc(i18nT('قيد التجهيز'))}</span>` : x.prep === 'ready' ? `<span class="od-box paid">✅ ${esc(i18nT('جاهزة'))}${x.prepLoc ? ' · ' + esc(x.prepLoc) : ''}</span>` : `<span class="od-box blue">${esc(i18nT('طلب مفتوح'))}</span>`))
                     : x.noParty ? `<span class="od-box warn">⚠️ <span>${esc(i18nT('بدون مورّد'))}</span></span>` : (x.pay === 'credit' ? `<span class="od-box unpaid">${esc(i18nT('غير خالص'))}</span>` : `<span class="od-box paid">${esc(i18nT('خالص'))}</span>`);
                 const n = (x.items || []).length;
                 html += `<div class="iv-card t-${x.type}" onclick="openInvView('${x.id}')"><div class="nt-body" style="min-width:0"><div class="iv-nm" data-notr>${esc(invNm(x))}</div>
@@ -9376,6 +9378,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             };
             if (old) { if (stamp.by) { inv.editedBy = stamp.by; inv.editedAt = stamp.at; } }
             else { inv.by = stamp.by || (me && me.name) || ''; inv.uid = (me && me.uid) || ''; }
+            if (type === 'orders') { if (!old) inv.prep = 'new'; else if (old.prep && JSON.stringify(old.items) !== JSON.stringify(items)) { inv.prep = 'new'; inv.prepAt = null; } }
             if (invDraft.fromOrder) inv.fromOrder = invDraft.fromOrder;
             try {
                 if (old && old.txId && old.partyId && (!wantDebt || old.partyId !== partyId))
@@ -9440,8 +9443,13 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const x = invById(invViewId);
             if (!x) { openInvoices(invTab); return; }
             document.getElementById('invview-doc').innerHTML = invoiceHtml(x); renderInvPend(x);
+            { const dv = document.getElementById('invview-doc'); let pb = document.getElementById('invview-prep'); if (!pb) { pb = document.createElement('div'); pb.id = 'invview-prep'; dv.parentNode.insertBefore(pb, dv); }
+              pb.className = x.type === 'orders' && x.prep && x.status !== 'archived' ? 'ord-prep ' + (x.prep === 'ready' ? 'ready' : 'wait') : 'hidden';
+              pb.innerHTML = x.type === 'orders' && x.prep && x.status !== 'archived' ? (x.prep === 'ready' ? `✅ <b>${esc(i18nT('الطلبية جاهزة'))}</b>${x.prepLoc ? ' — ' + esc(i18nT('مكان التخزين')) + ': <b data-notr>' + esc(x.prepLoc) + '</b>' : ''}${x.prepBy ? ' <small data-notr>· ' + esc(x.prepBy) + '</small>' : ''}` : `⏳ ${esc(i18nT('الطلبية عند عامل المخزن قيد التجهيز'))}`) : ''; }
             const b = [`<button class="fn-btn primary" onclick="printInvoice()">🖨️ طباعة / PDF</button>`, `<button class="fn-btn ok" onclick="invoiceWhatsApp()">📲 إرسال عبر واتساب</button>`];
             if (x.type === 'orders' && x.status !== 'archived') {
+                if (!x.prep) b.push(`<button class="fn-btn" onclick="ordSendPrep('${x.id}')">🏭 ${esc(i18nT('إرسال لعامل المخزن للتجهيز'))}</button>`);
+                else if (x.prep === 'ready') b.push(`<button class="fn-btn" onclick="ordSendPrep('${x.id}')">↩️ ${esc(i18nT('إعادة للتجهيز'))}</button>`);
                 b.push(`<button class="fn-btn ok" onclick="orderConfirm('${x.id}')">✅ تأكيد الطلب وتحويله لفاتورة مبيعات</button>`);
                 b.push(`<button class="fn-btn" onclick="orderArchive('${x.id}',true)">🗄️ أرشفة</button>`);
             }
@@ -9503,8 +9511,9 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 <hr class="t"><div class="c" style="font-weight:800;font-size:14px">${esc(i18nT('مرحباً بكم'))}</div><div style="margin-top:4px">${code39Svg(x.number)}</div><div class="c" dir="ltr" style="font-size:10px">${esc(x.number)}</div></div>`;
         }
         function printInvoice() { const x = invById(invViewId); if (x) printDoc(invoiceHtml(x), x.number); }
-        function orderConfirm(id) {
+        async function orderConfirm(id) {
             const o = invById(id); if (!o) return;
+            if (o.prep === 'new' && !await appConfirm(i18nT('الطلبية لم تُجهَّز بعد من المخزن. المتابعة رغم ذلك؟'))) return;
             openInvForm('sales', null, { fromOrder: id, partyId: o.partyId, name: o.name, phone: o.phone, address: o.address, items: o.items, discount: o.discount, notes: o.notes });
         }
         function orderArchive(id, on) { const o = invById(id); if (!o) return; finSave('invoices', { ...o, status: on ? 'archived' : 'open' }); invOrderFilter = on ? 'archived' : 'open'; if (on) openInvoices('orders'); }
@@ -10229,7 +10238,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v34';
+        const APP_VER = 'v35';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10476,6 +10485,26 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return `<div class="gr-ln"><div class="gr-nm">${nm}</div><span>${esc(fnNum(l.qty))}</span><span>${l.price === '' || l.price == null ? '—' : esc(fnNum(l.price))}</span><div class="gr-got">${gt}</div></div>`;
             }).join('') + (counting ? `<textarea class="fn-in" rows="2" placeholder="${esc(i18nT('ملاحظة عن الاستلام (اختياري)'))}" oninput="grnNote('${x.id}',this.value)" onchange="grnPersist('${x.id}')">${esc(x.cntNote || '')}</textarea>` : (x.cntNote ? `<div class="vc-note"><small>${esc(i18nT('ملاحظة'))}</small><span data-notr>${esc(x.cntNote)}</span></div>` : ''));
         }
+        // ---- تجهيز الطلبيات (عامل المخزن) ----
+        const ordPrepList = () => (state.invoices || []).filter(x => x.type === 'orders' && x.status !== 'archived' && (x.prep === 'new' || x.prep === 'ready')).sort((a, b) => (a.prep === b.prep ? (b.createdAt || 0) - (a.createdAt || 0) : a.prep === 'new' ? -1 : 1));
+        function ordSendPrep(id) { const o = invById(id); if (!o) return; finSave('invoices', { ...o, prep: 'new', prepAt: null }); renderInvView(); appToast('🏭 ' + i18nT('أُرسلت للتجهيز')); }
+        function ordReady(id) {
+            const o = invById(id); if (!o || !grnCanCount()) return;
+            const el = document.getElementById('ordloc-' + id), loc = el ? el.value.trim() : '';
+            if (!loc) { appAlert('اكتب مكان تخزين الطلبية.'); return; }
+            finSave('invoices', { ...o, prep: 'ready', prepLoc: loc, prepBy: (me && me.name) || '', prepAt: Date.now() }); renderGrn(); appToast('✅ ' + i18nT('الطلبية جاهزة — أُبلغ العامل الرئيسي'));
+        }
+        function ordReopen(id) { const o = invById(id); if (!o) return; finSave('invoices', { ...o, prep: 'new', prepAt: null }); renderGrn(); }
+        function ordCards() {
+            const L = ordPrepList(); if (!L.length) return '';
+            const locs = [...new Set((state.invoices || []).map(x => x.prepLoc).filter(Boolean))];
+            const dl = `<datalist id="ord-locs">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
+            return `<div class="gr-h">🛒 ${esc(i18nT('طلبيات الزبائن للتجهيز'))} (${L.filter(o => o.prep === 'new').length})</div>${dl}` + L.map(o => {
+                const items = (o.items || []).map(i => `<div class="gr-oi"><b>${esc(fnNum(i.qty))}</b> × <span data-notr>${esc(i.name)}</span></div>`).join('');
+                const act = o.prep === 'new' ? (grnCanCount() ? `<div class="gr-ol"><input id="ordloc-${o.id}" class="fn-in" list="ord-locs" placeholder="${esc(i18nT('مكان تخزين الطلبية (رف، مخزن، ...)'))}"><button class="fn-btn ok" onclick="ordReady('${o.id}')">✅ ${esc(i18nT('تم التجهيز'))}</button></div>` : '') : `<div class="gr-ol"><span>✅ ${esc(i18nT('جاهزة'))} — ${esc(i18nT('المكان'))}: <b data-notr>${esc(o.prepLoc || '')}</b></span>${grnCanCount() ? `<button class="fn-btn" onclick="ordReopen('${o.id}')">↩️</button>` : ''}</div>`;
+                return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(o.number)} · ${esc(o.name || i18nT('زبون'))}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}${o.notes ? ' · ' + esc(o.notes) : ''}</div></div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-body">${items}${act}</div></div>`;
+            }).join('');
+        }
         function renderGrn() {
             const box = document.getElementById('grn-list'); if (!box) return;
             const nb = document.getElementById('grn-new'); if (nb) nb.classList.toggle('hidden', !grnCanCount());
@@ -10487,15 +10516,18 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return `<div class="fn-inv gr-card ${me_ ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" onclick="grnOpenId=${open ? 'null' : `'${x.id}'`};renderGrn()"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.sup || i18nT('مورّد غير محدد'))}</div><div class="text-xs text-slate-500" data-notr>${esc(x.desc || '')}</div></div><span class="gr-chip ${S[2]}">${S[0]} ${esc(i18nT(S[1]))}</span></div>
                     ${open ? `<div class="gr-body">${grnLinesHtml(x)}${x.invNo ? `<div class="text-xs text-slate-500">🏁 ${esc(i18nT('فاتورة المشتريات'))}: ${esc(x.invNo)}</div>` : ''}<div class="gr-hist">${hist}</div><div class="gr-acts">${grnActions(x)}</div></div>` : ''}</div>`;
             };
-            box.innerHTML = L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
-                : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`;
+            const oc = ordCards();
+            box.innerHTML = oc + (L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
+                : (oc ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`));
         }
         // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
         function grnRefresh() {
-            const L = grnList(), n = L.filter(grnNeedsMe).length;
+            const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter())).length;
             document.querySelectorAll('[data-grn-n]').forEach(e => { e.innerText = n ? String(n) : ''; e.classList.toggle('hidden', !n); });
             const seen = {}; L.forEach(x => seen[x.id] = x.st);
             if (grnSeen) L.forEach(x => { if (grnSeen[x.id] !== x.st && grnNeedsMe(x) && !(x.hist && x.hist.length && x.hist[x.hist.length - 1].by === ((me && me.name) || '#'))) { try { appToast('🏭 ' + (GRN_ST[x.st] || ['', ''])[1] + ' — ' + x.number); } catch (e) {} } });
+            OP.forEach(o => seen['o' + o.id] = o.prep);
+            if (grnSeen) OP.forEach(o => { const was = grnSeen['o' + o.id]; if (was !== o.prep) { const mineNew = o.prep === 'new' && grnCanCount() && (isStore() || isOwner()), mineReady = o.prep === 'ready' && grnCanEnter() && !isStore(); if ((mineNew || mineReady) && o.prepBy !== ((me && me.name) || '#') && o.by !== ((me && me.name) || '#')) { try { appToast(o.prep === 'new' ? '🛒 ' + i18nT('طلبية جديدة للتجهيز') + ' — ' + o.number : '✅ ' + i18nT('طلبية جاهزة') + ' — ' + o.number + (o.prepLoc ? ' (' + o.prepLoc + ')' : '')); } catch (e) {} } } });
             grnSeen = seen;
             if (screenVisible('grn') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#grn-list') && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) renderGrn();
         }
