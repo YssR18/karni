@@ -1630,7 +1630,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     <button onclick="showScreen('home')" class="btn-back">← العودة</button>
                     <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">🏭 استلام المخزن</h2>
                 </div>
-                <button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button>
+                <div class="flex gap-2 flex-wrap"><button type="button" id="grn-xf" onclick="xfNew()" class="fn-btn">🔁 <span>نقل بين المخازن</span></button><button type="button" id="grn-new" onclick="grnNew()" class="fn-btn primary">➕ <span>وصلت سلعة</span></button></div>
             </div>
             <div id="grn-list" class="space-y-2"></div>
         </section>
@@ -4583,7 +4583,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         let permToastAt = 0;
         function permDeny(msg) { if (Date.now() - permToastAt < 1500) return; permToastAt = Date.now(); try { appToast('🔒 ' + i18nT(msg || 'لا تملك صلاحية لهذا الإجراء')); } catch (e) {} }
         // مجموعات الأقسام التي تسمح بالكتابة في كل مجموعة بيانات (البيع يعدّل المخزون والفواتير وديون العملاء، إلخ)
-        const PERM_COL = { customers: ['customers', 'vouchers', 'sales', 'invoices'], suppliers: ['suppliers', 'vouchers', 'invoices'], products: ['products', 'sales', 'invoices'], invoices: ['invoices', 'sales', 'store'], expenses: ['expenses'], workers: ['workers'] };
+        const PERM_COL = { customers: ['customers', 'vouchers', 'sales', 'invoices'], suppliers: ['suppliers', 'vouchers', 'invoices'], products: ['products', 'store', 'sales', 'invoices'], invoices: ['invoices', 'sales', 'store'], expenses: ['expenses'], workers: ['workers'] };
         function permWriteOk(col, op) {
             if (!me || me.legacy || me.role === 'owner') return true;
             const feats = PERM_COL[col];
@@ -7758,7 +7758,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (!st[from] && from !== (p.wh || NOWH)) delete st[from];
             const doc = { ...p, stock: st };
             if (!st[from] && p.wh === from) doc.wh = to;
-            finSave('products', doc); closeModal('modal-tr');
+            if (doc.wh !== p.wh) finSave('products', doc); else xferApply(p, from, to, q);
+            closeModal('modal-tr');
             appToast(i18nT('تم نقل') + ' ' + fnNum(q) + ' ' + i18nT('إلى') + ' ' + whName(to));
         }
         // ---- شاشة المنتجات ----
@@ -10238,7 +10239,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v35';
+        const APP_VER = 'v36';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10505,6 +10506,59 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(o.number)} · ${esc(o.name || i18nT('زبون'))}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}${o.notes ? ' · ' + esc(o.notes) : ''}</div></div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-body">${items}${act}</div></div>`;
             }).join('');
         }
+        // ---- نقل السلع بين المخازن (عامل المخزن) ----
+        // النقل بالفرق (increment) فلا يمحو تعديلات الأجهزة الأخرى؛ وكل نقل يُسجَّل في وثيقة type:'xfer'
+        function xferApply(p, from, to, q) {
+            const cur = state.products.find(x => x.id === p.id) || p, st = { ...pStock(cur) };
+            st[from] = fnRound((st[from] || 0) - q); st[to] = fnRound((st[to] || 0) + q);
+            if (!st[from] && from !== (cur.wh || NOWH)) delete st[from];
+            if (!db || !cur.stock || typeof cur.stock !== 'object' || [from, to].some(k => !k || /[.~*\/\[\]`]/.test(k))) { finSave('products', { ...cur, stock: st }); return; }
+            const F = firebase.firestore.FieldValue, i = state.products.findIndex(x => x.id === p.id); if (i >= 0) state.products[i] = { ...cur, stock: st };
+            dbWrite(db.collection('products').doc(p.id).update({ ['stock.' + from]: F.increment(-q), ['stock.' + to]: F.increment(q) }));
+        }
+        const xfList = () => (state.invoices || []).filter(x => x.type === 'xfer').sort((a, b) => (b.at || 0) - (a.at || 0));
+        let xfEd = null;
+        function xfSources() { const ids = whList().map(w => w.id); if (prodItems().some(p => (pStock(p)[NOWH] || 0) > 0)) ids.push(NOWH); return ids; }
+        function xfNew() {
+            if (!grnCanCount()) { permDeny(); return; }
+            if (!whList().length) { appAlert('أضف مخزناً أولاً من تبويب المخازن في شاشة المنتجات.'); return; }
+            const src = xfSources(); xfEd = { from: src[0], to: '', lines: [{ pid: '', qty: '' }] }; xfDraw();
+        }
+        function xfAvail(pid, from) { const p = prodItems().find(x => x.id === pid); return p ? (pStock(p)[from] || 0) : 0; }
+        function xfDraw() {
+            const m = grnModalEl(), E = xfEd, src = xfSources(), tos = whList().filter(w => w.id !== E.from);
+            if (!tos.some(w => w.id === E.to)) E.to = tos[0] ? tos[0].id : '';
+            const prods = prodItems().filter(p => (pStock(p)[E.from] || 0) > 0).sort((a, b) => ARC.compare(a.name || '', b.name || ''));
+            m.innerHTML = `<div class="fn-card gr-box" style="max-width:34rem"><div class="font-extrabold text-lg">🔁 ${esc(i18nT('نقل سلع بين المخازن'))}</div>
+                <div class="grid grid-cols-2 gap-2"><div><label class="fn-lbl">${esc(i18nT('من مخزن'))}</label><select class="fn-in" onchange="xfEd.from=this.value;xfEd.lines=[{pid:'',qty:''}];xfDraw()">${src.map(k => `<option value="${esc(k)}"${k === E.from ? ' selected' : ''} data-notr>${esc(whName(k))}</option>`).join('')}</select></div>
+                <div><label class="fn-lbl">${esc(i18nT('إلى مخزن'))}</label><select class="fn-in" onchange="xfEd.to=this.value">${tos.map(w => `<option value="${esc(w.id)}"${w.id === E.to ? ' selected' : ''} data-notr>${esc(w.name)}</option>`).join('')}</select></div></div>
+                <div id="xf-lines">${E.lines.map((l, i) => `<div class="gr-ln"><select class="fn-in" onchange="xfEd.lines[${i}].pid=this.value;xfDraw()"><option value="">${esc(i18nT('— اختر منتجاً —'))}</option>${prods.map(p => `<option value="${esc(p.id)}"${p.id === l.pid ? ' selected' : ''} data-notr>${esc(p.name)}</option>`).join('')}</select><input class="fn-in" type="number" inputmode="decimal" min="0" step="any" value="${esc(l.qty)}" placeholder="${esc(i18nT('الكمية'))}" oninput="xfEd.lines[${i}].qty=this.value"><span class="text-xs">${l.pid ? esc(i18nT('متوفر') + ' ' + fnNum(xfAvail(l.pid, E.from))) : ''}</span><button type="button" class="fn-x" onclick="xfEd.lines.splice(${i},1);if(!xfEd.lines.length)xfEd.lines.push({pid:'',qty:''});xfDraw()">✕</button></div>`).join('')}</div>
+                <button type="button" class="fn-btn" onclick="xfEd.lines.push({pid:'',qty:''});xfDraw()">➕ ${esc(i18nT('إضافة منتج'))}</button>
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="xfDo()">✅ ${esc(i18nT('تأكيد النقل'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden');
+        }
+        function xfDo() {
+            const E = xfEd; if (!E || !E.to || E.to === E.from) { appAlert('اختر مخزناً مختلفاً للنقل إليه.'); return; }
+            const sum = {}; E.lines.forEach(l => { if (l.pid && +l.qty > 0) sum[l.pid] = fnRound((sum[l.pid] || 0) + +l.qty); });
+            const ids = Object.keys(sum); if (!ids.length) { appAlert('أضف منتجاً وكمية.'); return; }
+            for (const pid of ids) { const av = xfAvail(pid, E.from); if (sum[pid] > av) { const p = prodItems().find(x => x.id === pid); appAlert('الكمية أكبر من المتوفر: ' + (p ? p.name : '') + ' (' + fnNum(av) + ')'); return; } }
+            const lines = ids.map(pid => { const p = prodItems().find(x => x.id === pid); xferApply(p, E.from, E.to, sum[pid]); return { pid, name: p.name, qty: sum[pid] }; });
+            const n = xfList().length + 1;
+            finSave('invoices', { id: finNewId('invoices'), type: 'xfer', number: 'TRF-' + String(n).padStart(4, '0'), st: 'done', from: E.from, to: E.to, fromName: whName(E.from), toName: whName(E.to), lines, date: toISODate(new Date()), at: Date.now(), by: (me && me.name) || '', ...actorStamp() });
+            grnClose(); renderGrn(); appToast('✔ ' + i18nT('تم النقل') + ' — ' + lines.length + ' ' + i18nT('منتج'));
+        }
+        async function xfUndo(id) {
+            const x = invById(id); if (!x || !isOwner() || x.st !== 'done') return;
+            for (const l of x.lines) { const p = prodItems().find(y => y.id === l.pid); if (!p) { appAlert('منتج محذوف: ' + l.name); return; } if ((pStock(p)[x.to] || 0) < l.qty) { appAlert('لا يمكن العكس: الكمية في المخزن المستلم أقل من المنقولة (' + l.name + ').'); return; } }
+            if (!await appConfirm(i18nT('عكس هذا النقل وإرجاع السلع للمخزن الأصلي؟'))) return;
+            x.lines.forEach(l => xferApply(prodItems().find(y => y.id === l.pid), x.to, x.from, l.qty));
+            finSave('invoices', { ...x, st: 'reversed', revBy: (me && me.name) || '', revAt: Date.now() }); renderGrn();
+        }
+        function xfCards() {
+            const L = xfList().slice(0, 8); if (!L.length) return '';
+            return `<div class="gr-h">🔁 ${esc(i18nT('آخر عمليات النقل'))}</div>` + L.map(x => `<div class="fn-inv gr-card" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(x.number)} · ${esc(x.fromName || '')} ← ${esc(x.toName || '')}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(x.date || ''))} · ${esc(x.by || '')}</div></div><span class="gr-chip ${x.st === 'done' ? 'g' : 'd'}">${x.st === 'done' ? '✅ ' + esc(i18nT('تم')) : '↩️ ' + esc(i18nT('معكوس'))}</span></div>
+                <div class="gr-body">${(x.lines || []).map(l => `<div class="gr-oi"><b>${esc(fnNum(l.qty))}</b> × <span data-notr>${esc(l.name)}</span></div>`).join('')}${x.st === 'done' && isOwner() ? `<div class="gr-acts"><button class="fn-btn" onclick="xfUndo('${x.id}')">↩️ ${esc(i18nT('عكس النقل'))}</button></div>` : ''}</div></div>`).join('');
+        }
         function renderGrn() {
             const box = document.getElementById('grn-list'); if (!box) return;
             const nb = document.getElementById('grn-new'); if (nb) nb.classList.toggle('hidden', !grnCanCount());
@@ -10517,8 +10571,9 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     ${open ? `<div class="gr-body">${grnLinesHtml(x)}${x.invNo ? `<div class="text-xs text-slate-500">🏁 ${esc(i18nT('فاتورة المشتريات'))}: ${esc(x.invNo)}</div>` : ''}<div class="gr-hist">${hist}</div><div class="gr-acts">${grnActions(x)}</div></div>` : ''}</div>`;
             };
             const oc = ordCards();
-            box.innerHTML = oc + (L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
-                : (oc ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`));
+            const xb = document.getElementById('grn-xf'); if (xb) xb.classList.toggle('hidden', !grnCanCount());
+            box.innerHTML = oc + xfCards() + (L.length ? (mine.length ? `<div class="gr-h">🔔 ${esc(i18nT('تنتظر إجراءً منك'))} (${mine.length})</div>` + mine.map(card).join('') : '') + (rest.length ? `<div class="gr-h">${esc(i18nT('بقية الوثائق'))}</div>` + rest.map(card).join('') : '')
+                : (oc || xfList().length ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد استلامات بعد.'))}</div>`));
         }
         // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
         function grnRefresh() {
