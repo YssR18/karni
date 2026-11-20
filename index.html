@@ -7303,7 +7303,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (expEditId === id) resetExpenseForm();
         }
         function expMonthData() {
-            const list = (state.expenses || []).filter(x => x.src !== 'close' && !!x.inc === isInc() && (x.date || '').startsWith(expMonth)).sort((a, b) => b.date.localeCompare(a.date) || (b.at || 0) - (a.at || 0));
+            const list = (state.expenses || []).filter(x => x.src !== 'close' && x.src !== 'salesok' && !!x.inc === isInc() && (x.date || '').startsWith(expMonth)).sort((a, b) => b.date.localeCompare(a.date) || (b.at || 0) - (a.at || 0));
             const days = {};
             list.forEach(x => { (days[x.date] = days[x.date] || { total: 0, items: [] }); days[x.date].total += x.amount; days[x.date].items.push(x); });
             return { list, days, total: list.reduce((s, x) => s + x.amount, 0) };
@@ -7323,13 +7323,26 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             (state.invoices || []).forEach(x => { if (x.type === 'sales' && x.date && pred(x.date)) s.add(x.date); });
             return [...s].sort();
         }
+        // اعتماد مبيعات الفواتير النقدية في إغلاق اليوم: اختياري لكل يوم (الأيام السابقة لتاريخ الميزة تبقى تلقائية)
+        const FX_OPTIN_FROM = '2026-11-20';
+        function fxSalesOn(d) { if (d < FX_OPTIN_FROM) return true; const x = (state.expenses || []).find(e => e.src === 'salesok' && e.date === d); return !!(x && x.on); }
+        function fxInvCash(f, t, all) {
+            let c = 0; (state.invoices || []).forEach(x => { if (x.type === 'sales' && x.date >= f && x.date <= t && (all || fxSalesOn(x.date))) c += (x.total || 0) - (x.pay === 'credit' ? (x.total || 0) - (x.paid || 0) : 0); });
+            return fnRound(c);
+        }
+        function fxSalesToggle() {
+            const d = fxDate; if (expLocked(d) || closeDoc(d)) return;
+            const old = (state.expenses || []).find(e => e.src === 'salesok' && e.date === d), on = !fxSalesOn(d), st = actorStamp();
+            finSave('expenses', { ...(old || { id: 'salesok_' + d, src: 'salesok', date: d, amount: 0, at: Date.now() }), on, by: st.by || (me && me.name) || '' });
+            renderExpenses();
+        }
         // أرقام فترة (يوم أو شهر) حسب المصدر
         function fxData(f, t) {
             const z = rpCloseCalc(f, t), m = { sales: 0, branch: 0, other: 0 }, truck = fnRound(fxDebtRows(f, t).filter(r => r.truck).reduce((s, r) => s + r.amount, 0)), debt = fnRound(z.collected - truck);
             (state.expenses || []).filter(x => x.inc && x.src !== 'debt' && x.src !== 'close' && (x.date || '') >= f && (x.date || '') <= t).forEach(x => { m[icKey(x)] += x.amount || 0; });
-            const main = fnRound(z.cash + m.sales), branch = fnRound(m.branch), other = fnRound(m.other);
+            const zc = fxInvCash(f, t, false), main = fnRound(zc + m.sales), branch = fnRound(m.branch), other = fnRound(m.other);
             // المصاريف والمرتجعات للمراجعة والتدوين فقط: لا تُخصم من المدخول
-            return { f, t, main, mainInv: z.cash, mainMan: fnRound(m.sales), branch, other, debt, truck, exp: z.exp, retCash: z.retCash, expected: fnRound(main + branch + other + debt) };
+            return { f, t, main, mainInv: zc, mainMan: fnRound(m.sales), branch, other, debt, truck, exp: z.exp, retCash: z.retCash, expected: fnRound(main + branch + other + debt) };
         }
         // عرض يوم: لقطة الإغلاق إن وُجدت وإلا الأرقام الحيّة
         function fxView(d) {
@@ -7419,6 +7432,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 ${d.other ? line(FX_COL.other, '➕', 'مداخيل أخرى', '', d.other) : ''}
                 ${line(FX_COL.exp, '💸', 'المصاريف', i18nT('للمراجعة فقط — غير مخصومة من المدخول'), d.exp, false, plus('exp', 'مصروف'), 'exp')}
                 ${d.retCash ? line(FX_COL.exp, '↩️', 'مرتجعات نقدية', i18nT('للمراجعة فقط — غير مخصومة من المدخول'), d.retCash, false) : ''}</div>
+                ${(() => { const all = fxInvCash(fxDate, fxDate, true), n = (state.invoices || []).filter(x => x.type === 'sales' && x.date === fxDate).length; if (!n || c) return ''; const on = fxSalesOn(fxDate); return `<div class="fx-dl"><div class="fx-dro"><button type="button" class="fx-ck fx-act${on ? ' on' : ''}" onclick="fxSalesToggle()" title="${esc(i18nT(on ? 'إلغاء اعتماد مبيعات الفواتير' : 'اعتماد مبيعات الفواتير في الإغلاق'))}">✓</button><div class="fx-dn"><b>🧾 ${T('مبيعات الفواتير النقدية')}</b><small>${n} ${T('فاتورة')} · ${esc(formatAmount(all))} ${on ? '· ' + T('معتمدة في الإغلاق') : '· ' + T('غير معتمدة')}</small></div></div><div class="fx-dh">✓ ${T('علّم لاعتماد مبلغ الفواتير في إغلاق اليوم، أو سجّل المبلغ يدوياً بزر ＋ تسجيل')}</div></div>`; })()}
                 ${debtList}<div class="fx-exp-box"><div class="fx-l">${T('إجمالي المدخول المتوقع')}</div><div class="text-3xl font-extrabold" dir="ltr" style="color:${d.expected >= 0 ? '#059669' : '#dc2626'}">${esc(formatAmount(d.expected))}</div></div>`;
             if (!c) {
                 h += `<div><label class="fn-lbl">${T('المبلغ الذي عددته فعلياً في الصندوق')}</label><input id="fx-counted" type="number" inputmode="decimal" step="any" min="0" placeholder="0" class="fn-in" oninput="fxLive()"></div>
@@ -8232,7 +8246,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     rows: L.map((o, i) => ({ t: (i + 1) + '. ' + o.name, s: i18nT('الكمية') + ': ' + fnNum(fnRound(o.qty)) + ' · ' + i18nT('المبيعات') + ': ' + A(fnRound(o.rev)), a: A(fnRound(k === 'qty' ? o.qty : k === 'rev' ? o.rev : o.profit)), cls: o.profit >= 0 ? 'text-emerald-600' : 'text-red-600' })) };
             }
             if (t === 'e_exp' || t === 'e_inc') {
-                const inc = t === 'e_inc', L = (state.expenses || []).filter(x => x.src !== 'close' && !!x.inc === inc && inR(x.date || '') && (!q || rpNm(x.note).includes(q)) && (!inc || rpF.st === 'all' || icKey(x) === rpF.st)).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.at || 0) - (a.at || 0));
+                const inc = t === 'e_inc', L = (state.expenses || []).filter(x => x.src !== 'close' && x.src !== 'salesok' && !!x.inc === inc && inR(x.date || '') && (!q || rpNm(x.note).includes(q)) && (!inc || rpF.st === 'all' || icKey(x) === rpF.st)).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.at || 0) - (a.at || 0));
                 const tot = sum(L, x => x.amount), s = [S(inc ? 'إجمالي المداخيل' : 'إجمالي المصاريف', A(tot), inc ? 'text-emerald-600' : 'text-red-600'), S('العدد', L.length)];
                 if (inc) { s.push(S('مدخول الفرع', A(sum(L.filter(x => icKey(x) === 'branch'), x => x.amount)))); s.push(S('مدخول خارج المبيعات', A(sum(L.filter(x => icKey(x) === 'other'), x => x.amount)))); } else s.push(S('متوسط المصروف', A(L.length ? fnRound(tot / L.length) : 0)));
                 return { sum: s, rows: L.map(x => ({ t: x.note || '—', s: isoToDisplay(x.date) + (inc ? ' · ' + icLbl(x) : '') + (x.by ? ' · ' + x.by : ''), a: A(x.amount || 0), cls: inc ? 'text-emerald-600' : 'text-red-600' })) };
@@ -10306,7 +10320,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v45';
+        const APP_VER = 'v46';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }

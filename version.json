@@ -1,1 +1,1 @@
-{"version": "v45", "date": "2026-11-19", "notes": {"ar": ["القائمة الجانبية: الإشعار نقطة حمراء بدل الرقم."], "fr": ["Menu latéral : pastille rouge au lieu du nombre."], "en": ["Sidebar: red dot instead of number."]}}
+{"version": "v46", "date": "2026-11-20", "notes": {"ar": ["إغلاق اليوم: زر ✓ لاعتماد مبلغ فواتير البيع النقدية، أو إدخال المبلغ يدوياً (بزر تسجيل)."], "fr": ["Clôture : ✓ pour valider les ventes des factures ou saisir le montant à la main."], "en": ["Day close: ✓ to approve invoice cash sales, or enter the amount manually."]}}
