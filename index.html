@@ -534,6 +534,11 @@
         .fx-pill span{font-size:.85rem;font-weight:700;color:#64748b}.dark .fx-pill span{color:#94a3b8}
         .fx-pill b{font-size:1.25rem;font-weight:900}
         .fx-pill em{font-style:normal;font-size:1rem;font-weight:800;color:#dc2626}
+        .fx-pill b.fx-big{font-size:1.75rem;line-height:1.15;font-weight:900}.fx-pill em.fx-sm{font-size:.76rem;font-weight:600;color:#64748b}
+        .fx-chip{text-align:center;padding-top:1.15rem}.fx-chip .fx-l{font-size:.78rem}.fx-chip .fx-v{font-size:1.65rem;line-height:1.2;margin-top:.2rem}.fx-chip.fx-wide .fx-v{font-size:2.1rem}
+        #rp-body .fn-sum .text-lg{font-size:1.75rem!important;line-height:1.2;font-weight:900!important}#rp-body .fn-sum .text-xs{font-size:.82rem!important;font-weight:700}#rp-body .fn-sum{gap:1rem;padding:1.25rem 1rem}
+        .prod-menu{position:absolute;inset-inline-start:0;top:calc(100% + .35rem);z-index:60;display:flex;flex-direction:column;gap:.35rem;min-width:15rem;padding:.5rem;border-radius:1rem;background:#fff;border:1px solid var(--border-soft);box-shadow:0 12px 30px rgba(0,0,0,.25)}.dark .prod-menu{background:#1b2230}
+        .prod-menu.hidden{display:none}.prod-menu .fn-btn{justify-content:flex-start;width:100%}
         .fx-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
         @media(min-width:640px){.fx-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
         .fx-tile{position:relative;display:flex;flex-direction:column;gap:.25rem;background:var(--card-bg);border:1px solid var(--border-soft);border-radius:1rem;padding:.75rem .85rem;box-shadow:var(--shadow-soft);overflow:hidden;min-width:0}
@@ -1641,11 +1646,11 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <div id="exp-form-title" class="font-bold text-sm text-slate-700 dark:text-slate-200">➕ مصروف جديد</div>
                 <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><input type="hidden" id="exp-cat" value="sales"><div class="fn-tabs"><button type="button" id="exp-c-sales" class="fn-tab on" onclick="expCatTab('sales')">مدخول المبيعات</button><button type="button" id="exp-c-branch" class="fn-tab" onclick="expCatTab('branch')">مدخول الفرع</button><button type="button" id="exp-c-other" class="fn-tab" onclick="expCatTab('other')">مدخول خارج المبيعات</button></div></div>
                 <div id="exp-br-w" class="hidden"><label class="fn-lbl">اسم الفرع (اختياري)</label><input id="exp-br" type="text" maxlength="60" autocomplete="off" placeholder="مثال: فرع السوق" class="fn-in"></div>
-                <div><label id="exp-note-l" class="fn-lbl">فيما صُرف هذا المبلغ؟</label><input id="exp-note" type="text" required maxlength="200" autocomplete="off" placeholder="مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة..." class="fn-in"></div>
                 <div class="grid grid-cols-2 gap-2.5">
                     <div><label class="fn-lbl">التاريخ</label><input id="exp-date" type="date" required class="fn-in"></div>
                     <div><label class="fn-lbl">المبلغ</label><input id="exp-amount" type="number" inputmode="decimal" min="0" step="any" required placeholder="0" class="fn-in"></div>
                 </div>
+                <div><label id="exp-note-l" class="fn-lbl">فيما صُرف هذا المبلغ؟</label><input id="exp-note" type="text" required maxlength="200" autocomplete="off" placeholder="مثال: كراء المحل، فاتورة الكهرباء، نقل بضاعة..." class="fn-in"></div>
                 <div class="flex gap-2">
                     <button type="submit" id="exp-submit" class="fn-btn primary flex-1">✅ تأكيد المصروف</button>
                     <button type="button" id="exp-cancel" onclick="resetExpenseForm()" class="fn-btn hidden">إلغاء التعديل</button>
@@ -1853,9 +1858,15 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             <div class="screen-bar">
                 <div class="flex items-center gap-3">
                     <button onclick="showScreen('home')" class="btn-back">← العودة</button>
+                    <span style="position:relative;display:inline-block"><button type="button" id="prod-menu-btn" onclick="prodMenuToggle(event)" class="fn-btn" title="المزيد" aria-label="المزيد" style="font-size:1.25rem;line-height:1;padding:.4rem .7rem">☰</button><div id="prod-menu" class="prod-menu hidden">
+                    <button type="button" onclick="prodMenuToggle();openCatMgr('cat')" class="fn-btn">🗂️ <span>إضافة تصنيف منتج</span></button>
+                    <button type="button" onclick="prodMenuToggle();openRules()" class="fn-btn">⚙️ <span>هوامش الربح (التسعير التلقائي)</span></button>
+                    <button type="button" onclick="prodMenuToggle();document.getElementById('prod-import-file').click()" class="fn-btn">⬆️ <span>استيراد منتجات من Excel</span></button>
+                </div></span>
                     <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">📦 المنتجات</h2>
                 </div>
                 <div class="flex gap-2"><button type="button" onclick="openCount()" class="fn-btn">📋 <span>جرد المخزون</span></button>
+                <button type="button" id="prod-addwh-btn" onclick="openCatMgr('wh')" class="fn-btn primary hidden">🏬 <span>إضافة مخزن</span></button>
                 <button type="button" id="prod-add-btn" onclick="openProductForm()" class="fn-btn primary">➕ منتج جديد</button></div>
             </div>
             <div class="fn-tabs">
@@ -1865,12 +1876,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             </div>
             <div id="prod-pane-items" class="space-y-3">
                 <p class="text-xs text-slate-500 dark:text-slate-400">تُحفظ هنا تلقائياً منتجات فواتير المشتريات مع أسعار البيع المرجعية. هذه الأسعار لا تظهر في فاتورة المورّد.</p>
-                <div class="flex gap-2 flex-wrap">
-                    <button type="button" onclick="openCatMgr('cat')" class="fn-btn">🗂️ إضافة تصنيف منتج</button>
-                    <button type="button" onclick="openRules()" class="fn-btn">⚙️ <span>هوامش الربح (التسعير التلقائي)</span></button>
-                    <button type="button" onclick="document.getElementById('prod-import-file').click()" class="fn-btn">⬆️ <span>استيراد منتجات من Excel</span></button>
-                    <input type="file" id="prod-import-file" accept=".xlsx,.csv,.txt" class="hidden" onchange="importProductsFile(this)">
-                </div>
+                <input type="file" id="prod-import-file" accept=".xlsx,.csv,.txt" class="hidden" onchange="importProductsFile(this)">
                 <input id="prod-search" type="search" oninput="renderProducts()" placeholder="بحث بالاسم أو الباركود..." class="fn-in">
                 <div id="prod-cats" class="sl-cats"></div>
                 <div id="prod-count" class="text-xs text-slate-500 dark:text-slate-400"></div>
@@ -1883,9 +1889,6 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <div id="pend-list" class="space-y-2"></div>
             </div>
             <div id="prod-pane-wh" class="space-y-3 hidden">
-                <div class="flex gap-2 flex-wrap">
-                    <button type="button" onclick="openCatMgr('wh')" class="fn-btn primary">🏬 إضافة مخزن</button>
-                </div>
                 <div id="wh-cards" class="wh-cards"></div>
                 <div id="wh-count" class="text-xs text-slate-500 dark:text-slate-400"></div>
                 <div id="wh-list" class="space-y-2"></div>
@@ -7294,7 +7297,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             document.getElementById('exp-form-title').innerText = isInc() ? '✏️ تعديل المدخول' : '✏️ تعديل المصروف';
             document.getElementById('exp-submit').innerText = '💾 حفظ التعديل';
             document.getElementById('exp-cancel').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'smooth' }); try { document.getElementById('exp-form').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { }
         }
         async function expDelete(id) {
             if (!isOwner()) { appAlert('الحذف للمدير فقط.'); return; }
@@ -7378,7 +7381,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             let top = null; dayKeys.forEach(k => { if (!top || days[k].total > days[top].total) top = k; });
             const tg = `<button type="button" class="fx-tg" onclick="fxHeroToggle()"><span>📊 ${esc(i18nT('ملخص الشهر'))}</span><span class="fx-tgv" dir="ltr" style="color:#059669">${fxHeroOff ? '🧮 ' + esc(formatAmount(d.expected)) : ''}</span><span>${fxHeroOff ? '▾' : '▴'}</span></button>`;
             return tg + (fxHeroOff ? '' : `<div class="fx-grid">${fxChip(FX_COL.sales, '🏪', 'المحل الرئيسي', d.main)}${fxChip(FX_COL.branch, '🏬', 'مدخول الفرع', d.branch)}${fxChip(FX_COL.debt, '💰', 'ديون محصَّلة', d.debt)}${fxChip(FX_COL.truck, '🚚', 'حساب الشاحنة', d.truck)}${fxChip(FX_COL.other, '➕', 'مداخيل أخرى', d.other)}${fxChip(FX_COL.exp, '💸', 'المصاريف (للمراجعة)', d.exp)}${fxChip('#059669', '🧮', 'إجمالي المدخول', d.expected, 'fx-wide')}</div>`)
-                + (expKind === 'close' ? '' : `<div class="fx-pills"><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'عدد المداخيل' : 'عدد المصاريف'))}</span><b>${list.length}</b></div><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'أعلى يوم دخلاً' : 'أعلى يوم صرفاً'))}</span><b>${top ? esc(isoToDisplay(top)) : '—'}</b>${top ? `<em dir="ltr">${esc(formatAmount(days[top].total))}</em>` : ''}</div></div>`);
+                + (expKind === 'close' ? '' : `<div class="fx-pills"><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'عدد المداخيل' : 'عدد المصاريف'))}</span><b>${list.length}</b></div><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'أعلى يوم دخلاً' : 'أعلى يوم صرفاً'))}</span>${top ? `<b class="fx-big" dir="ltr" style="color:${isInc() ? '#059669' : '#dc2626'}">${esc(formatAmount(days[top].total))}</b><em class="fx-sm">${esc(isoToDisplay(top))}</em>` : '<b>—</b>'}</div></div>`);
         }
         function renderExpenses() {
             const cur = toISODate(new Date()).slice(0, 7), isC = expKind === 'close';
@@ -7541,13 +7544,27 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return `<tr><td>${esc(isoToDisplay(d))}</td><td class="r">${esc(fnNum(v.main))}</td><td class="r">${esc(fnNum(v.branch))}</td><td class="r">${esc(fnNum(v.debt))}</td><td class="r">${esc(fnNum(v.other))}</td><td class="r">${esc(fnNum(v.exp + (v.retCash || 0)))}</td><td class="r">${esc(fnNum(v.expected))}</td><td class="r">${c ? esc(fnNum(c.counted)) + ' (' + (c.diff > 0 ? '+' : '') + esc(fnNum(c.diff || 0)) + ')' : '—'}</td><td>${esc(stl)}</td></tr>`;
             }).join('');
             const S = (l, v) => `<tr><td>${esc(i18nT(l))}</td><td class="r"><b>${esc(fnNum(fnRound(v)))}</b></td></tr>`;
-            printDoc(`<div class="inv-h"><div><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-sub">${esc(sh.info)}</div></div>
+            reportOut(`<div class="inv-h"><div><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-sub">${esc(sh.info)}</div></div>
                 <div class="inv-kind">${esc(i18nT(one ? 'تقرير المدير اليومي' : 'تقرير المدير'))}<div class="inv-sub">${one ? esc(isoToDisplay(f)) : esc(monthLabel(f.slice(0, 7)))}</div></div></div>
                 <table><tr><th>${esc(i18nT('البند'))}</th><th class="r">${esc(i18nT('المبلغ'))}</th></tr>${S('مدخول المحل الرئيسي', tot.main)}${S('الديون المحصَّلة (المحل)', tot.debt)}${tot.truck ? S('ديون الشاحنة (حساب منفصل)', tot.truck) : ''}${S('مدخول الفرع', tot.branch)}${tot.other ? S('مداخيل أخرى', tot.other) : ''}${S('المصاريف (للمراجعة فقط)', tot.exp)}${tot.retCash ? S('مرتجعات نقدية (للمراجعة فقط)', tot.retCash) : ''}</table>
                 <div class="inv-tot"><div class="inv-sub">${esc(i18nT('إجمالي المدخول (المصاريف غير مخصومة)'))}</div><b>${esc(formatAmount(fnRound(tot.expected)))}</b></div>
                 ${(() => { const dr = fxDebtRows(f, t); return dr.length ? `<div class="inv-sub" style="margin:8px 0 4px">${esc(i18nT('تفصيل الديون المحصَّلة'))}</div><table style="font-size:11px"><tr><th>${esc(i18nT('التاريخ'))}</th><th>${esc(i18nT('العميل'))}</th><th>${esc(i18nT('ملاحظة'))}</th><th>${esc(i18nT('المصدر'))}</th><th class="r">${esc(i18nT('المبلغ'))}</th></tr>${dr.slice(0, 80).map(x => { const p = x.p, nm = x.p.name; return `<tr><td>${esc(isoToDisplay(x.date))}</td><td>${esc(nm)}</td><td>${esc(x.note && x.note !== nm ? x.note : '')}</td><td>${esc(i18nT(x.truck ? 'الشاحنة' : 'المحل'))}</td><td class="r">${esc(fnNum(x.amount))}</td></tr>`; }).join('')}</table>` : ''; })()}
                 <div class="inv-sub" style="margin-top:8px">${esc(i18nT('مجموع فروقات الجرد'))}: <b>${esc(fnNum(fnRound(tot.diff)))}</b></div>
                 ${hands.length ? `<div class="inv-sub" style="margin-top:8px">${esc(i18nT('التسليم'))}:</div>` + hands.map(h => `<div style="font-size:15px;margin-top:3px">${esc(h.d)} &nbsp; <b>${esc(h.by)}</b> <span style="font-size:22px;font-weight:900;line-height:1;vertical-align:-2px">&#8592;</span> <b>${esc(h.to)}</b></div>`).join('') : ''}`, 'Manager ' + f);
+        }
+        async function docImage(html, title) {
+            try {
+                const css = `*{box-sizing:border-box}table{width:100%;border-collapse:collapse}th,td{border:1px solid #94a3b8;padding:6px 8px;text-align:start;font-size:13px}th{background:#e5e7eb}.inv-h{display:flex;justify-content:space-between;gap:12px;border-bottom:3px solid #0f172a;padding-bottom:8px;margin-bottom:10px}.inv-shop{font-size:22px;font-weight:800}.inv-sub{color:#334155;font-size:13px}.inv-kind{font-size:18px;font-weight:800;text-align:end}.inv-tot{margin-top:12px;border:3px solid #0f172a;border-radius:10px;padding:12px;text-align:center}.inv-tot b{display:block;font-size:28px;margin-top:2px}.r{text-align:end;white-space:nowrap}`;
+                const cv = await receiptCanvas(`<style>${css}</style><div style="padding:16px;background:#fff;color:#0f172a;font-family:Tahoma,Arial,sans-serif;font-size:13px">${html}</div>`, 200);
+                const blob = await new Promise(r => cv.toBlob(r, 'image/png')), name = String(title || 'KARNI').replace(/[\\/:*?"<>|]+/g, ' ') + '.png';
+                try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+                const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+                appToast('🖼️ ' + i18nT('تم حفظ التقرير كصورة'));
+            } catch (e) { console.error(e); appAlert('تعذّر حفظ الصورة.'); }
+        }
+        async function reportOut(html, title) {
+            const v = await appDialog({ icon: '🖨️', title: i18nT('التقرير'), message: i18nT('ماذا تريد أن تفعل بالتقرير؟'), cancelValue: null, buttons: [{ label: '🖨️ ' + i18nT('طباعة'), value: 'p', kind: 'primary', focus: true }, { label: '🖼️ ' + i18nT('حفظ كصورة'), value: 'i' }, { label: i18nT('إلغاء'), value: null }] });
+            if (v === 'p') printDoc(html, title); else if (v === 'i') docImage(html, title);
         }
         function printExpensesReport() {
             if (expKind === 'close') { fxPrintReport(expMonth + '-01', expMonth + '-31'); return; }
@@ -7556,7 +7573,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const sh = shopHead();
             const rows = list.slice().sort((a, b) => a.date.localeCompare(b.date) || (a.at || 0) - (b.at || 0)).map((x, i) =>
                 `<tr><td>${i + 1}</td><td>${esc(isoToDisplay(x.date))}</td><td>${x.inc ? esc(x.src === 'debt' ? i18nT('تسديد دين') : icLbl(x)) + (x.br ? ' (' + esc(x.br) + ')' : '') + (x.note ? ' — ' : '') : ''}${esc(x.note || '')}</td><td class="r">${esc(fnNum(x.amount))}</td></tr>`).join('');
-            printDoc(`<div class="inv-h"><div><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-sub">${esc(sh.info)}</div></div>
+            reportOut(`<div class="inv-h"><div><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-sub">${esc(sh.info)}</div></div>
                 <div class="inv-kind">${isInc() ? 'تقرير المداخيل الشهري' : 'تقرير المصاريف الشهري'}<div class="inv-sub">${esc(monthLabel(expMonth))}</div></div></div>
                 <table><tr><th>#</th><th>التاريخ</th><th>${isInc() ? 'المصدر' : 'فيما صُرف'}</th><th class="r">المبلغ</th></tr>${rows}</table>
                 <div class="inv-tot"><div class="inv-sub">${isInc() ? 'إجمالي مداخيل الشهر' : 'إجمالي مصاريف الشهر'}</div><b>${esc(formatAmount(total))}</b></div>`, 'Expenses ' + expMonth);
@@ -8632,6 +8649,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 if (x) { clearInterval(tm); try { openInvView(x.id); } catch (e) { console.error(e); } }
             }, 500);
         }
+        function prodMenuToggle(e) {
+            const m = document.getElementById('prod-menu'); if (!m) return; if (e) e.stopPropagation(); m.classList.toggle('hidden');
+            if (!m.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', function f(ev) { if (!m.contains(ev.target)) { m.classList.add('hidden'); } document.removeEventListener('click', f); }), 0);
+        }
         function setProdTab(t) { prodTab = t; closeProductForm(); renderProducts(); }
         function fillProdSelects(p) {
             document.getElementById('prod-cat').innerHTML = `<option value="">${esc(i18nT('— بدون تصنيف —'))}</option>` + catList().map(c => `<option value="${esc(c.id)}" data-notr>${esc(c.name)}</option>`).join('');
@@ -8832,6 +8853,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             document.getElementById('prod-pane-items').classList.toggle('hidden', !items);
             document.getElementById('prod-pane-pend').classList.toggle('hidden', !pend);
             document.getElementById('prod-pane-wh').classList.toggle('hidden', prodTab !== 'wh');
+            { const mb = document.getElementById('prod-menu-btn'), aw = document.getElementById('prod-addwh-btn'); if (mb) mb.classList.toggle('hidden', !items); if (aw) aw.classList.toggle('hidden', prodTab !== 'wh'); if (!items) { const pm = document.getElementById('prod-menu'); if (pm) pm.classList.add('hidden'); } }
             if (pend) { document.getElementById('prod-add-btn').classList.add('hidden'); renderPending(); return; }
             document.getElementById('prod-add-btn').classList.toggle('hidden', !items);
             const all = prodItems(), srt = (a, b) => ARC.compare(a.name || '', b.name || '');
@@ -9231,10 +9253,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             list.sort((a, b) => ((b.date || '') < (a.date || '') ? -1 : (b.date || '') > (a.date || '') ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0));
             const tot = fnRound(list.reduce((s, x) => s + (x.total || 0), 0));
             const cr = fnRound(list.filter(x => x.pay === 'credit' && x.type !== 'orders').reduce((s, x) => s + (x.total || 0) - (x.paid || 0), 0));
-            const st = [[i18nT('عدد الفواتير'), String(list.length), ''], [i18nT('الإجمالي'), formatAmount(tot), '']];
+            const st = [];
             if (invTab !== 'orders') st.push([i18nT('منها غير خالص'), formatAmount(cr), 'red']);
             const sb = document.getElementById('inv-stats');
-            sb.style.gridTemplateColumns = `repeat(${st.length},1fr)`;
+            sb.style.display = st.length ? '' : 'none'; sb.style.gridTemplateColumns = `repeat(${Math.max(1, st.length)},1fr)`;
             sb.innerHTML = st.map(([l, v, c]) => `<div class="iv-st ${c}"><small>${esc(l)}</small><b>${esc(v)}</b></div>`).join('');
             const box = document.getElementById('inv-list');
             if (!list.length) { box.innerHTML = `<div class="nt-empty">${esc(i18nT('لا توجد فواتير هنا بعد'))}</div>`; return; }
@@ -10320,7 +10342,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v46';
+        const APP_VER = 'v47';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
