@@ -3345,7 +3345,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         }
         function txVoucher(section, person, txId) {
             const r = txBeforeAfter(section, person, txId); if (!r) return null;
-            return { type: vchMap(section, r.tx.type), txType: r.tx.type, number: r.tx.invoice || '', date: r.tx.date, name: person.name, by: r.tx.by || '', method: r.tx.method || 'نقداً', note: r.tx.note || '', amount: r.tx.amount, balAfter: r.after };
+            return { type: vchMap(section, r.tx.type), txType: r.tx.type, number: r.tx.invoice || '', date: displayToISO(r.tx.date) || r.tx.date, name: person.name, by: r.tx.by || '', method: r.tx.method || 'نقداً', note: r.tx.note || '', amount: r.tx.amount, balAfter: r.after };
         }
         async function movCanvas(section, person, txId) {
             try { await document.fonts.load(`700 24px ${PFONT}`); await document.fonts.load(`600 24px ${PFONT}`); } catch (e) { }
@@ -3360,7 +3360,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             pdfText(c, i18nT('حساب الحركة'), PW / 2, 305, 62, { bold: true, align: 'center' });
             let y = 450;
             const row = (label, val, big) => { pdfText(c, label, R, y, 30, { color: '#374151' }); pdfText(c, val, R - 330, y, big ? 38 : 32, { bold: true, maxW: PW - 2 * PM - 340 }); c.fillStyle = '#d1d5db'; c.fillRect(L, y + 36, PW - 2 * PM, 2); y += 84; };
-            row(i18nT('التاريخ'), isoToDisplay(tx.date));
+            row(i18nT('التاريخ'), tx.date || '');
             row(i18nT(isCust ? 'العميل' : 'المورد'), person.name, true);
             row(i18nT('نوع الحركة'), i18nT(isAdd ? 'إضافة دين' : 'تسديد'));
             if (tx.invoice) row(i18nT('رقم الفاتورة'), String(tx.invoice));
@@ -3369,9 +3369,9 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             const gap = 24, bw = (PW - 2 * PM - 2 * gap) / 3;
             [['الحساب القديم', r.before, '#111827', 2], [isAdd ? 'الحركة (+ دين)' : 'الحركة (− تسديد)', tx.amount, isAdd ? '#b91c1c' : '#15803d', 2], ['الحساب الجديد', r.after, '#111827', 5]].forEach(([lb, val, col, lw], i) => {
                 const x0 = R - bw - i * (bw + gap);
-                pdfRRect(c, x0, y, bw, 190, 14, null, lw === 5 ? '#000000' : '#4b5563', lw);
-                pdfText(c, i18nT(lb), x0 + bw - 20, y + 46, 26, { bold: true, color: '#111827', maxW: bw - 40 });
-                pdfMoney(c, val, x0 + bw - 20, y + 128, 36, { bold: true, color: col });
+                pdfRRect(c, x0, y, bw, 220, 14, null, lw === 5 ? '#000000' : '#4b5563', lw);
+                pdfText(c, i18nT(lb), x0 + bw - 20, y + 46, 30, { bold: true, color: '#111827', maxW: bw - 40 });
+                const len = pdfNum(val).length; pdfMoney(c, val, x0 + bw - 20, y + 140, len <= 10 ? 50 : len <= 12 ? 44 : 38, { bold: true, color: col });
             });
             return c0;
         }
@@ -10382,7 +10382,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v48';
+        const APP_VER = 'v49';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
