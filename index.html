@@ -3335,7 +3335,45 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         function sendKindsFor(c) {
             if (c.t === 'w') return [['total', '💰 الصافي فقط'], ['statement', '📋 كشف حساب']];
             if (c.t === 'p' && c.txId == null) return [['total', '💰 المتبقي فقط'], ['statement', '📋 كشف حساب'], ['statementx', '📋 مفصّل بالمنتجات']];
+            if (c.t === 'p') { const r = txBeforeAfter(c.section, (state[c.section] || []).find(p => p.id === c.personId) || { transactions: [] }, c.txId), vt = r ? vchMap(c.section, r.tx.type) : 'receipt'; return [['detail', '📋 الحساب التفصيلي'], ['voucher', '🧾 ' + VCH[vt].one], ['move', '🔁 حساب الحركة']]; }
             return null;
+        }
+        function txBeforeAfter(section, person, txId) {
+            let run = parseFloat(person.initialBalance) || 0;
+            for (const tx of sortedTransactions(person)) { const before = run; run += tx.type === 'add' ? tx.amount : -tx.amount; if (tx.id == txId) return { tx, before: fnRound(before), after: fnRound(run) }; }
+            return null;
+        }
+        function txVoucher(section, person, txId) {
+            const r = txBeforeAfter(section, person, txId); if (!r) return null;
+            return { type: vchMap(section, r.tx.type), txType: r.tx.type, number: r.tx.invoice || '', date: r.tx.date, name: person.name, by: r.tx.by || '', method: r.tx.method || 'نقداً', note: r.tx.note || '', amount: r.tx.amount, balAfter: r.after };
+        }
+        async function movCanvas(section, person, txId) {
+            try { await document.fonts.load(`700 24px ${PFONT}`); await document.fonts.load(`600 24px ${PFONT}`); } catch (e) { }
+            const r = txBeforeAfter(section, person, txId), tx = r.tx, isAdd = tx.type === 'add', isCust = section === 'customers';
+            const c0 = document.createElement('canvas'); c0.width = PW; c0.height = PH; const c = c0.getContext('2d'), R = PW - PM, L = PM, sh = shopHead();
+            c.direction = LANG === 'ar' ? 'rtl' : 'ltr'; c.fillStyle = '#ffffff'; c.fillRect(0, 0, PW, PH);
+            if (LANG !== 'ar') { c.translate(PW, 0); c.scale(-1, 1); }
+            pdfText(c, sh.name || 'دفتر الحسابات', R, 105, 62, { bold: true });
+            if (sh.info) pdfText(c, sh.info, R, 160, 28, { color: '#111827', maxW: 1100 });
+            c.fillStyle = '#4b5563'; c.fillRect(L, 205, PW - 2 * PM, 3);
+            pdfRRect(c, L + 250, 250, PW - 2 * PM - 500, 110, 18, null, '#000000', 5);
+            pdfText(c, i18nT('حساب الحركة'), PW / 2, 305, 62, { bold: true, align: 'center' });
+            let y = 450;
+            const row = (label, val, big) => { pdfText(c, label, R, y, 30, { color: '#374151' }); pdfText(c, val, R - 330, y, big ? 38 : 32, { bold: true, maxW: PW - 2 * PM - 340 }); c.fillStyle = '#d1d5db'; c.fillRect(L, y + 36, PW - 2 * PM, 2); y += 84; };
+            row(i18nT('التاريخ'), isoToDisplay(tx.date));
+            row(i18nT(isCust ? 'العميل' : 'المورد'), person.name, true);
+            row(i18nT('نوع الحركة'), i18nT(isAdd ? 'إضافة دين' : 'تسديد'));
+            if (tx.invoice) row(i18nT('رقم الفاتورة'), String(tx.invoice));
+            if (tx.note) row(i18nT('البيان'), tx.note);
+            y += 30;
+            const gap = 24, bw = (PW - 2 * PM - 2 * gap) / 3;
+            [['الحساب القديم', r.before, '#111827', 2], [isAdd ? 'الحركة (+ دين)' : 'الحركة (− تسديد)', tx.amount, isAdd ? '#b91c1c' : '#15803d', 2], ['الحساب الجديد', r.after, '#111827', 5]].forEach(([lb, val, col, lw], i) => {
+                const x0 = R - bw - i * (bw + gap);
+                pdfRRect(c, x0, y, bw, 190, 14, null, lw === 5 ? '#000000' : '#4b5563', lw);
+                pdfText(c, i18nT(lb), x0 + bw - 20, y + 46, 26, { bold: true, color: '#111827', maxW: bw - 40 });
+                pdfMoney(c, val, x0 + bw - 20, y + 128, 36, { bold: true, color: col });
+            });
+            return c0;
         }
         function sendPartyPhone(section, id) { const p = (state[section] || []).find(z => z.id === id); return p ? (p.phone || '') : ''; }
         function openSendModal(txId, workerId) {
@@ -3372,7 +3410,9 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             if (c.t === 'i') return invCanvases(invById(c.id));
             if (c.t === 'v') return [await vchCanvas(invById(c.id))];
             const person = c.t === 'w' ? workerById(c.personId) : (state[c.section] || []).find(p => p.id === c.personId);
-            return pdfCanvases(c.section, person, c.kind, c.txId);
+            if (c.t === 'p' && c.txId != null && c.kind === 'voucher') { const v = txVoucher(c.section, person, c.txId); if (v) return [await vchCanvas(v)]; }
+            if (c.t === 'p' && c.txId != null && c.kind === 'move' && txBeforeAfter(c.section, person, c.txId)) return [await movCanvas(c.section, person, c.txId)];
+            return pdfCanvases(c.section, person, c.kind === 'voucher' || c.kind === 'move' ? 'detail' : c.kind, c.txId);
         }
         function sendStack(cvs) {
             if (cvs.length === 1) return cvs[0];
@@ -3399,7 +3439,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             if (c.t === 'i') { const x = invById(c.id); return { t: i18nT((INV_T[x.type] || INV_T.sales).one) + ' ' + x.number + ' - ' + invNm(x), f: 'Invoice-' + String(x.number).replace(/[^\w-]/g, '') }; }
             if (c.t === 'v') { const v = invById(c.id); return { t: i18nT(VCH[v.type].one) + ' ' + v.number + ' - ' + v.name, f: (v.type === 'receipt' ? 'Receipt-' : 'Payment-') + String(v.number).replace(/[^\w-]/g, '') }; }
             const p = c.t === 'w' ? workerById(c.personId) : (state[c.section] || []).find(z => z.id === c.personId), nm = p ? p.name.trim() : '';
-            return { t: i18nT(c.kind === 'total' ? 'وصل رصيد - ' : c.kind === 'detail' ? 'فاتورة حركة - ' : 'كشف حساب - ') + nm, f: (c.kind === 'total' ? 'Balance-' : c.kind === 'detail' ? 'Transaction-' : 'Statement-') + stamp };
+            return { t: i18nT(c.kind === 'total' ? 'وصل رصيد - ' : c.kind === 'voucher' ? 'سند - ' : c.kind === 'move' ? 'حساب الحركة - ' : c.kind === 'detail' ? 'فاتورة حركة - ' : 'كشف حساب - ') + nm, f: (c.kind === 'total' ? 'Balance-' : c.kind === 'voucher' ? 'Voucher-' : c.kind === 'move' ? 'Movement-' : c.kind === 'detail' ? 'Transaction-' : 'Statement-') + stamp };
         }
         function sendDownload() {
             const f = sendFiles; if (!f) return;
@@ -10342,7 +10382,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v47';
+        const APP_VER = 'v48';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
