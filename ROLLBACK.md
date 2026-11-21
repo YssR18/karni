@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v49 | `e589ce8` | 2026-11-21 | movement card bigger numbers, fix date |
 | v48 | `fa765d5` | 2026-11-21 | send transaction as detail / voucher / movement (old & new balance) |
 | v47 | `6e16dd3` | 2026-11-21 | bigger centered numbers, print/save-as-image report, products ☰ menu, add-warehouse beside count, invoices stats trimmed |
 | v46 | `e6cda68` | 2026-11-20 | day close - opt-in approval of invoice cash sales |
