@@ -1,18 +1,33 @@
 # نقاط الرجوع — KARNI
 
-كل إصدار له وسم (tag) باسمه: `v30` … `v46` وما بعده. الوسم يحفظ نسخة ثابتة من المشروع كما كانت وقتها.
+كل إصدار هو commit ثابت على `main` برقمه (`vNN`) وهذا الجدول يحفظ رمز كل نقطة. (لا يمكن دفع الوسوم من هذه البيئة، فالرمز هو نقطة الرجوع.)
 
 ## الرجوع لنسخة سابقة (آمن، يحتفظ بالسجل)
 ```
-git fetch --tags
-git checkout main && git pull
-git revert --no-edit <vNN>..HEAD     # يلغي كل ما بعد النسخة vNN
+git pull
+git revert --no-edit <رمز_النسخة_السليمة>..HEAD   # يلغي كل ما بعدها
 git push origin main
 ```
-أو بإلغاء تعديل واحد فقط: `git revert <commit>`.
+إلغاء تعديل واحد فقط: `git revert <رمز_التعديل>`.
+معاينة نسخة قديمة دون تغيير شيء: `git checkout <رمز>` ثم `git checkout main` للعودة.
 
-## معاينة نسخة قديمة دون تغيير شيء
-`git checkout vNN` ثم افتح `index.html`؛ والعودة بـ `git checkout main`.
-
-## ملاحظة
-بعد الرجوع يجب أن يكون `APP_VER` و`VERSION` في `sw.js` و`version.json` أعلى من النسخة المعطوبة حتى يتحدّث الجهاز (يرفعها `git revert` تلقائياً لأنها تعدّل الملفات لكن راجعها).
+## الجدول
+| الإصدار | الرمز | التاريخ | الوصف |
+|---|---|---|---|
+| v46 | `e6cda68` | 2026-11-20 | day close - opt-in approval of invoice cash sales |
+| v45 | `a7f55c3` | 2026-11-20 | sidebar notification as red dot instead of number |
+| v44 | `6d3c63b` | 2026-11-19 | compact cards on warehouses page (Windows) |
+| v43 | `ad8e8a7` | 2026-11-19 | compact product cards on Windows (more columns) |
+| v42 | `7b20b5d` | 2026-11-18 | opaque modals in studio theme; rename/delete shelf |
+| v41 | `2b94616` | 2026-11-18 | shelf filter select + add-shelf modal (registry on warehouse doc) |
+| v40 | `af013ae` | 2026-11-18 | inventory counting by storekeeper with manager approval, delta-based corrections |
+| v39 | `d7e44cc` | 2026-11-18 | warehouse hub renamed, tabs, shelves feature, storekeeper landing |
+| v38 | `276e00b` | 2026-11-18 | delete user option |
+| v37 | `2b0df30` | 2026-11-18 | fix update button hanging (backup beforeunload guard blocked reload) |
+| v36 | `d0407ac` | 2026-11-18 | warehouse transfers for storekeeper with log and undo, delta-based stock moves |
+| v35 | `ffdddae` | 2026-11-18 | customer orders go to storekeeper for preparation with storage location |
+| v34 | `f048054` | 2026-11-17 | report days table removed, clearer handover arrow, reset card centered |
+| v33 | `a7e1cac` | 2026-11-17 | storekeeper role and goods receiving/matching flow |
+| v32 | `57cf763` | 2026-11-17 | fix stale-device sync overwrite (stock increments, tx diffs), perms modal z-index, UI tweaks |
+| v31 | `8ac355b` | 2026-11-17 | reorder expense/income form |
+| v30 | `c46f1d6` | 2026-11-17 | truck account tick, download button, direct WhatsApp, update fix |
