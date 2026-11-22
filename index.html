@@ -3447,19 +3447,19 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         }
         function sendDownload() {
             const f = sendFiles; if (!f) return;
-            f.jpgs.forEach((b, i) => { const u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = f.name.f + (f.jpgs.length > 1 ? '-' + (i + 1) : '') + '.jpg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 10000); });
+            f.jpgs.forEach((b, i) => { imgSaveOut(b.type ? b : new Blob([b], { type: 'image/jpeg' }), f.name.f + (f.jpgs.length > 1 ? '-' + (i + 1) : '') + '.jpg'); });
         }
         async function sendDl() {
             const f = sendFiles; if (!f) return;
             try {
-                if (f.jpgs.length === 1) sendDownload();
+                if (f.jpgs.length === 1) await imgSaveOut(f.jpgs[0].type ? f.jpgs[0] : new Blob([f.jpgs[0]], { type: 'image/jpeg' }), f.name.f + '.jpg');
                 else {
                     const pdf = await pdfJoin(await Promise.all(f.jpgs.map(async b => ({ bytes: new Uint8Array(await b.arrayBuffer()), w: PW, h: PH }))));
-                    const u = URL.createObjectURL(pdf), a = document.createElement('a'); a.href = u; a.download = f.name.f + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 10000);
+                    await imgSaveOut(pdf.type ? pdf : new Blob([pdf], { type: 'application/pdf' }), f.name.f + '.pdf');
                 }
-                appToast('✅ ' + i18nT('تم التحميل'));
             } catch (e) { console.error(e); appAlert('تعذّر التحميل.'); }
         }
+
         async function sendGo(btn) {
             const f = sendFiles; if (!f) return;
             if (sendUseShare()) {
@@ -10398,7 +10398,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v54';
+        const APP_VER = 'v55';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -11112,14 +11112,25 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         // حفظ صورة: مشاركة (الهاتف) ← تنزيل (الحاسوب) ← عرض الصورة للضغط المطوّل
         async function imgSaveOut(blob, name) {
-            try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+            const mime = blob.type || 'image/png', isImg = /^image\//.test(mime);
+            // 1) تطبيق أندرويد محدّث: حفظ مباشر في المعرض
+            try {
+                if (window.KarniAndroid && typeof window.KarniAndroid.saveFile === 'function') {
+                    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+                    if (window.KarniAndroid.saveFile(b64, name, mime)) { appToast('✅ ' + i18nT('تم الحفظ في المعرض')); return; }
+                }
+            } catch (e) {}
+            // 2) مشاركة الملف (قائمة المشاركة)
+            try { const f = new File([blob], name, { type: mime }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
             const u = URL.createObjectURL(blob);
-            const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || /Android|iPhone|iPad/i.test(navigator.userAgent);
-            if (!isNative) { const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); appToast('🖼️ ' + i18nT('تم حفظ الصورة')); return; }
-            const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px';
-            d.innerHTML = `<div style="color:#fff;font-weight:700;text-align:center">${esc(i18nT('اضغط على الصورة مطوّلاً ثم اختر «حفظ الصورة»'))}</div><img src="${u}" style="max-width:100%;max-height:60vh;background:#fff;border-radius:8px"><div style="display:flex;gap:8px"><a href="${u}" download="${esc(name)}" style="background:#2563eb;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none">⬇️ ${esc(i18nT('تنزيل'))}</a><button type="button" style="background:#fff;color:#0f172a;padding:10px 18px;border-radius:10px;font-weight:700">${esc(i18nT('إغلاق'))}</button></div>`;
+            const isNative = !!(window.KarniAndroid || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) || /Android|iPhone|iPad|; wv\)/i.test(navigator.userAgent);
+            if (!isNative) { const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); appToast('🖼️ ' + i18nT('تم حفظ الملف')); return; }
+            // 3) الهاتف بلا مشاركة ولا حفظ مباشر: عرض الصورة ليحفظها المستخدم أو يلتقطها
+            const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px';
+            d.innerHTML = `<div style="color:#fff;font-weight:700;text-align:center;font-size:14px">${esc(i18nT('لم يتمكن التطبيق من الحفظ تلقائياً. اضغط على الصورة مطوّلاً واختر «حفظ الصورة»، أو التقط لقطة شاشة.'))}</div>${isImg ? `<img src="${u}" style="max-width:100%;max-height:62vh;background:#fff;border-radius:8px">` : ''}<div style="display:flex;gap:8px"><a href="${u}" download="${esc(name)}" style="background:#2563eb;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none">⬇️ ${esc(i18nT('تنزيل'))}</a><button type="button" style="background:#fff;color:#0f172a;padding:10px 18px;border-radius:10px;font-weight:700">${esc(i18nT('إغلاق'))}</button></div>`;
             d.querySelector('button').onclick = () => { d.remove(); URL.revokeObjectURL(u); }; document.body.appendChild(d);
         }
+
 
         function attPurge() {
             if (!isOwner()) return; const lim = Date.now() - ATT_DAYS * 864e5;
