@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v51 | `711279f` | 2026-11-22 | barcode badge login per user (replaces attendance scan) |
 | v50 | `b94fec7` | 2026-11-21 | remove signup; barcode attendance in reports; 30-day trash in reset |
 | v49 | `e589ce8` | 2026-11-21 | movement card bigger numbers, fix date |
 | v48 | `fa765d5` | 2026-11-21 | send transaction as detail / voucher / movement (old & new balance) |
