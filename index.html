@@ -7607,9 +7607,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const css = `*{box-sizing:border-box}table{width:100%;border-collapse:collapse}th,td{border:1px solid #94a3b8;padding:6px 8px;text-align:start;font-size:13px}th{background:#e5e7eb}.inv-h{display:flex;justify-content:space-between;gap:12px;border-bottom:3px solid #0f172a;padding-bottom:8px;margin-bottom:10px}.inv-shop{font-size:22px;font-weight:800}.inv-sub{color:#334155;font-size:13px}.inv-kind{font-size:18px;font-weight:800;text-align:end}.inv-tot{margin-top:12px;border:3px solid #0f172a;border-radius:10px;padding:12px;text-align:center}.inv-tot b{display:block;font-size:28px;margin-top:2px}.r{text-align:end;white-space:nowrap}`;
                 const cv = await receiptCanvas(`<style>${css}</style><div style="padding:16px;background:#fff;color:#0f172a;font-family:Tahoma,Arial,sans-serif;font-size:13px">${html}</div>`, 200);
                 const blob = await new Promise(r => cv.toBlob(r, 'image/png')), name = String(title || 'KARNI').replace(/[\\/:*?"<>|]+/g, ' ') + '.png';
-                try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-                const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
-                appToast('🖼️ ' + i18nT('تم حفظ التقرير كصورة'));
+                await imgSaveOut(blob, name);
             } catch (e) { console.error(e); appAlert('تعذّر حفظ الصورة.'); }
         }
         async function reportOut(html, title) {
@@ -10397,7 +10395,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v52';
+        const APP_VER = 'v53';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -11084,19 +11082,36 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const us = attUsers(); el.innerHTML = `<div class="flex flex-wrap gap-2"><select class="fn-in" style="flex:1;min-width:10rem" onchange="attF=this.value;attLogRes()"><option value="">${esc(i18nT('كل المستخدمين'))}</option>${us.map(u => `<option value="${esc(u.id)}" ${attF === u.id ? 'selected' : ''} data-notr>${esc(u.name)}</option>`).join('')}</select></div><div id="att-log" class="space-y-2"></div>`; attLogRes();
             } else {
                 if (!isOwner()) { el.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('للمدير فقط'))}</div>`; return; }
-                el.innerHTML = `<button type="button" class="fn-btn primary w-full" onclick="attCardsPrint()">🖨️ ${esc(i18nT('طباعة / حفظ البطاقات'))}</button><div class="text-[11px] text-slate-500">${esc(i18nT('كل بطاقة تفتح البرنامج بصلاحيات صاحبها: يمرّرها المستخدم في قارئ الباركود على شاشة الدخول. أنشئ البطاقة ثم فعّلها على كل جهاز تريد الدخول منه.'))}</div><div id="att-cards" class="space-y-2"></div>`;
+                el.innerHTML = `<div class="text-[11px] text-slate-500">${esc(i18nT('كل بطاقة تفتح البرنامج بصلاحيات صاحبها: يمرّرها المستخدم في قارئ الباركود على شاشة الدخول. أنشئ البطاقة ثم فعّلها على كل جهاز تريد الدخول منه.'))}</div><div id="att-cards" class="space-y-2"></div>`;
                 const box = document.getElementById('att-cards'), draw = async () => {
                     const us = attUsers(), en = await Promise.all(us.map(u => u.badge ? bdHas(u.badge) : false));
-                    box.innerHTML = us.map((u, k) => `<div class="fn-card text-center space-y-1"><div class="font-extrabold" data-notr>${esc(u.name)}</div><div class="text-xs text-slate-500">${esc(i18nT(attRoleL(u)))}</div>` + (u.badge ? `<div style="max-width:22rem;margin:.4rem auto;background:#fff;border-radius:.5rem;padding:.4rem .8rem">${barcodeSvg(u.badge, 60, true).replace('style="width:100%;height:auto"', 'style="width:100%;height:7rem;display:block"')}</div><div class="flex gap-1.5 justify-center flex-wrap"><button type="button" class="fn-btn ${en[k] ? '' : 'primary'}" onclick="bdEnrollOpen('${esc(u.id)}')">${en[k] ? '✅ ' + esc(i18nT('مفعّلة هنا — إعادة التفعيل')) : '🔑 ' + esc(i18nT('تفعيل على هذا الجهاز'))}</button><button type="button" class="fn-btn" onclick="bdCreate('${esc(u.id)}')">🔄 ${esc(i18nT('بطاقة جديدة'))}</button></div>` : `<button type="button" class="fn-btn primary" onclick="bdCreate('${esc(u.id)}')">➕ ${esc(i18nT('إنشاء بطاقة'))}</button>`) + `</div>`).join('') || `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا يوجد مستخدمون'))}</div>`;
+                    box.innerHTML = us.map((u, k) => `<div class="fn-card text-center space-y-1"><div class="font-extrabold" data-notr>${esc(u.name)}</div><div class="text-xs text-slate-500">${esc(i18nT(attRoleL(u)))}</div>` + (u.badge ? `<div style="max-width:22rem;margin:.4rem auto;background:#fff;border-radius:.5rem;padding:.4rem .8rem">${barcodeSvg(u.badge, 60, true).replace('style="width:100%;height:auto"', 'style="width:100%;height:7rem;display:block"')}</div><div class="flex gap-1.5 justify-center flex-wrap"><button type="button" class="fn-btn ${en[k] ? '' : 'primary'}" onclick="bdEnrollOpen('${esc(u.id)}')">${en[k] ? '✅ ' + esc(i18nT('مفعّلة هنا — إعادة التفعيل')) : '🔑 ' + esc(i18nT('تفعيل على هذا الجهاز'))}</button><button type="button" class="fn-btn" onclick="bdCreate('${esc(u.id)}')">🔄 ${esc(i18nT('بطاقة جديدة'))}</button><button type="button" class="fn-btn primary" onclick="bdCardOut('${esc(u.id)}')">🖨️ ${esc(i18nT('طباعة'))}</button></div>` : `<button type="button" class="fn-btn primary" onclick="bdCreate('${esc(u.id)}')">➕ ${esc(i18nT('إنشاء بطاقة'))}</button>`) + `</div>`).join('') || `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا يوجد مستخدمون'))}</div>`;
                 };
                 draw(); attLoadUsers().then(draw);
             }
         }
-        function attCardsPrint() {
-            const sh = shopHead();
-            const bcs = attUsers().filter(u => u.badge).map(u => `<div style="width:85mm;height:55mm;box-sizing:border-box;border:.4mm solid #0f172a;border-radius:3mm;padding:2.5mm 4mm;text-align:center;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden"><div><div style="font-weight:800;font-size:5.2mm;line-height:1.2">${esc(u.name)}</div><div style="font-size:3.6mm;color:#334155">${esc(i18nT(attRoleL(u)))}</div></div><div style="background:#fff;padding:0 3mm">${barcodeSvg(u.badge, 60, true).replace('style="width:100%;height:auto"', 'style="width:100%;height:30mm;display:block"')}</div></div>`).join('');
-            reportOut(`<div class="inv-h"><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-kind">${esc(i18nT('بطاقات الدخول'))}</div></div><div style="display:flex;flex-wrap:wrap;gap:4mm">${bcs}</div>`, i18nT('بطاقات الحضور'));
+        function bdCardHtml(u) {
+            return `<div style="width:85mm;height:55mm;box-sizing:border-box;border:.4mm solid #0f172a;border-radius:3mm;padding:2.5mm 4mm;text-align:center;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:#fff;color:#0f172a;font-family:Tahoma,Arial,sans-serif"><div><div style="font-weight:800;font-size:5.2mm;line-height:1.2">${esc(u.name)}</div><div style="font-size:3.6mm;color:#334155">${esc(i18nT(attRoleL(u)))}</div></div><div style="background:#fff;padding:0 3mm">${barcodeSvg(u.badge, 60, true).replace('style="width:100%;height:auto"', 'style="width:100%;height:30mm;display:block"')}</div></div>`;
         }
+        async function bdCardOut(id) {
+            const u = attUsers().find(x => x.id === id); if (!u || !u.badge) return;
+            const v = await appDialog({ icon: '🔖', title: u.name, message: i18nT('ماذا تريد أن تفعل بالبطاقة؟'), cancelValue: null, buttons: [{ label: '🖨️ ' + i18nT('طباعة'), value: 'p', kind: 'primary', focus: true }, { label: '🖼️ ' + i18nT('حفظ كصورة'), value: 'i' }, { label: i18nT('إلغاء'), value: null }] });
+            if (v === 'p') printDoc(`<style>@page{size:85mm 55mm;margin:0}body{margin:0}</style>` + bdCardHtml(u), u.name);
+            else if (v === 'i') {
+                try { const cv = await receiptCanvas(bdCardHtml(u), 85, 55); const blob = await new Promise(r => cv.toBlob(r, 'image/png')); await imgSaveOut(blob, 'KARNI-' + String(u.name).replace(/[\\/:*?"<>|]+/g, ' ') + '.png'); } catch (e) { console.error(e); appAlert('تعذّر حفظ الصورة.'); }
+            }
+        }
+        // حفظ صورة: مشاركة (الهاتف) ← تنزيل (الحاسوب) ← عرض الصورة للضغط المطوّل
+        async function imgSaveOut(blob, name) {
+            try { const f = new File([blob], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+            const u = URL.createObjectURL(blob);
+            const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || /Android|iPhone|iPad/i.test(navigator.userAgent);
+            if (!isNative) { const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); appToast('🖼️ ' + i18nT('تم حفظ الصورة')); return; }
+            const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px';
+            d.innerHTML = `<div style="color:#fff;font-weight:700;text-align:center">${esc(i18nT('اضغط على الصورة مطوّلاً ثم اختر «حفظ الصورة»'))}</div><img src="${u}" style="max-width:100%;max-height:60vh;background:#fff;border-radius:8px"><div style="display:flex;gap:8px"><a href="${u}" download="${esc(name)}" style="background:#2563eb;color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none">⬇️ ${esc(i18nT('تنزيل'))}</a><button type="button" style="background:#fff;color:#0f172a;padding:10px 18px;border-radius:10px;font-weight:700">${esc(i18nT('إغلاق'))}</button></div>`;
+            d.querySelector('button').onclick = () => { d.remove(); URL.revokeObjectURL(u); }; document.body.appendChild(d);
+        }
+
         function attPurge() {
             if (!isOwner()) return; const lim = Date.now() - ATT_DAYS * 864e5;
             attAll().filter(x => (x.ts || 0) < lim).sort((a, b) => a.ts - b.ts).forEach(x => finRemove('invoices', x.id, true));
