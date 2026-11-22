@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v54 | `0139a9b` | 2026-11-22 | login screen shows badge field only, toggle for password login Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v53 | `51233d0` | 2026-11-22 | per-card print/save button; fix image save on phone Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v52 | `3546476` | 2026-11-22 | badge cards 85x55mm, larger barcode, name+role only |
 | v51 | `711279f` | 2026-11-22 | barcode badge login per user (replaces attendance scan) |
