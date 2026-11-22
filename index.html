@@ -1328,6 +1328,8 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             <div id="login-loading" class="text-center text-sm text-slate-500 dark:text-slate-400 py-4">جاري التحميل...</div>
             <form id="login-form" onsubmit="handleLogin(event)" class="hidden space-y-3.5">
                 <div><input id="badge-in" type="text" dir="ltr" autocomplete="off" inputmode="none" class="fn-in" style="text-align:center" placeholder="🔖 امسح بطاقتك للدخول" onkeydown="if(event.key==='Enter'){event.preventDefault();const v=this.value;this.value='';badgeLogin(v)}"></div>
+                <button type="button" id="pw-toggle" class="w-full text-sm font-bold text-blue-600 dark:text-blue-400 py-2 rounded-xl border border-blue-200 dark:border-blue-900" onclick="pwToggle()">🔑 الدخول بكلمة المرور ▾</button>
+                <div id="pw-box" class="hidden space-y-3.5">
                 <p class="text-xs text-slate-500 dark:text-slate-400 text-center">سجّل الدخول للوصول إلى بياناتك</p>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">اسم المستخدم أو البريد الإلكتروني</label>
@@ -1337,9 +1339,10 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">كلمة المرور</label>
                     <input type="password" id="login-password" required autocomplete="current-password" dir="ltr" class="fn-in">
                 </div>
-                <div id="login-error" class="hidden text-xs text-red-600 dark:text-red-400 text-center font-bold"></div>
+
                 <button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/25 transition disabled:opacity-60">دخول</button>
-            </form>
+                </div>
+                <div id="login-error" class="hidden text-xs text-red-600 dark:text-red-400 text-center font-bold"></div></form>
             <form id="signup-form" onsubmit="handleSignup(event)" class="hidden space-y-3.5">
                 <p class="text-xs text-slate-500 dark:text-slate-400 text-center">أنشئ حسابك الخاص ببيانات مستقلة تماماً عن غيرك</p>
                 <div>
@@ -10395,7 +10398,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v53';
+        const APP_VER = 'v54';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -11089,6 +11092,12 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 };
                 draw(); attLoadUsers().then(draw);
             }
+        }
+        function pwToggle(open) {
+            const b = document.getElementById('pw-box'), t = document.getElementById('pw-toggle'); if (!b) return;
+            const on = open === undefined ? b.classList.contains('hidden') : !!open;
+            b.classList.toggle('hidden', !on); if (t) t.textContent = on ? '🔑 إخفاء كلمة المرور ▴' : '🔑 الدخول بكلمة المرور ▾';
+            const f = document.getElementById(on ? 'login-email' : 'badge-in'); if (f) try { f.focus(); } catch (e) {}
         }
         function bdCardHtml(u) {
             return `<div style="width:85mm;height:55mm;box-sizing:border-box;border:.4mm solid #0f172a;border-radius:3mm;padding:2.5mm 4mm;text-align:center;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:#fff;color:#0f172a;font-family:Tahoma,Arial,sans-serif"><div><div style="font-weight:800;font-size:5.2mm;line-height:1.2">${esc(u.name)}</div><div style="font-size:3.6mm;color:#334155">${esc(i18nT(attRoleL(u)))}</div></div><div style="background:#fff;padding:0 3mm">${barcodeSvg(u.badge, 60, true).replace('style="width:100%;height:auto"', 'style="width:100%;height:30mm;display:block"')}</div></div>`;
