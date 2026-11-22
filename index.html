@@ -1327,6 +1327,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             <div class="lang-picker login-lang" data-notr></div>
             <div id="login-loading" class="text-center text-sm text-slate-500 dark:text-slate-400 py-4">جاري التحميل...</div>
             <form id="login-form" onsubmit="handleLogin(event)" class="hidden space-y-3.5">
+                <div><input id="badge-in" type="text" dir="ltr" autocomplete="off" inputmode="none" class="fn-in" style="text-align:center" placeholder="🔖 امسح بطاقتك للدخول" onkeydown="if(event.key==='Enter'){event.preventDefault();const v=this.value;this.value='';badgeLogin(v)}"></div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 text-center">سجّل الدخول للوصول إلى بياناتك</p>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">اسم المستخدم أو البريد الإلكتروني</label>
@@ -4251,6 +4252,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 try { localStorage.setItem(cacheKey, JSON.stringify(prof)); } catch (e) {}
             }
             applyRole();
+            if (window.__logLogin) { window.__logLogin = false; try { attLogEv({ id: me.uid || uid, name: me.name, role: me.role, store: me.store }, 'in'); } catch (e) { } }
             return true;
         }
 
@@ -4516,6 +4518,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     errEl.classList.remove('hidden'); return;
                 }
                 const cr = await auth.signInWithEmailAndPassword(email, pass);
+                window.__logLogin = true;
                 offSaveCred(email, pass, cr.user.uid);
                 document.getElementById('login-password').value = '';
             } catch (err) {
@@ -4860,7 +4863,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
 
         async function handleLogout() {
             if (offSess) { appAlert('أنت في وضع بلا اتصال. اضغط على شارة «وضع بلا اتصال» لمزامنة تعديلاتك أولاً، ثم سجّل الخروج.'); return; }
-            if (auth && await appConfirm('هل تريد تسجيل الخروج؟')) auth.signOut();
+            if (auth && await appConfirm('هل تريد تسجيل الخروج؟')) { try { if (me && me.uid) attLogEv({ id: me.uid, name: me.name, role: me.role, store: me.store }, 'out'); } catch (e) { } auth.signOut(); }
         }
 
         // --- 5. الساعة والتاريخ ---
@@ -8230,10 +8233,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { k: 'vch', ic: '📋', l: 'السندات', subs: ['v_all'] },
             { k: 'prod', ic: '📦', l: 'المنتجات', subs: ['stock', 'p_val', 'p_top', 'dead'] },
             { k: 'exp', ic: '💸', l: 'مصاريف ومداخيل', subs: ['e_exp', 'e_inc'] },
-            { k: 'att', ic: '⏱️', l: 'الحضور', subs: ['a_scan', 'a_log', 'a_cards'] },
+            { k: 'att', ic: '🔖', l: 'الدخول', subs: ['a_log', 'a_cards'] },
             { k: 'work', ic: '👷', l: 'العمال', subs: ['w_all'] }
         ];
-        const RP_SUB = { a_scan: ['🔖', 'تسجيل سريع'], a_log: ['📜', 'السجل'], a_cards: ['🪪', 'بطاقات الباركود'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
+        const RP_SUB = { a_log: ['📜', 'سجل الدخول والخروج'], a_cards: ['🪪', 'بطاقات الدخول'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
         const RP_NORANGE = ['a_scan', 'a_cards', 'stock', 'debts', 'dead', 'zakat', 'p_val'];
         const RP_OLD = ['profit', 'close', 'zakat', 'debts', 'stock', 'dead'];
         const rpFDef = () => ({ q: '', num: '', st: 'all', it: 'all', vt: 'all', sort: 'debt', g: 'list' });
@@ -10394,7 +10397,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v50';
+        const APP_VER = 'v51';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -11022,7 +11025,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (!db) return;
             try {
                 const snap = await db.collection('users').get(), us = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                window.__users = us; localStorage.setItem('att_users', JSON.stringify(us.map(u => ({ id: u.id, name: u.name, role: u.role, store: u.store === true, active: u.active !== false }))));
+                window.__users = us; localStorage.setItem('att_users', JSON.stringify(us.map(u => ({ id: u.id, name: u.name, role: u.role, store: u.store === true, active: u.active !== false, badge: u.badge || '', email: u.email || '', username: u.username || '' }))));
             } catch (e) { /* يُستعمل المخزَّن */ }
         }
         const attAll = () => (state.invoices || []).filter(x => x.type === 'att');
@@ -11067,7 +11070,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         function attPrint() {
             const { f, t } = rpRange(), rows = attSessions(f, t, attF);
-            reportOut(`<div class="inv-h"><div><div class="inv-shop">${esc(shopHead().name || 'KARNI')}</div><div class="inv-sub">${esc(isoToDisplay(f))} — ${esc(isoToDisplay(t))}</div></div><div class="inv-kind">${esc(i18nT('سجل الحضور والانصراف'))}</div></div><table><tr><th>${esc(i18nT('التاريخ'))}</th><th>${esc(i18nT('المستخدم'))}</th><th>${esc(i18nT('دخول'))}</th><th>${esc(i18nT('خروج'))}</th><th>${esc(i18nT('المدة'))}</th></tr>${rows.map(r => `<tr><td>${esc(isoToDisplay(r.date))}</td><td>${esc(r.name)}</td><td dir="ltr">${esc((r.tin || '—').slice(0, 5))}</td><td dir="ltr">${esc((r.tout || '—').slice(0, 5))}</td><td>${r.dur ? esc(attFmtDur(r.dur)) : '—'}</td></tr>`).join('')}</table>`, i18nT('سجل الحضور'));
+            reportOut(`<div class="inv-h"><div><div class="inv-shop">${esc(shopHead().name || 'KARNI')}</div><div class="inv-sub">${esc(isoToDisplay(f))} — ${esc(isoToDisplay(t))}</div></div><div class="inv-kind">${esc(i18nT('سجل الدخول والخروج'))}</div></div><table><tr><th>${esc(i18nT('التاريخ'))}</th><th>${esc(i18nT('المستخدم'))}</th><th>${esc(i18nT('دخول'))}</th><th>${esc(i18nT('خروج'))}</th><th>${esc(i18nT('المدة'))}</th></tr>${rows.map(r => `<tr><td>${esc(isoToDisplay(r.date))}</td><td>${esc(r.name)}</td><td dir="ltr">${esc((r.tin || '—').slice(0, 5))}</td><td dir="ltr">${esc((r.tout || '—').slice(0, 5))}</td><td>${r.dur ? esc(attFmtDur(r.dur)) : '—'}</td></tr>`).join('')}</table>`, i18nT('سجل الدخول'));
         }
         function attRender(el) {
             el.removeAttribute('data-t');
@@ -11081,18 +11084,94 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const us = attUsers(); el.innerHTML = `<div class="flex flex-wrap gap-2"><select class="fn-in" style="flex:1;min-width:10rem" onchange="attF=this.value;attLogRes()"><option value="">${esc(i18nT('كل المستخدمين'))}</option>${us.map(u => `<option value="${esc(u.id)}" ${attF === u.id ? 'selected' : ''} data-notr>${esc(u.name)}</option>`).join('')}</select></div><div id="att-log" class="space-y-2"></div>`; attLogRes();
             } else {
                 if (!isOwner()) { el.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('للمدير فقط'))}</div>`; return; }
-                el.innerHTML = `<button type="button" class="fn-btn primary w-full" onclick="attCardsPrint()">🖨️ ${esc(i18nT('طباعة / حفظ البطاقات'))}</button><div class="text-[11px] text-slate-500">${esc(i18nT('بطاقة لكل مستخدم عليها باركود خاص به. ألصقها أو اطبعها للمستخدم.'))}</div><div id="att-cards" class="space-y-2"></div>`;
-                const box = document.getElementById('att-cards'), draw = () => { box.innerHTML = attUsers().map(u => `<div class="fn-card text-center"><div class="font-extrabold" data-notr>${esc(u.name)}</div><div class="text-xs text-slate-500">${esc(i18nT(attRoleL(u)))}</div><div style="max-width:15rem;margin:.4rem auto;background:#fff;border-radius:.5rem;padding:.3rem">${barcodeSvg(attCode(u.id), 60)}</div><div class="text-xs" dir="ltr">${esc(attCode(u.id))}</div></div>`).join('') || `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا يوجد مستخدمون'))}</div>`; };
+                el.innerHTML = `<button type="button" class="fn-btn primary w-full" onclick="attCardsPrint()">🖨️ ${esc(i18nT('طباعة / حفظ البطاقات'))}</button><div class="text-[11px] text-slate-500">${esc(i18nT('كل بطاقة تفتح البرنامج بصلاحيات صاحبها: يمرّرها المستخدم في قارئ الباركود على شاشة الدخول. أنشئ البطاقة ثم فعّلها على كل جهاز تريد الدخول منه.'))}</div><div id="att-cards" class="space-y-2"></div>`;
+                const box = document.getElementById('att-cards'), draw = async () => {
+                    const us = attUsers(), en = await Promise.all(us.map(u => u.badge ? bdHas(u.badge) : false));
+                    box.innerHTML = us.map((u, k) => `<div class="fn-card text-center space-y-1"><div class="font-extrabold" data-notr>${esc(u.name)}</div><div class="text-xs text-slate-500">${esc(i18nT(attRoleL(u)))}</div>` + (u.badge ? `<div style="max-width:15rem;margin:.4rem auto;background:#fff;border-radius:.5rem;padding:.3rem">${barcodeSvg(u.badge, 60)}</div><div class="text-xs" dir="ltr">${esc(u.badge)}</div><div class="flex gap-1.5 justify-center flex-wrap"><button type="button" class="fn-btn ${en[k] ? '' : 'primary'}" onclick="bdEnrollOpen('${esc(u.id)}')">${en[k] ? '✅ ' + esc(i18nT('مفعّلة هنا — إعادة التفعيل')) : '🔑 ' + esc(i18nT('تفعيل على هذا الجهاز'))}</button><button type="button" class="fn-btn" onclick="bdCreate('${esc(u.id)}')">🔄 ${esc(i18nT('بطاقة جديدة'))}</button></div>` : `<button type="button" class="fn-btn primary" onclick="bdCreate('${esc(u.id)}')">➕ ${esc(i18nT('إنشاء بطاقة'))}</button>`) + `</div>`).join('') || `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا يوجد مستخدمون'))}</div>`;
+                };
                 draw(); attLoadUsers().then(draw);
             }
         }
         function attCardsPrint() {
             const sh = shopHead();
-            reportOut(`<div class="inv-h"><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-kind">${esc(i18nT('بطاقات الحضور'))}</div></div><div style="display:flex;flex-wrap:wrap;gap:10px">${attUsers().map(u => `<div style="width:46%;border:2px solid #0f172a;border-radius:10px;padding:10px;text-align:center;break-inside:avoid"><div style="font-weight:800;font-size:17px">${esc(u.name)}</div><div style="font-size:12px;color:#334155">${esc(i18nT(attRoleL(u)))}</div><div style="background:#fff;padding:4px">${barcodeSvg(attCode(u.id), 60)}</div><div dir="ltr" style="font-size:12px">${esc(attCode(u.id))}</div></div>`).join('')}</div>`, i18nT('بطاقات الحضور'));
+            reportOut(`<div class="inv-h"><div class="inv-shop">${esc(sh.name || 'KARNI')}</div><div class="inv-kind">${esc(i18nT('بطاقات الدخول'))}</div></div><div style="display:flex;flex-wrap:wrap;gap:10px">${attUsers().filter(u => u.badge).map(u => `<div style="width:46%;border:2px solid #0f172a;border-radius:10px;padding:10px;text-align:center;break-inside:avoid"><div style="font-weight:800;font-size:17px">${esc(u.name)}</div><div style="font-size:12px;color:#334155">${esc(i18nT(attRoleL(u)))}</div><div style="background:#fff;padding:4px">${barcodeSvg(u.badge, 60)}</div><div dir="ltr" style="font-size:12px">${esc(u.badge)}</div></div>`).join('')}</div>`, i18nT('بطاقات الحضور'));
         }
         function attPurge() {
             if (!isOwner()) return; const lim = Date.now() - ATT_DAYS * 864e5;
             attAll().filter(x => (x.ts || 0) < lim).sort((a, b) => a.ts - b.ts).forEach(x => finRemove('invoices', x.id, true));
+        }
+        // ===== الدخول ببطاقة الباركود (لكل مستخدم) =====
+        const bdStore = () => { try { return JSON.parse(localStorage.getItem('karni_badges') || '{}'); } catch (e) { return {}; } };
+        const bdHex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+        const bdId = async code => bdHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('karni-badge-id:' + code))).slice(0, 24);
+        async function bdKey(code) {
+            const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode('karni-badge-v1'), iterations: 100000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        }
+        function bdNewCode() {
+            const used = new Set((window.__users || []).map(u => u.badge)), r = new Uint32Array(1);
+            for (let k = 0; k < 20; k++) { crypto.getRandomValues(r); const b = '298' + String(r[0] % 1000000000).padStart(9, '0'), c = b + eanCheck(b); if (!used.has(c)) return c; }
+            return '';
+        }
+        async function bdSaveBlob(code, u, email, pass) {
+            const iv = crypto.getRandomValues(new Uint8Array(12)), ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await bdKey(code), new TextEncoder().encode(JSON.stringify({ email, pass })));
+            const all = bdStore(); all[await bdId(code)] = { iv: offB64(iv), ct: offB64(new Uint8Array(ct)), uid: u.id, name: u.name }; localStorage.setItem('karni_badges', JSON.stringify(all));
+        }
+        const bdHas = async code => !!bdStore()[await bdId(code)];
+        async function bdOpenBlob(code) {
+            const b = bdStore()[await bdId(code)]; if (!b) return null;
+            const un = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+            try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: un(b.iv) }, await bdKey(code), un(b.ct)))); } catch (e) { return null; }
+        }
+        async function badgeLogin(code) {
+            code = String(code || '').trim(); if (!code) return;
+            const errEl = document.getElementById('login-error'), say = m => { errEl.innerText = i18nT(m); errEl.classList.remove('hidden'); };
+            errEl.classList.add('hidden');
+            const cred = await bdOpenBlob(code);
+            if (!cred) { say('هذه البطاقة غير مفعّلة على هذا الجهاز. اطلب من المدير تفعيلها.'); return; }
+            try {
+                window.__logLogin = true;
+                if (!navigator.onLine) { const r = await offTryLogin(cred.email, cred.pass); if (r !== 'ok') say('لا يمكن الدخول بلا إنترنت بهذه البطاقة.'); return; }
+                const cr = await auth.signInWithEmailAndPassword(cred.email, cred.pass); offSaveCred(cred.email, cred.pass, cr.user.uid);
+            } catch (err) { window.__logLogin = false; say(err && (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') ? 'تغيّرت كلمة مرور المستخدم. فعّل البطاقة من جديد.' : 'تعذّر الدخول بالبطاقة.'); }
+        }
+        async function attLogLogin(uid) {
+            try {
+                let u = null; try { const d = await db.collection('users').doc(uid).get(); u = d.exists ? { id: uid, ...d.data() } : null; } catch (e) { }
+                u = u || { id: uid, name: (me && me.name) || '', role: me && me.role };
+                attLogEv(u, 'in');
+            } catch (e) { }
+        }
+        function attLogEv(u, dir) {
+            try {
+                if (!db) return; const n = attNow(), doc = { id: finNewId('invoices'), type: 'att', uid: u.id, name: u.name || '', role: attRoleL(u), dir, ...n };
+                state.invoices.push(doc); db.collection('invoices').doc(doc.id).set(doc).catch(() => { });
+            } catch (e) { }
+        }
+        async function bdCreate(uid) {
+            if (!isOwner()) return; const c = bdNewCode(); if (!c) return;
+            await userUpdate(uid, { badge: c }, 'badge', 'إنشاء بطاقة دخول'); await attLoadUsers(); attRender(document.getElementById('rp-body'));
+        }
+        function bdEnrollOpen(uid) {
+            const u = attUsers().find(z => z.id === uid); if (!u || !u.badge) return;
+            const m = trashModalEl(); m.innerHTML = `<div class="fn-card gr-box" style="max-width:26rem;width:100%"><div class="font-extrabold text-lg">🔑 ${esc(i18nT('تفعيل البطاقة على هذا الجهاز'))}</div><div class="text-sm" data-notr>${esc(u.name)}</div>
+                <div class="text-xs text-slate-500">${esc(i18nT('أدخل كلمة مرور هذا المستخدم مرة واحدة. تُحفظ مشفّرة على هذا الجهاز ولا تُفتح إلا بمسح بطاقته.'))}</div>
+                <input id="bd-pass" type="password" class="fn-in" dir="ltr" autocomplete="off" placeholder="${esc(i18nT('كلمة المرور'))}"><div id="bd-err" class="text-xs text-red-600 font-bold hidden"></div>
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" id="bd-go" onclick="bdEnroll('${esc(uid)}')">✔ ${esc(i18nT('تفعيل'))}</button><button type="button" class="fn-btn" onclick="document.getElementById('modal-trash').classList.add('hidden')">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('bd-pass'); if (i) i.focus(); }, 60);
+        }
+        async function bdEnroll(uid) {
+            const u = attUsers().find(z => z.id === uid), pass = document.getElementById('bd-pass').value, er = document.getElementById('bd-err'), go = document.getElementById('bd-go');
+            if (!u || !pass) return; if (!navigator.onLine) { er.innerText = i18nT('التفعيل يحتاج اتصالاً بالإنترنت.'); er.classList.remove('hidden'); return; }
+            go.disabled = true; er.classList.add('hidden');
+            try {
+                const email = u.email || ((u.username || '') + '@daftar.app'); let sec;
+                try { sec = firebase.app('secondary'); } catch (x) { sec = firebase.initializeApp(firebaseConfig, 'secondary'); }
+                const cr = await sec.auth().signInWithEmailAndPassword(email, pass); try { await sec.auth().signOut(); } catch (x) { }
+                if (cr.user.uid !== u.id) throw new Error('uid');
+                await bdSaveBlob(u.badge, u, email, pass);
+                document.getElementById('modal-trash').classList.add('hidden'); appToast('✅ ' + i18nT('تم تفعيل البطاقة على هذا الجهاز')); attRender(document.getElementById('rp-body'));
+            } catch (e) { er.innerText = i18nT('كلمة المرور غير صحيحة.'); er.classList.remove('hidden'); go.disabled = false; }
         }
         setTimeout(() => { try { trashPurge(); attPurge(); } catch (e) { } }, 12000);
         setInterval(() => { try { trashPurge(); attPurge(); } catch (e) { } }, 6 * 36e5);
