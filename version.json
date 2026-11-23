@@ -1,1 +1,1 @@
-{"version": "v55", "date": "2026-11-22", "notes": {"ar": ["زر «تحميل» في إرسال الحركة والفواتير: لم يعد يعرض رسالة نجاح كاذبة؛ يستعمل المشاركة أو يعرض الصورة للحفظ على الهاتف."], "fr": ["Téléchargement d'image corrigé sur mobile."], "en": ["Image download fixed on mobile."]}}
+{"version": "v56", "date": "2026-11-23", "notes": {"ar": ["إصلاح تداخل شريط تحديد الرف مع نافذة إضافة رف."], "fr": ["Correction du chevauchement de la barre d'étagère avec la fenêtre."], "en": ["Fixed shelf bar overlapping the add-shelf modal."]}}

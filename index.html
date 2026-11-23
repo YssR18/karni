@@ -1120,6 +1120,7 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 .gr-tab.on{background:#0ea5e9;color:#fff;border-color:#0ea5e9}.gr-tab .gr-badge{background:#ef4444}
 .gr-sh{display:inline-block;background:#e0f2fe;color:#075985;border-radius:.5rem;padding:.05rem .45rem;font-weight:700;margin-inline-start:.3rem}
 .sh-top{display:grid;grid-template-columns:.8fr .8fr 1.4fr;gap:.4rem}.sh-top select.fn-in{padding-inline:.4rem;font-size:.85rem;min-width:0}
+#modal-perms{z-index:140}#modal-grn{z-index:130}#modal-trash{z-index:135}
 .sh-bulk{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.6rem;border-radius:.9rem;border:1px dashed var(--border-soft,#cbd5e1);position:sticky;top:.3rem;z-index:5;background:var(--card-bg,#fff)}.sh-bulk.on{border:1px solid #0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.2)}.sh-bulk .fn-in{flex:1;min-width:8rem}
 .sh-gh{display:flex;justify-content:space-between;align-items:center}
 .sh-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .3rem;border-bottom:1px solid var(--border-soft,#e2e8f0);cursor:pointer}.sh-row input{width:1.2rem;height:1.2rem}
@@ -10398,7 +10399,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v55';
+        const APP_VER = 'v56';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
