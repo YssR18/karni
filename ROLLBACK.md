@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v57 | `876c369` | 2026-11-23 | POS cart fixed buttons, invoice/expenses/close-day layout changes Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v56 | `348e935` | 2026-11-23 | fix modal z-index (shelf bar overlapping add-shelf modal) Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v55 | `d264f9b` | 2026-11-22 | honest image save on phone (share / viewer / native saveFile hook) Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v54 | `0139a9b` | 2026-11-22 | login screen shows badge field only, toggle for password login Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
