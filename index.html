@@ -1399,9 +1399,9 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 </button>
                 <button id="btn-logout" onclick="handleLogout()" class="hidden bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition">🚪 خروج</button>
                 <button id="btn-settings" onclick="openSettingsModal()" title="الإعدادات" aria-label="الإعدادات" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-base flex items-center justify-center rounded-xl transition" style="width:2.35rem;height:2.35rem">⚙️</button>
-                <div class="clock-box text-left">
+                <div class="clock-box text-center">
                     <div id="clock" class="text-sm md:text-base font-extrabold tracking-wider text-amber-400 leading-tight">00:00:00</div>
-                    <div id="date" class="text-[11px] text-slate-400 leading-tight">---</div>
+                    <div id="date" class="text-sm md:text-base font-extrabold text-slate-100 leading-tight" style="margin-top:.1rem">---</div>
                 </div>
             </div>
         </div>
@@ -2235,6 +2235,15 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 </div>
 
                 <!-- الطابعات الحرارية (نسخة الحاسوب) -->
+                <!-- خيار إظهار د.ج -->
+                <div data-stab="print" class="flex items-center justify-between pb-3 border-b dark:border-slate-700">
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">إظهار رمز العملة (د.ج)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="input-show-currency" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 tgl-track after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
                 <div data-stab="print" id="prn-sec" class="hidden border-t dark:border-slate-700 pt-3 space-y-2">
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">🖨️ الطابعات الحرارية</div>
                     <div id="prn-bt" class="hidden space-y-2">
@@ -2298,17 +2307,8 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     </label>
                 </div>
 
-                <!-- خيار إظهار د.ج -->
-                <div data-stab="app" class="flex items-center justify-between pb-3 border-b dark:border-slate-700">
-                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">إظهار رمز العملة (د.ج)</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="input-show-currency" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 tgl-track after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
                 <!-- التحديثات -->
-                <div data-stab="app" class="flex items-center justify-between gap-3 pb-3 border-b dark:border-slate-700">
+                <div data-stab="app" class="fn-card flex items-center justify-between gap-3">
                     <div class="min-w-0"><div class="text-sm font-bold text-slate-700 dark:text-slate-300">🔄 <span>التحديثات</span></div><div id="upd-status" class="text-xs text-slate-500 dark:text-slate-400" data-notr></div></div>
                     <button type="button" id="upd-check-btn" onclick="updManual()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition">🔍 <span>التحقق من التحديثات</span></button>
                 </div>
@@ -2317,7 +2317,6 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">الفريق</div>
                     <div class="flex gap-2">
                         <button type="button" onclick="openUsersModal()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition">👥 المستخدمون</button>
-                        <button type="button" onclick="openActivityModal()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold py-2.5 rounded-xl transition">📜 سجل النشاط</button>
                     </div>
                 </div>
 
@@ -8242,11 +8241,11 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { k: 'vch', ic: '📋', l: 'السندات', subs: ['v_all'] },
             { k: 'prod', ic: '📦', l: 'المنتجات', subs: ['stock', 'p_val', 'p_top', 'dead'] },
             { k: 'exp', ic: '💸', l: 'مصاريف ومداخيل', subs: ['e_exp', 'e_inc'] },
-            { k: 'att', ic: '🔖', l: 'الدخول', subs: ['a_log', 'a_cards'] },
+            { k: 'att', ic: '🔖', l: 'الدخول والنشاط', subs: ['a_log', 'a_act', 'a_cards'] },
             { k: 'work', ic: '👷', l: 'العمال', subs: ['w_all'] }
         ];
-        const RP_SUB = { a_log: ['📜', 'سجل الدخول والخروج'], a_cards: ['🪪', 'بطاقات الدخول'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
-        const RP_NORANGE = ['a_scan', 'a_cards', 'stock', 'debts', 'dead', 'zakat', 'p_val'];
+        const RP_SUB = { a_act: ['🗂️', 'سجل النشاط'], a_log: ['📜', 'سجل الدخول والخروج'], a_cards: ['🪪', 'بطاقات الدخول'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
+        const RP_NORANGE = ['a_scan', 'a_act', 'a_cards', 'stock', 'debts', 'dead', 'zakat', 'p_val'];
         const RP_OLD = ['profit', 'close', 'zakat', 'debts', 'stock', 'dead'];
         const rpFDef = () => ({ q: '', num: '', st: 'all', it: 'all', vt: 'all', sort: 'debt', g: 'list' });
         let rpF = rpFDef(), rpLast = null;
@@ -10406,7 +10405,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v57';
+        const APP_VER = 'v58';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -11089,6 +11088,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 i.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); const v = i.value; i.value = ''; attScan(v); } });
                 i.addEventListener('blur', () => setTimeout(() => { const a = document.activeElement; if (document.getElementById('att-in') === i && (!a || a === document.body)) i.focus(); }, 150));
                 attPresent(); attLoadUsers().then(attPresent); setTimeout(() => i.focus(), 60);
+            } else if (rpT === 'a_act') {
+                if (!isOwner()) { el.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('للمدير فقط'))}</div>`; return; }
+                el.innerHTML = `<div class="fn-card text-center space-y-2"><div class="font-extrabold">📜 ${esc(i18nT('سجل النشاط (آخر 100 عملية)'))}</div><button type="button" class="fn-btn primary" onclick="openActivityModal()">${esc(i18nT('فتح السجل'))}</button></div>`;
+                openActivityModal();
             } else if (rpT === 'a_log') {
                 const us = attUsers(); el.innerHTML = `<div class="flex flex-wrap gap-2"><select class="fn-in" style="flex:1;min-width:10rem" onchange="attF=this.value;attLogRes()"><option value="">${esc(i18nT('كل المستخدمين'))}</option>${us.map(u => `<option value="${esc(u.id)}" ${attF === u.id ? 'selected' : ''} data-notr>${esc(u.name)}</option>`).join('')}</select></div><div id="att-log" class="space-y-2"></div>`; attLogRes();
             } else {
