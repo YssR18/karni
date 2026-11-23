@@ -1481,7 +1481,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="dash-foot">
                         <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
                             <span>إجمالي المبالغ المستحقة لي:</span>
-                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 focus:outline-none p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility('cust')" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 focus:outline-none p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                                 <span id="eye-icon-cust">👁️</span>
                             </button>
                         </div>
@@ -1502,7 +1502,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="dash-foot">
                         <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
                             <span>إجمالي المبالغ المطلوبة مني:</span>
-                            <button onclick="event.stopPropagation(); toggleBalanceVisibility()" class="text-slate-600 dark:text-slate-300 hover:text-emerald-600 focus:outline-none p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <button onclick="event.stopPropagation(); toggleBalanceVisibility('supp')" class="text-slate-600 dark:text-slate-300 hover:text-emerald-600 focus:outline-none p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                                 <span id="eye-icon-supp">👁️</span>
                             </button>
                         </div>
@@ -2936,7 +2936,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         let state = {
             activeSection: 'customers',
             currentPersonId: null,
-            hideBalance: true,
+            hideBalance: true, hideCust: true, hideSupp: true,
             showCurrency: localStorage.getItem('app_show_currency') !== 'false',
             customers: JSON.parse(localStorage.getItem('app_customers') || '[]'),
             suppliers: JSON.parse(localStorage.getItem('app_suppliers') || '[]'),
@@ -4889,14 +4889,15 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         setInterval(updateClock, 1000);
         updateClock();
 
-        function toggleBalanceVisibility() {
-            state.hideBalance = !state.hideBalance;
-            const eyeCust = document.getElementById('eye-icon-cust');
-            const eyeSupp = document.getElementById('eye-icon-supp');
-            if(eyeCust) eyeCust.innerText = state.hideBalance ? '👁️' : '🙈';
-            if(eyeSupp) eyeSupp.innerText = state.hideBalance ? '👁️' : '🙈';
+        function toggleBalanceVisibility(which) {
+            if (which === 'supp') state.hideSupp = !state.hideSupp; else state.hideCust = !state.hideCust;
+            state.hideBalance = state.hideCust && state.hideSupp;
+            const eyeCust = document.getElementById('eye-icon-cust'), eyeSupp = document.getElementById('eye-icon-supp');
+            if (eyeCust) eyeCust.innerText = state.hideCust ? '👁️' : '🙈';
+            if (eyeSupp) eyeSupp.innerText = state.hideSupp ? '👁️' : '🙈';
             updateHomeTotals();
         }
+
 
         function txRunning(person) {
             let b = parseFloat(person.initialBalance) || 0; const m = {};
@@ -4922,13 +4923,8 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             const suppEl = document.getElementById('total-suppliers-balance');
 
             if(custEl && suppEl) {
-                if (state.hideBalance) {
-                    custEl.innerText = '****';
-                    suppEl.innerText = '****';
-                } else {
-                    custEl.innerText = formatAmount(totalCust);
-                    suppEl.innerText = formatAmount(totalSupp);
-                }
+                custEl.innerText = state.hideCust ? '****' : formatAmount(totalCust);
+                suppEl.innerText = state.hideSupp ? '****' : formatAmount(totalSupp);
             }
             try { widgetPush(totalCust, totalSupp); } catch (e) {}
         }
@@ -4945,7 +4941,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     window.KarniAndroid.setWidget(JSON.stringify({
                         shop: localStorage.getItem('app_shop_name') || 'KARNI',
                         sales: f(fnRound(sales.reduce((t, x) => t + (x.total || 0), 0))), count: String(sales.length),
-                        cust: f(tc != null ? tc : state.customers.reduce((a, p) => a + getPersonBalance(p), 0)), supp: f(ts != null ? ts : state.suppliers.reduce((a, p) => a + getPersonBalance(p), 0)),
+                        cust: (state.hideCust ? '****' : formatAmount(tc != null ? tc : state.customers.reduce((a, p) => a + getPersonBalance(p), 0))), _c: f(tc != null ? tc : state.customers.reduce((a, p) => a + getPersonBalance(p), 0)), supp: (state.hideSupp ? '****' : formatAmount(ts != null ? ts : state.suppliers.reduce((a, p) => a + getPersonBalance(p), 0))), _s: f(ts != null ? ts : state.suppliers.reduce((a, p) => a + getPersonBalance(p), 0)),
                         low, pend, at: Date.now(),
                         l: { sales: i18nT('مبيعات اليوم'), count: i18nT('فواتير'), cust: i18nT('ديون العملاء'), supp: i18nT('للموردين'), low: i18nT('نفاد'), pend: i18nT('تسعير'), ok: i18nT('لا توجد تنبيهات'), b1: i18nT('بيع'), b2: i18nT('العملاء'), b3: i18nT('سندات'), b4: i18nT('مسح') }
                     }));
@@ -10405,7 +10401,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v58';
+        const APP_VER = 'v59';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }

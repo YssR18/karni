@@ -1,1 +1,1 @@
-{"version": "v58", "date": "2026-11-23", "notes": {"ar": ["الإعدادات: التحديثات في بطاقة خاصة، ورمز د.ج ضمن الطباعة.", "سجل النشاط انتقل إلى التقارير (الدخول والنشاط).", "التاريخ في الشريط العلوي أبرز وتحت الساعة في المنتصف."], "fr": ["Réglages et en-tête: ajustements."], "en": ["Settings and header tweaks."]}}
+{"version": "v59", "date": "2026-11-23", "notes": {"ar": ["أيقونة العين في العملاء تُظهر مبلغ العملاء فقط، وأيقونة الموردين تُظهر مبلغ الموردين فقط."], "fr": ["Œil séparé pour clients et fournisseurs."], "en": ["Separate eye toggles for customers and suppliers."]}}
