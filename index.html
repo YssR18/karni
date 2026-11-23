@@ -1083,6 +1083,16 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .vc-note{font-size:1.05rem}.vc-note small{display:block;font-size:.85rem;margin-bottom:.1rem}
 #sl-lines{max-height:46vh;overflow-y:auto}
 @media(min-width:900px){#sl-lines{min-height:18rem;max-height:52vh}}
+#sl-lines{padding-inline:.15rem .9rem}
+.iv-row2{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;align-items:start}@media(min-width:760px){.iv-row2{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.iv-disc{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.15rem;min-width:0}.iv-disc .fn-in{width:7rem;text-align:center;padding:.35rem .4rem}.iv-disc small{display:block;font-size:.7rem;color:#64748b;font-weight:700}.iv-subl{font-size:.68rem;color:#64748b}.iv-bar>div:first-child{text-align:start}
+@media(max-width:560px){.iv-bar{flex-wrap:wrap}.iv-disc{order:3;flex:1 0 100%}}
+@media(min-width:760px){.iv-item{flex-direction:row;flex-wrap:wrap;align-items:flex-end}.iv-item .iv-ih{order:1;flex:1 1 15rem;min-width:0}.iv-item .iv-ig{order:2;flex:2 1 24rem}.iv-item .it-stk,.iv-item .iv-us,.iv-item .iv-ref{order:5;flex:0 0 100%}.iv-ig.four{grid-template-columns:repeat(4,1fr)}}
+.iv-card .fn-amt{font-size:1.55rem;font-weight:800;line-height:1.1}.iv-card .iv-sm{font-size:.86rem;font-weight:700;color:#334155}.dark .iv-card .iv-sm{color:#cbd5e1}
+.inv-doc td.r,.inv-doc th.r,.inv-doc td:first-child,.inv-doc th:first-child{text-align:center}
+.fx-pair{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:.5rem;align-items:end}.fx-pair .fn-in{padding:.4rem .6rem}
+.fx-btns{display:flex;gap:.5rem}.fx-btns .fn-btn{flex:1;padding:.45rem .6rem;font-size:.85rem}
+@media(min-width:900px){#sl-cart.sl-right{display:flex;flex-direction:column;gap:.75rem;overflow:hidden}#sl-cart #sl-lines{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}#sl-cart>.flex{flex:none}}
 .sl-clock small{font-size:.9rem;font-weight:700;color:#334155;letter-spacing:.03em}.dark .sl-clock small{color:#e2e8f0}
 @media(max-width:700px){.sl-clock small{font-size:.7rem}}
 .is-desk .sl-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:.4rem}
@@ -1640,12 +1650,6 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <button id="exp-print-btn" onclick="printExpensesReport()" class="fn-btn">🖨️ طباعة التقرير الشهري</button>
             </div>
             <div class="fn-tabs"><button type="button" id="exp-k-exp" class="fn-tab on" onclick="expSetKind('exp')">💸 <span>المصاريف</span></button><button type="button" id="exp-k-inc" class="fn-tab" onclick="expSetKind('inc')">💰 <span>المداخيل</span></button><button type="button" id="exp-k-close" class="fn-tab" onclick="expSetKind('close')">📒 <span>إغلاق اليوم</span></button></div>
-            <div class="fn-monthbar">
-                <button type="button" onclick="expShiftMonth(-1)" class="fn-btn">▶</button>
-                <div id="exp-month-label" class="font-extrabold text-slate-800 dark:text-slate-100"></div>
-                <button type="button" onclick="expShiftMonth(1)" class="fn-btn">◀</button>
-            </div>
-            <div id="exp-summary"></div>
             <form id="exp-form" onsubmit="saveExpense(event)" class="fn-card space-y-3">
                 <div id="exp-form-title" class="font-bold text-sm text-slate-700 dark:text-slate-200">➕ مصروف جديد</div>
                 <div id="exp-cat-w" class="hidden"><label class="fn-lbl">التصنيف</label><input type="hidden" id="exp-cat" value="sales"><div class="fn-tabs"><button type="button" id="exp-c-sales" class="fn-tab on" onclick="expCatTab('sales')">مدخول المبيعات</button><button type="button" id="exp-c-branch" class="fn-tab" onclick="expCatTab('branch')">مدخول الفرع</button><button type="button" id="exp-c-other" class="fn-tab" onclick="expCatTab('other')">مدخول خارج المبيعات</button></div></div>
@@ -1661,6 +1665,12 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 </div>
             </form>
             <div id="exp-close" class="hidden space-y-3"></div>
+            <div class="fn-monthbar">
+                <button type="button" onclick="expShiftMonth(-1)" class="fn-btn">▶</button>
+                <div id="exp-month-label" class="font-extrabold text-slate-800 dark:text-slate-100"></div>
+                <button type="button" onclick="expShiftMonth(1)" class="fn-btn">◀</button>
+            </div>
+            <div id="exp-summary"></div>
             <div id="exp-list" class="space-y-3"></div>
         </section>
 
@@ -1772,6 +1782,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 </div>
             </div>
             <form id="invform" onsubmit="saveInvoice(event)" class="space-y-4">
+                <div class="iv-row2">
                 <div class="fn-card space-y-3">
                     <div class="iv-step"><i>1</i><span id="inv-step1">بيانات العميل</span></div>
                     <div><label id="inv-party-lbl" class="fn-lbl">العميل</label><select id="inv-party" onchange="invPartyChange()" class="fn-in"></select></div>
@@ -1796,16 +1807,12 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                         </select>
                     </div>
                 </div>
+                </div>
                 <div class="fn-card space-y-3">
                     <div class="iv-step"><i>3</i><span>المنتجات</span></div>
                     <datalist id="inv-prodlist"></datalist>
                     <div id="inv-items" class="space-y-2"></div>
                     <button type="button" onclick="invAddRow()" class="fn-btn w-full">➕ إضافة منتج</button>
-                </div>
-                <div id="inv-disc-box" class="fn-card space-y-2">
-                    <div class="iv-step"><i>%</i><span>خصم من صافي الفاتورة</span></div>
-                    <input id="inv-disc" type="number" inputmode="decimal" min="0" step="any" class="fn-in" placeholder="0" oninput="invUpdateTotals()">
-                    <div id="inv-sub" class="fn-dl"></div>
                 </div>
                 <div class="fn-card space-y-2">
                     <div class="iv-step"><i>4</i><span>ملاحظات (اختياري)</span></div>
@@ -1814,6 +1821,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <div id="inv-debt-after" class="fn-debt hidden"></div>
                 <div class="iv-bar">
                     <div><small>إجمالي الفاتورة</small><b id="inv-total">0</b></div>
+                    <div id="inv-disc-box" class="iv-disc"><small>% خصم من صافي الفاتورة</small><input id="inv-disc" type="number" inputmode="decimal" min="0" step="any" class="fn-in" placeholder="0" oninput="invUpdateTotals()"><div id="inv-sub" class="iv-subl"></div></div>
                     <button type="submit" class="fn-btn primary" style="padding:.7rem 1.2rem;font-size:.95rem">💾 حفظ الفاتورة</button>
                 </div>
             </form>
@@ -7434,8 +7442,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const d = fxData(expMonth + '-01', expMonth + '-31'), dayKeys = Object.keys(days);
             let top = null; dayKeys.forEach(k => { if (!top || days[k].total > days[top].total) top = k; });
             const tg = `<button type="button" class="fx-tg" onclick="fxHeroToggle()"><span>📊 ${esc(i18nT('ملخص الشهر'))}</span><span class="fx-tgv" dir="ltr" style="color:#059669">${fxHeroOff ? '🧮 ' + esc(formatAmount(d.expected)) : ''}</span><span>${fxHeroOff ? '▾' : '▴'}</span></button>`;
-            return tg + (fxHeroOff ? '' : `<div class="fx-grid">${fxChip(FX_COL.sales, '🏪', 'المحل الرئيسي', d.main)}${fxChip(FX_COL.branch, '🏬', 'مدخول الفرع', d.branch)}${fxChip(FX_COL.debt, '💰', 'ديون محصَّلة', d.debt)}${fxChip(FX_COL.truck, '🚚', 'حساب الشاحنة', d.truck)}${fxChip(FX_COL.other, '➕', 'مداخيل أخرى', d.other)}${fxChip(FX_COL.exp, '💸', 'المصاريف (للمراجعة)', d.exp)}${fxChip('#059669', '🧮', 'إجمالي المدخول', d.expected, 'fx-wide')}</div>`)
-                + (expKind === 'close' ? '' : `<div class="fx-pills"><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'عدد المداخيل' : 'عدد المصاريف'))}</span><b>${list.length}</b></div><div class="fx-pill"><span>${esc(i18nT(isInc() ? 'أعلى يوم دخلاً' : 'أعلى يوم صرفاً'))}</span>${top ? `<b class="fx-big" dir="ltr" style="color:${isInc() ? '#059669' : '#dc2626'}">${esc(formatAmount(days[top].total))}</b><em class="fx-sm">${esc(isoToDisplay(top))}</em>` : '<b>—</b>'}</div></div>`);
+            return tg + (fxHeroOff ? '' : `<div class="fx-grid">${fxChip(FX_COL.sales, '🏪', 'المحل الرئيسي', d.main)}${fxChip(FX_COL.branch, '🏬', 'مدخول الفرع', d.branch)}${fxChip(FX_COL.debt, '💰', 'ديون محصَّلة', d.debt)}${fxChip(FX_COL.truck, '🚚', 'حساب الشاحنة', d.truck)}${fxChip(FX_COL.other, '➕', 'مداخيل أخرى', d.other)}${fxChip(FX_COL.exp, '💸', 'المصاريف (للمراجعة)', d.exp)}${fxChip('#059669', '🧮', 'إجمالي المدخول', d.expected, 'fx-wide')}</div>`);
         }
         function renderExpenses() {
             const cur = toISODate(new Date()).slice(0, 7), isC = expKind === 'close';
@@ -7492,10 +7499,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 ${(() => { const all = fxInvCash(fxDate, fxDate, true), n = (state.invoices || []).filter(x => x.type === 'sales' && x.date === fxDate).length; if (!n || c) return ''; const on = fxSalesOn(fxDate); return `<div class="fx-dl"><div class="fx-dro"><button type="button" class="fx-ck fx-act${on ? ' on' : ''}" onclick="fxSalesToggle()" title="${esc(i18nT(on ? 'إلغاء اعتماد مبيعات الفواتير' : 'اعتماد مبيعات الفواتير في الإغلاق'))}">✓</button><div class="fx-dn"><b>🧾 ${T('مبيعات الفواتير النقدية')}</b><small>${n} ${T('فاتورة')} · ${esc(formatAmount(all))} ${on ? '· ' + T('معتمدة في الإغلاق') : '· ' + T('غير معتمدة')}</small></div></div><div class="fx-dh">✓ ${T('علّم لاعتماد مبلغ الفواتير في إغلاق اليوم، أو سجّل المبلغ يدوياً بزر ＋ تسجيل')}</div></div>`; })()}
                 ${debtList}<div class="fx-exp-box"><div class="fx-l">${T('إجمالي المدخول المتوقع')}</div><div class="text-3xl font-extrabold" dir="ltr" style="color:${d.expected >= 0 ? '#059669' : '#dc2626'}">${esc(formatAmount(d.expected))}</div></div>`;
             if (!c) {
-                h += `<div><label class="fn-lbl">${T('المبلغ الذي عددته فعلياً في الصندوق')}</label><input id="fx-counted" type="number" inputmode="decimal" step="any" min="0" placeholder="0" class="fn-in" oninput="fxLive()"></div>
+                h += `<div class="fx-pair"><div><label class="fn-lbl">${T('المبلغ المعدود (اختياري)')}</label><input id="fx-counted" type="number" inputmode="decimal" step="any" min="0" placeholder="${esc(i18nT('المتوقع'))}" class="fn-in" oninput="fxLive()"></div>
+                    <div><label class="fn-lbl">${T('ملاحظة (اختياري)')}</label><input id="fx-note" type="text" maxlength="200" autocomplete="off" placeholder="${esc(i18nT('سبب الفرق إن وُجد...'))}" class="fn-in"></div></div>
                     <div id="fx-diff" class="fx-diffbox"></div>
-                    <div><label class="fn-lbl">${T('ملاحظة (اختياري)')}</label><input id="fx-note" type="text" maxlength="200" autocomplete="off" placeholder="${esc(i18nT('سبب الفرق إن وُجد...'))}" class="fn-in"></div>
-                    <button type="button" class="fn-btn primary w-full fx-act" onclick="fxClose()">🔒 ${T('إغلاق اليوم')}</button>`;
+                    <div class="fx-btns"><button type="button" class="fn-btn primary fx-act" onclick="fxClose()">🔒 ${T('إغلاق اليوم')}</button><button type="button" class="fn-btn" onclick="fxPrintReport(fxDate,fxDate)">🖨️ ${T('تقرير اليوم')}</button></div>`;
             } else {
                 h += `<div class="fx-done"><div class="fx-l">${T('المبلغ المعدود')}</div><div class="fx-v" dir="ltr" style="color:var(--text,inherit)">${esc(formatAmount(c.counted))}</div><div class="fx-diffbox">${fxDiffHtml(c.diff != null ? c.diff : (c.counted - c.expected))}</div>
                     ${c.note ? `<div class="fx-note" data-notr>${esc(c.note)}</div>` : ''}
@@ -7505,7 +7512,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 else h += `<div class="fx-hand fx-act"><label class="fn-lbl">${T('تسليم المبلغ إلى')}</label><div class="flex gap-2"><input id="fx-to" list="fx-names" type="text" maxlength="60" autocomplete="off" placeholder="${esc(i18nT('اسم العامل المستلم'))}" class="fn-in flex-1"><datalist id="fx-names">${fxNames().map(n => `<option value="${esc(n)}">`).join('')}</datalist><button type="button" class="fn-btn primary" onclick="fxHand()">🤝 ${T('تسليم')}</button></div></div>`;
                 if (!handed || isOwner()) h += `<button type="button" class="fn-btn fx-act w-full" onclick="fxReopen()">↩️ ${T('إعادة فتح اليوم')}</button>`;
             }
-            h += `<button type="button" class="fn-btn w-full" onclick="fxPrintReport(fxDate,fxDate)">🖨️ ${T('تقرير اليوم')}</button></div>`;
+            h += (c ? `<button type="button" class="fn-btn w-full" onclick="fxPrintReport(fxDate,fxDate)">🖨️ ${T('تقرير اليوم')}</button>` : '') + `</div>`;
             const keep = {}, ae = document.activeElement && document.activeElement.id; box.querySelectorAll('input[id^="fx"]').forEach(i => { if (i.id !== 'fx-date') keep[i.id] = i.value; });
             box.innerHTML = h;
             Object.keys(keep).forEach(id => { const e = document.getElementById(id); if (e && keep[id] !== '') e.value = keep[id]; });
@@ -7557,9 +7564,9 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         function fxSnap(d) { return { main: d.main, branch: d.branch, other: d.other, debt: d.debt, truck: d.truck, exp: d.exp, retCash: d.retCash }; }
         function fxClose() {
-            const el = document.getElementById('fx-counted'); if (!el || el.value === '') { appAlert('اكتب المبلغ الذي عددته فعلياً في الصندوق.'); return; }
+            const el = document.getElementById('fx-counted'); if (!el) return;
             if (expLocked(fxDate)) return;
-            const counted = fnRound(el.value), d = fxData(fxDate, fxDate), old = closeDoc(fxDate), st = actorStamp();
+            const d = fxData(fxDate, fxDate), counted = el.value === '' ? fnRound(d.expected) : fnRound(el.value), old = closeDoc(fxDate), st = actorStamp();
             const doc = { ...(old || {}), id: 'close_' + fxDate, src: 'close', date: fxDate, amount: 0, st: 'closed', counted, expected: d.expected, diff: fnRound(counted - d.expected), sn: fxSnap(d), note: (document.getElementById('fx-note').value || '').trim() };
             doc.by = st.by || (me && me.name) || ''; doc.at = Date.now(); doc.uid = (me && me.uid) || '';
             finSave('expenses', doc); renderExpenses(); appToast(i18nT('تم إغلاق اليوم'));
@@ -10399,7 +10406,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v56';
+        const APP_VER = 'v57';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
