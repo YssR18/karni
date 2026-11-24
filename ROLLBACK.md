@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v60 | `1e3e2d4` | 2026-11-24 | proposed firestore.rules + SECURITY.md; profile-less account rejected when rules deny Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v59 | `80f01b9` | 2026-11-23 | separate eye toggles for customers and suppliers Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v58 | `9e55d5b` | 2026-11-23 | settings regroup (updates card, currency in print), activity log to reports, bolder centered date Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v57 | `876c369` | 2026-11-23 | POS cart fixed buttons, invoice/expenses/close-day layout changes Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
