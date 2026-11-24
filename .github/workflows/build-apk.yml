@@ -175,6 +175,27 @@ jobs:
                       return false;
                   }
 
+                  @JavascriptInterface
+                  public boolean saveFile(String b64, String name, String mime) {
+                      try {
+                          if (Build.VERSION.SDK_INT < 29) return false;
+                          byte[] data = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+                          boolean img = mime != null && mime.startsWith("image/");
+                          android.content.ContentValues cv = new android.content.ContentValues();
+                          cv.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, name);
+                          cv.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mime == null ? "application/octet-stream" : mime);
+                          cv.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, (img ? android.os.Environment.DIRECTORY_PICTURES : android.os.Environment.DIRECTORY_DOWNLOADS) + "/KARNI");
+                          android.net.Uri col = img ? android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI : android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                          android.net.Uri u = getContentResolver().insert(col, cv);
+                          if (u == null) return false;
+                          java.io.OutputStream o = getContentResolver().openOutputStream(u);
+                          o.write(data);
+                          o.close();
+                          return true;
+                      } catch (Exception e) {}
+                      return false;
+                  }
+
                   private boolean btPermOk() {
                       if (Build.VERSION.SDK_INT >= 31) {
                           if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
