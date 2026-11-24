@@ -1122,6 +1122,15 @@ html:not([data-theme]) #rp-range>div:first-child{justify-content:center;gap:.6re
 .sn .gr-badge{font-size:0;min-width:0;width:.65rem;height:.65rem;padding:0;margin-inline-start:auto;box-shadow:0 0 0 2px rgba(0,0,0,.25);flex:none}
 .sn .gr-badge.hidden{display:none}
 html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% - 1.05rem);margin:0}
+/* بطاقة العميل تتقلص عند التمرير */
+#hp-hero.hp-mini{position:fixed!important;top:var(--hdr-h,64px);z-index:40;flex-direction:row!important;align-items:center!important;gap:.7rem!important;padding:.45rem .9rem!important;border-radius:1rem!important;text-align:start!important;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+#hp-hero.hp-mini #person-phone,#hp-hero.hp-mini #person-actions,#hp-hero.hp-mini #balance-label{display:none!important}
+#hp-hero.hp-mini .wk-head{flex:0 1 38%;min-width:0;justify-content:flex-start}
+#hp-hero.hp-mini .wk-head h2{font-size:1.05rem!important;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#hp-hero.hp-mini .hp-row{flex:1 1 auto;margin:0!important;padding:0!important;border:0!important;gap:.6rem}
+#hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
+#hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
+#hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
 .ord-prep{padding:.7rem 1rem;border-radius:.9rem;font-size:1rem;margin-bottom:.6rem}.ord-prep.ready{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.ord-prep.wait{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.ord-prep.hidden{display:none}
 .gr-oi{font-size:1rem;padding:.15rem 0}.gr-ol{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.gr-ol .fn-in{flex:1;min-width:10rem}
@@ -2010,7 +2019,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 </div>
             </div>
 
-            <div class="hero-balance-card hero-p">
+            <div id="hp-wrap"><div class="hero-balance-card hero-p" id="hp-hero">
                 <div class="wk-head"><h2 id="person-name" class="text-2xl font-extrabold">---</h2></div>
                 <div id="person-phone" class="wk-contacts"></div>
                 <div id="person-actions" class="hidden wk-contacts">
@@ -2027,7 +2036,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                         <button onclick="openTransactionModal('pay')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl transition shadow">➖ تسديد</button>
                     </div>
                 </div>
-            </div>
+            </div></div>
 
             <h3 class="font-extrabold text-slate-700 dark:text-slate-300 pt-2">سجل المعاملات:</h3>
             <div id="transactions-container" class="space-y-2.5">
@@ -4972,6 +4981,18 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         })();
 
         // --- 6. التنقل الشاشات ---
+        // بطاقة العميل: تتقلص وتثبت أعلى الصفحة عند التمرير
+        function hpMiniUpdate() {
+            const w = document.getElementById('hp-wrap'), h = document.getElementById('hp-hero'), sc = document.getElementById('screen-detail');
+            if (!w || !h || !sc || sc.classList.contains('hidden')) { if (h && h.classList.contains('hp-mini')) { h.classList.remove('hp-mini'); h.style.cssText = ''; if (w) w.style.height = ''; } return; }
+            const hdr = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hdr-h')) || 64, mini = h.classList.contains('hp-mini'), r = w.getBoundingClientRect();
+            if (!mini && r.bottom <= hdr + 6 && document.documentElement.scrollHeight - innerHeight > r.height + 300) {
+                w.style.height = r.height + 'px'; h.classList.add('hp-mini'); h.style.left = r.left + 'px'; h.style.width = r.width + 'px';
+            } else if (mini && r.bottom > hdr + 40) { h.classList.remove('hp-mini'); h.style.cssText = ''; w.style.height = ''; }
+            else if (mini) { h.style.left = r.left + 'px'; h.style.width = r.width + 'px'; }
+        }
+        window.addEventListener('scroll', hpMiniUpdate, { passive: true });
+        window.addEventListener('resize', hpMiniUpdate);
         function showScreen(screenId) {
             if (!['worker', 'wsummary', 'wpayout'].includes(screenId)) lockWorkerSalaries();
             ['home', 'list', 'detail', 'workers', 'worker', 'wsummary', 'wpayout', 'notes', 'expenses', 'invoices', 'invform', 'invview', 'products', 'sales', 'reports', 'count', 'vouchers', 'grn', 'reset'].forEach(id => {
@@ -10403,7 +10424,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v61';
+        const APP_VER = 'v62';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }

@@ -1,1 +1,1 @@
-{"version": "v61", "date": "2026-11-24", "notes": {"ar": ["نقطة إشعار المخزن: الطلبيات الجاهزة تُشعِر مرة واحدة وتزول النقطة بعد فتح تبويب الطلبيات."], "fr": ["Pastille du magasin: les commandes prêtes ne notifient qu'une fois."], "en": ["Warehouse dot: ready orders notify only once."]}}
+{"version": "v62", "date": "2026-11-24", "notes": {"ar": ["بطاقة العميل/المورد تتقلص عند التمرير وتثبت أعلى الصفحة: الاسم والرصيد وأزرار الإضافة والتسديد في صف واحد."], "fr": ["La carte du client se réduit au défilement."], "en": ["Customer card collapses and sticks on scroll."]}}
