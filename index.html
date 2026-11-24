@@ -1131,6 +1131,19 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v63 */
+#hp-hero .hp-bal{text-align:center}#hp-hero #person-balance{font-size:3.1rem!important;line-height:1.1}#hp-hero #balance-label{text-align:center}
+@media(max-width:640px){#hp-hero #person-balance{font-size:2.3rem!important}}
+#hp-hero.hp-mini #person-balance{font-size:1.9rem!important;line-height:1.1;font-weight:900}
+@media(max-width:640px){#hp-hero.hp-mini #person-balance{font-size:1.55rem!important}#hp-hero.hp-mini .wk-head{flex:0 1 30%}#hp-hero.hp-mini .hp-t{display:none}#hp-hero.hp-mini .hp-btns button{width:2.1rem;height:2.1rem;padding:0!important;font-size:1.05rem!important;display:flex;align-items:center;justify-content:center}}
+.tx-run{font-size:.9rem!important;font-weight:800;opacity:1!important}@media(max-width:640px){.tx-run{font-size:.8rem!important}}
+@media(max-width:640px){.tx-old .tx-nt{text-align:center;font-size:.92rem!important;font-weight:600;opacity:1!important;margin-top:.35rem}body.not-home header.app-header{display:none!important}#screen-detail .screen-bar>div{gap:.3rem!important}#screen-detail .screen-bar .fn-btn,#screen-detail .screen-bar button.fn-btn{padding-inline:.55rem}}
+.gr-ordtop{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5rem}.gr-ordtop .gr-on{justify-self:start}.gr-ordtop .gr-cn{justify-self:center;text-align:center;font-size:1.1rem;min-width:0}.gr-ordtop .gr-chip{justify-self:end}
+.gr-ordsub{text-align:center;margin-top:.2rem}
+.gr-ordgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem}@media(min-width:700px){.gr-ordgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.gr-note{font-size:1.15rem;font-weight:700;line-height:1.6;padding:.7rem .9rem;border-radius:.9rem;background:#fef9c3;color:#713f12;border:1px solid #fde68a;align-self:start;text-align:center}.dark .gr-note{background:#3f3510;color:#fde68a;border-color:#78651a}
+.ntf-row{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--border-soft,#e2e8f0)}.ntf-row input{margin-top:.25rem;width:1.1rem;height:1.1rem}
+.ntf-it{display:flex;gap:.6rem;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:.8rem;background:rgba(148,163,184,.12);cursor:pointer;margin-top:.35rem}
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
 .ord-prep{padding:.7rem 1rem;border-radius:.9rem;font-size:1rem;margin-bottom:.6rem}.ord-prep.ready{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.ord-prep.wait{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.ord-prep.hidden{display:none}
 .gr-oi{font-size:1rem;padding:.15rem 0}.gr-ol{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.gr-ol .fn-in{flex:1;min-width:10rem}
@@ -1407,6 +1420,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     📥 تثبيت التطبيق
                 </button>
                 <button id="btn-logout" onclick="handleLogout()" class="hidden bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition">🚪 خروج</button>
+                <button id="ntf-bell" type="button" onclick="ntfOpen()" title="الإشعارات" aria-label="الإشعارات" class="hidden relative bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-base rounded-xl" style="width:2.4rem;height:2.4rem;align-items:center;justify-content:center">🔔<span id="ntf-n" class="gr-badge hidden" style="position:absolute;top:-.35rem;left:-.35rem;font-size:.65rem"></span></button>
                 <button id="btn-settings" onclick="openSettingsModal()" title="الإعدادات" aria-label="الإعدادات" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-base flex items-center justify-center rounded-xl transition" style="width:2.35rem;height:2.35rem">⚙️</button>
                 <div class="clock-box text-center">
                     <div id="clock" class="text-sm md:text-base font-extrabold tracking-wider text-amber-400 leading-tight">00:00:00</div>
@@ -2032,8 +2046,8 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                         <div id="person-balance" class="text-3xl font-extrabold mt-0.5 text-amber-400">0</div>
                     </div>
                     <div class="hp-btns">
-                        <button onclick="openTransactionModal('add')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl transition shadow">➕ إضافة دين</button>
-                        <button onclick="openTransactionModal('pay')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl transition shadow">➖ تسديد</button>
+                        <button onclick="openTransactionModal('add')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl transition shadow">➕ <span class="hp-t">إضافة دين</span></button>
+                        <button onclick="openTransactionModal('pay')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl transition shadow">➖ <span class="hp-t">تسديد</span></button>
                     </div>
                 </div>
             </div></div>
@@ -2203,6 +2217,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <button type="button" data-st="shop" onclick="stSet('shop')">🏪 <span>المتجر</span></button>
                 <button type="button" data-st="print" onclick="stSet('print')">🖨️ <span>الطباعة</span></button>
                 <button type="button" data-st="app" onclick="stSet('app')">🎨 <span>المظهر</span></button>
+                <button type="button" data-st="ntf" onclick="stSet('ntf')">🔔 <span>الإشعارات</span></button>
                 <button type="button" data-st="data" onclick="stSet('data')">☁️ <span>البيانات والفريق</span></button>
               </div>
               <div class="st-scroll overflow-y-auto flex-1 px-5 py-4 space-y-4">
@@ -2316,6 +2331,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     </label>
                 </div>
 
+                <div data-stab="ntf" id="ntf-box" class="fn-card space-y-3"></div>
                 <!-- التحديثات -->
                 <div data-stab="app" class="fn-card flex items-center justify-between gap-3">
                     <div class="min-w-0"><div class="text-sm font-bold text-slate-700 dark:text-slate-300">🔄 <span>التحديثات</span></div><div id="upd-status" class="text-xs text-slate-500 dark:text-slate-400" data-notr></div></div>
@@ -4993,6 +5009,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
         }
         window.addEventListener('scroll', hpMiniUpdate, { passive: true });
         window.addEventListener('resize', hpMiniUpdate);
+        function hdrSync() { const h = document.querySelector('header.app-header'); if (h) document.documentElement.style.setProperty('--hdr-h', (getComputedStyle(h).display === 'none' ? 0 : h.offsetHeight) + 'px'); }
         function showScreen(screenId) {
             if (!['worker', 'wsummary', 'wpayout'].includes(screenId)) lockWorkerSalaries();
             ['home', 'list', 'detail', 'workers', 'worker', 'wsummary', 'wpayout', 'notes', 'expenses', 'invoices', 'invform', 'invview', 'products', 'sales', 'reports', 'count', 'vouchers', 'grn', 'reset'].forEach(id => {
@@ -5002,6 +5019,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             const target = document.getElementById(`screen-${screenId}`);
             if (target) { target.classList.remove('hidden'); target.classList.remove('pgx'); void target.offsetWidth; target.classList.add('pgx'); }
             document.body.classList.toggle('pos-mode', screenId === 'sales');
+            document.body.classList.toggle('not-home', screenId !== 'home'); hdrSync();
             if (window.__lastScreen !== screenId) { window.__lastScreen = screenId; try { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => window.scrollTo(0, 0), 30); } catch (e) {} }
             if (window.__curScreen !== screenId) { window.__curScreen = screenId; try { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); document.body.scrollTop = 0; requestAnimationFrame(() => window.scrollTo(0, 0)); } catch (e) {} }
             const ab = document.getElementById('about-link');
@@ -5074,6 +5092,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             if (!vis(t)) { const f = tabs.find(b => !b.classList.contains('hidden')); t = f ? f.dataset.st : 'app'; }
             stCur = t; document.querySelectorAll('[data-stab]').forEach(e => e.classList.toggle('st-on', e.dataset.stab === t));
             tabs.forEach(b => b.classList.toggle('on', b.dataset.st === t));
+            if (t === 'ntf') { try { ntfSettingsRender(); } catch (e) {} }
             const sc = document.querySelector('#form-settings .st-scroll'); if (sc) sc.scrollTop = 0;
         }
         function openSettingsModal() {
@@ -5232,7 +5251,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                             </div>
                             <span class="font-bold text-base" style="white-space:nowrap">${formatAmount(tx.amount)}</span>
                         </div>
-                        <div class="text-xs opacity-75 mt-0.5">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
+                        <div class="text-xs opacity-75 mt-0.5 tx-nt">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
                         ${tx.by ? `<div class="text-[11px] opacity-60 mt-0.5">👤 ${esc(tx.by)}${tx.at ? ' • ' + esc(new Date(tx.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })) : ''}${tx.editedBy ? ' • ✏️ <span>عدّلها</span> ' + esc(tx.editedBy) : ''}</div>` : ''}
                                         </div>
                     <div class="tx-full">
@@ -9630,10 +9649,11 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { const dv = document.getElementById('invview-doc'); let pb = document.getElementById('invview-prep'); if (!pb) { pb = document.createElement('div'); pb.id = 'invview-prep'; dv.parentNode.insertBefore(pb, dv); }
               pb.className = x.type === 'orders' && x.prep && x.status !== 'archived' ? 'ord-prep ' + (x.prep === 'ready' ? 'ready' : 'wait') : 'hidden';
               pb.innerHTML = x.type === 'orders' && x.prep && x.status !== 'archived' ? (x.prep === 'ready' ? `✅ <b>${esc(i18nT('الطلبية جاهزة'))}</b>${x.prepLoc ? ' — ' + esc(i18nT('مكان التخزين')) + ': <b data-notr>' + esc(x.prepLoc) + '</b>' : ''}${x.prepBy ? ' <small data-notr>· ' + esc(x.prepBy) + '</small>' : ''}` : `⏳ ${esc(i18nT('الطلبية عند عامل المخزن قيد التجهيز'))}`) : ''; }
+            { const pb2 = document.getElementById('invview-prep'); if (pb2 && x.type === 'orders' && x.delivered) { pb2.className = 'ord-prep ready'; pb2.innerHTML = `🚚 <b>${esc(i18nT('سُلّمت إلى'))}</b> <span data-notr>${esc(x.delivered.name || '')}</span>${x.delivered.phone ? ' <small data-notr dir="ltr">· ' + esc(x.delivered.phone) + '</small>' : ''}${x.delivered.note ? ' — ' + esc(x.delivered.note) : ''}${x.delivered.at ? ' <small>· ' + esc(new Date(x.delivered.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })) + '</small>' : ''}`; } }
             const b = [`<button class="fn-btn primary" onclick="printInvoice()">🖨️ طباعة / PDF</button>`, `<button class="fn-btn ok" onclick="invoiceWhatsApp()">📲 إرسال عبر واتساب</button>`];
             if (x.type === 'orders' && x.status !== 'archived') {
                 if (!x.prep) b.push(`<button class="fn-btn" onclick="ordSendPrep('${x.id}')">🏭 ${esc(i18nT('إرسال لعامل المخزن للتجهيز'))}</button>`);
-                else if (x.prep === 'ready') b.push(`<button class="fn-btn" onclick="ordSendPrep('${x.id}')">↩️ ${esc(i18nT('إعادة للتجهيز'))}</button>`);
+                else if (x.prep === 'ready') { b.push(`<button class="fn-btn ok" onclick="ordDeliver('${x.id}')">🚚 ${esc(i18nT('تسليم'))}</button>`); b.push(`<button class="fn-btn" onclick="ordSendPrep('${x.id}')">↩️ ${esc(i18nT('إعادة للتجهيز'))}</button>`); }
                 b.push(`<button class="fn-btn ok" onclick="orderConfirm('${x.id}')">✅ تأكيد الطلب وتحويله لفاتورة مبيعات</button>`);
                 b.push(`<button class="fn-btn" onclick="orderArchive('${x.id}',true)">🗄️ أرشفة</button>`);
             }
@@ -10424,7 +10444,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v62';
+        const APP_VER = 'v63';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10697,10 +10717,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (grnTab === 'ord') ordSeenMark();
             const locs = [...new Set((state.invoices || []).map(x => x.prepLoc).filter(Boolean))];
             const dl = `<datalist id="ord-locs">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
-            return `<div class="gr-h">🛒 ${esc(i18nT('طلبيات الزبائن للتجهيز'))} (${L.filter(o => o.prep === 'new').length})</div>${dl}` + L.map(o => {
+            return dl + L.map(o => {
                 const items = (o.items || []).map(i => { const sh = shelfText(i.name); return `<div class="gr-oi"><b>${esc(fnNum(i.qty))}</b> × <span data-notr>${esc(i.name)}</span>${sh ? ` <small class="gr-sh" data-notr>📍 ${esc(sh)}</small>` : ''}</div>`; }).join('');
-                const act = o.prep === 'new' ? (grnCanCount() ? `<div class="gr-ol"><input id="ordloc-${o.id}" class="fn-in" list="ord-locs" placeholder="${esc(i18nT('مكان تخزين الطلبية (رف، مخزن، ...)'))}"><button class="fn-btn ok" onclick="ordReady('${o.id}')">✅ ${esc(i18nT('تم التجهيز'))}</button></div>` : '') : `<div class="gr-ol"><span>✅ ${esc(i18nT('جاهزة'))} — ${esc(i18nT('المكان'))}: <b data-notr>${esc(o.prepLoc || '')}</b></span>${grnCanCount() ? `<button class="fn-btn" onclick="ordReopen('${o.id}')">↩️</button>` : ''}</div>`;
-                return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top" style="cursor:default"><div class="min-w-0"><div class="font-bold" data-notr>${esc(o.number)} · ${esc(o.name || i18nT('زبون'))}</div><div class="text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}${o.notes ? ' · ' + esc(o.notes) : ''}</div></div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-body">${items}${act}</div></div>`;
+                const act = o.prep === 'new' ? (grnCanCount() ? `<div class="gr-ol"><input id="ordloc-${o.id}" class="fn-in" list="ord-locs" placeholder="${esc(i18nT('مكان تخزين الطلبية (رف، مخزن، ...)'))}"><button class="fn-btn ok" onclick="ordReady('${o.id}')">✅ ${esc(i18nT('تم التجهيز'))}</button></div>` : '') : `<div class="gr-ol"><span>✅ ${esc(i18nT('جاهزة'))} — ${esc(i18nT('المكان'))}: <b data-notr>${esc(o.prepLoc || '')}</b></span>${grnCanCount() ? `<button class="fn-btn" onclick="ordReopen('${o.id}')">↩️</button>` : ''}${(grnCanEnter() || grnCanCount()) ? `<button class="fn-btn ok" onclick="ordDeliver('${o.id}')">🚚 ${esc(i18nT('تسليم'))}</button>` : ''}</div>`;
+                return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top gr-ordtop" style="cursor:default"><div class="gr-on font-bold" data-notr>${esc(o.number)}</div><div class="gr-cn font-bold" data-notr>${esc(o.name || i18nT('زبون'))}</div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-ordsub text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}</div><div class="gr-body"><div class="gr-ordgrid"><div class="gr-oitems">${items}</div>${o.notes ? `<div class="gr-note">📝 ${esc(o.notes)}</div>` : ''}</div>${act}</div></div>`;
             }).join('');
         }
         // ---- نقل السلع بين المخازن (عامل المخزن) ----
@@ -10970,7 +10990,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const seen = {}; L.forEach(x => seen[x.id] = x.st);
             if (grnSeen) L.forEach(x => { if (grnSeen[x.id] !== x.st && grnNeedsMe(x) && !(x.hist && x.hist.length && x.hist[x.hist.length - 1].by === ((me && me.name) || '#'))) { try { appToast('🏭 ' + (GRN_ST[x.st] || ['', ''])[1] + ' — ' + x.number); } catch (e) {} } });
             OP.forEach(o => seen['o' + o.id] = o.prep);
-            if (grnSeen) OP.forEach(o => { const was = grnSeen['o' + o.id]; if (was !== o.prep) { const mineNew = o.prep === 'new' && grnCanCount() && (isStore() || isOwner()), mineReady = o.prep === 'ready' && grnCanEnter() && !isStore(); if ((mineNew || mineReady) && o.prepBy !== ((me && me.name) || '#') && o.by !== ((me && me.name) || '#')) { try { appToast(o.prep === 'new' ? '🛒 ' + i18nT('طلبية جديدة للتجهيز') + ' — ' + o.number : '✅ ' + i18nT('طلبية جاهزة') + ' — ' + o.number + (o.prepLoc ? ' (' + o.prepLoc + ')' : '')); } catch (e) {} } } });
+            if (grnSeen) OP.forEach(o => { if (!ntfOn(o.prep === 'new' ? 'ord' : 'ready')) return; const was = grnSeen['o' + o.id]; if (was !== o.prep) { const mineNew = o.prep === 'new' && grnCanCount() && (isStore() || isOwner()), mineReady = o.prep === 'ready' && grnCanEnter() && !isStore(); if ((mineNew || mineReady) && o.prepBy !== ((me && me.name) || '#') && o.by !== ((me && me.name) || '#')) { try { appToast(o.prep === 'new' ? '🛒 ' + i18nT('طلبية جديدة للتجهيز') + ' — ' + o.number : '✅ ' + i18nT('طلبية جاهزة') + ' — ' + o.number + (o.prepLoc ? ' (' + o.prepLoc + ')' : '')); } catch (e) {} } } });
             cnList().forEach(x => seen['c' + x.id] = x.st);
             if (grnSeen && isOwner()) cnList().forEach(x => { if (x.st === 'submitted' && grnSeen['c' + x.id] !== 'submitted' && x.subBy !== ((me && me.name) || '#')) { try { appToast('📋 ' + i18nT('جرد بانتظار اعتمادك') + ' — ' + x.number); } catch (e) { } } });
             grnSeen = seen;
@@ -11250,6 +11270,83 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         setTimeout(() => { try { trashPurge(); attPurge(); } catch (e) { } }, 12000);
         setInterval(() => { try { trashPurge(); attPurge(); } catch (e) { } }, 6 * 36e5);
+        // ---- تسليم الطلبية ----
+        function ordDeliver(id) {
+            const o = invById(id); if (!o) return;
+            const m = grnModalEl();
+            m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">🚚 ${esc(i18nT('تسليم الطلبية'))} <span data-notr>${esc(o.number || '')}</span></div>
+                <label class="fn-lbl">${esc(i18nT('اسم المستلم'))} *</label><input id="odv-name" class="fn-in" value="${esc(o.name || '')}" autocomplete="off">
+                <label class="fn-lbl">${esc(i18nT('رقم الهاتف (اختياري)'))}</label><input id="odv-phone" class="fn-in" type="tel" inputmode="tel" value="${esc(o.phone || '')}" autocomplete="off" dir="ltr">
+                <label class="fn-lbl">${esc(i18nT('ملاحظة (اختياري)'))}</label><input id="odv-note" class="fn-in" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();ordDeliverSave('${esc(id)}')}">
+                <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="ordDeliverSave('${esc(id)}')">✔ ${esc(i18nT('تأكيد التسليم'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
+            m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('odv-name'); if (i) { i.focus(); i.select(); } }, 50);
+        }
+        function ordDeliverSave(id) {
+            const o = invById(id); if (!o) return;
+            const g = k => (document.getElementById(k) || { value: '' }).value.trim(), name = g('odv-name');
+            if (!name) { appAlert('اكتب اسم المستلم.'); return; }
+            finSave('invoices', { ...o, status: 'archived', delivered: { name, phone: g('odv-phone'), note: g('odv-note'), at: Date.now(), by: (me && me.name) || '' } });
+            grnClose(); try { renderGrn(); } catch (e) {} try { if (document.getElementById('screen-invview') && !document.getElementById('screen-invview').classList.contains('hidden')) renderInvView(); } catch (e) {}
+            appToast('🚚 ' + i18nT('تم تسليم الطلبية وأُرشفت'));
+        }
+        // ---- الإشعارات ----
+        const NTF_T = {
+            nopr: { ic: '💲', l: 'فاتورة بلا سعر', d: 'تنبيه المدير عند وجود فاتورة فيها سلعة بلا سعر', ok: () => isOwner() },
+            ord: { ic: '🛒', l: 'طلبية جديدة للتجهيز', d: 'تنبيه عامل المخزن عند وصول طلبية للتجهيز', ok: () => grnCanCount() && (isStore() || isOwner()) },
+            ready: { ic: '✅', l: 'طلبية جاهزة للتسليم', d: 'تنبيه عند تجهيز طلبية وجاهزيتها', ok: () => grnCanEnter() },
+            low: { ic: '⚠️', l: 'نقص في المخزون', d: 'تنبيه بالمنتج الذي وصل حد النقص', ok: () => isOwner() || isStore() || permLevel('products') !== 'none' }
+        };
+        const ntfKey = k => 'karni_ntf_' + k + '_' + ((me && me.id) || 'u');
+        function ntfPrefs() { try { const o = JSON.parse(localStorage.getItem(ntfKey('p')) || 'null'); return o && o.t ? o : { on: true, t: {} }; } catch (e) { return { on: true, t: {} }; } }
+        function ntfSave(o) { try { localStorage.setItem(ntfKey('p'), JSON.stringify(o)); } catch (e) {} }
+        function ntfOn(k) { try { const p = ntfPrefs(); return p.on !== false && p.t[k] !== false && NTF_T[k].ok(); } catch (e) { return true; } }
+        function ntfSetMain(v) { const p = ntfPrefs(); p.on = !!v; ntfSave(p); ntfSettingsRender(); ntfScan(true); }
+        function ntfSetT(k, v) { const p = ntfPrefs(); p.t[k] = !!v; ntfSave(p); ntfScan(true); }
+        function ntfSettingsRender() {
+            const b = document.getElementById('ntf-box'); if (!b) return; const p = ntfPrefs();
+            b.innerHTML = `<div class="font-extrabold">🔔 ${esc(i18nT('الإشعارات'))}</div>
+                <label class="ntf-row" style="border-top:0"><input type="checkbox" ${p.on !== false ? 'checked' : ''} onchange="ntfSetMain(this.checked)"><span><b>${esc(i18nT('تفعيل الإشعارات'))}</b><br><small class="text-slate-500">${esc(i18nT('تظهر حسب صلاحيات حسابك على هذا الجهاز'))}</small></span></label>`
+                + Object.keys(NTF_T).filter(k => NTF_T[k].ok()).map(k => `<label class="ntf-row"><input type="checkbox" ${p.t[k] !== false ? 'checked' : ''} ${p.on === false ? 'disabled' : ''} onchange="ntfSetT('${k}',this.checked)"><span><b>${NTF_T[k].ic} ${esc(i18nT(NTF_T[k].l))}</b><br><small class="text-slate-500">${esc(i18nT(NTF_T[k].d))}</small></span></label>`).join('');
+        }
+        function ntfItems() {
+            const R = { nopr: [], ord: [], ready: [], low: [] };
+            const done = x => x.status === 'archived' || x.convertedTo;
+            if (NTF_T.nopr.ok()) (state.invoices || []).forEach(x => { if (!['sales', 'purchases', 'orders'].includes(x.type) || done(x)) return; if ((x.items || []).length && x.items.some(i => !(Number(i.price) > 0))) R.nopr.push({ k: x.id, t: (x.number || '') + (x.name ? ' · ' + x.name : ''), go: () => openInvView(x.id) }); });
+            const OP = ordPrepList();
+            if (NTF_T.ord.ok()) OP.filter(o => o.prep === 'new').forEach(o => R.ord.push({ k: o.id, t: (o.number || '') + ' · ' + (o.name || ''), go: () => { openGrn(); grnTab = 'ord'; renderGrn(); } }));
+            if (NTF_T.ready.ok()) OP.filter(o => o.prep === 'ready' && !ordSeenHas(o.id)).forEach(o => R.ready.push({ k: o.id, t: (o.number || '') + ' · ' + (o.name || ''), go: () => { openGrn(); grnTab = 'ord'; renderGrn(); } }));
+            if (NTF_T.low.ok()) rpLowList().forEach(o => R.low.push({ k: o.name, t: o.name + ' — ' + i18nT('المتوفر') + ': ' + fnNum(o.tot), go: () => showScreen('products') }));
+            return R;
+        }
+        let ntfFirst = true, ntfLast = null;
+        function ntfScan(quiet) {
+            try {
+                if (!state.invoices || !(me || localStorage.getItem('karni_demo') === '1')) return;
+                if (!(state.invoices.length || (state.products || []).length)) return;
+                const R = ntfItems(); ntfLast = R;
+                let n = 0; Object.keys(R).forEach(k => { if (ntfOn(k)) n += R[k].length; });
+                const bell = document.getElementById('ntf-bell'), nb = document.getElementById('ntf-n');
+                if (bell) { bell.classList.toggle('hidden', !Object.keys(NTF_T).some(k => NTF_T[k].ok())); bell.style.display = bell.classList.contains('hidden') ? '' : 'flex'; }
+                if (nb) { nb.innerText = n ? String(n) : ''; nb.classList.toggle('hidden', !n); }
+                let seen = {}; try { seen = JSON.parse(localStorage.getItem(ntfKey('s')) || '{}'); } catch (e) {}
+                ['nopr', 'low'].forEach(k => {
+                    const cur = new Set(seen[k] || []), fresh = R[k].filter(i => !cur.has(i.k));
+                    seen[k] = R[k].map(i => i.k);
+                    if (fresh.length && !ntfFirst && !quiet && ntfOn(k)) appToast(NTF_T[k].ic + ' ' + i18nT(NTF_T[k].l) + ': ' + fresh.slice(0, 2).map(i => i.k === i.t ? i.t : i.t.split(' — ')[0]).join('، ') + (fresh.length > 2 ? ' +' + (fresh.length - 2) : ''));
+                });
+                try { localStorage.setItem(ntfKey('s'), JSON.stringify(seen)); } catch (e) {}
+                ntfFirst = false;
+            } catch (e) { console.warn(e); }
+        }
+        function ntfOpen() {
+            ntfScan(true); const R = ntfLast || ntfItems(), m = grnModalEl(); let any = false;
+            const sec = Object.keys(NTF_T).filter(k => ntfOn(k) && R[k].length).map(k => { any = true; return `<div class="font-bold mt-3">${NTF_T[k].ic} ${esc(i18nT(NTF_T[k].l))} (${R[k].length})</div>` + R[k].slice(0, 30).map((i, ix) => `<div class="ntf-it" onclick="ntfGo('${k}',${ix})"><span data-notr>${esc(i.t)}</span><span>‹</span></div>`).join(''); }).join('');
+            m.innerHTML = `<div class="fn-card gr-box"><div class="flex items-center justify-between"><div class="font-extrabold text-lg">🔔 ${esc(i18nT('الإشعارات'))}</div><button type="button" class="fn-btn" onclick="grnClose()">✕</button></div>${any ? sec : `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد إشعارات'))}</div>`}<button type="button" class="fn-btn w-full" onclick="grnClose();openSettingsModal();stSet('ntf')">⚙️ ${esc(i18nT('إعدادات الإشعارات'))}</button></div>`;
+            m.classList.remove('hidden');
+        }
+        function ntfGo(k, ix) { const i = ntfLast && ntfLast[k] && ntfLast[k][ix]; grnClose(); if (i) i.go(); }
+        setInterval(ntfScan, 15000); setTimeout(ntfScan, 4000);
+
         updateHomeTotals();
         initAuth();
     </script>
