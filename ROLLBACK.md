@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v62 | `1391cf0` | 2026-11-24 | person card collapses to a sticky one-row bar on scroll Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v61 | `6cfeb42` | 2026-11-24 | warehouse dot - ready orders notify once, cleared when orders tab opened Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v60 | `1e3e2d4` | 2026-11-24 | proposed firestore.rules + SECURITY.md; profile-less account rejected when rules deny Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v59 | `80f01b9` | 2026-11-23 | separate eye toggles for customers and suppliers Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
