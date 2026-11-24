@@ -10403,7 +10403,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v60';
+        const APP_VER = 'v61';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10663,8 +10663,17 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             finSave('invoices', { ...o, prep: 'ready', prepLoc: loc, prepBy: (me && me.name) || '', prepAt: Date.now() }); renderGrn(); appToast('✅ ' + i18nT('الطلبية جاهزة — أُبلغ العامل الرئيسي'));
         }
         function ordReopen(id) { const o = invById(id); if (!o) return; finSave('invoices', { ...o, prep: 'new', prepAt: null }); renderGrn(); }
+        // الطلبية الجاهزة تُشعِر مرة واحدة: تزول النقطة بمجرد فتح تبويب الطلبيات
+        function ordSeenGet() { try { return JSON.parse(localStorage.getItem('karni_ord_seen') || '[]'); } catch (e) { return []; } }
+        function ordSeenHas(id) { return ordSeenGet().indexOf(id) >= 0; }
+        function ordSeenMark() {
+            const ids = ordPrepList().filter(o => o.prep === 'ready').map(o => o.id), old = ordSeenGet(), cur = new Set(old);
+            let ch = false; ids.forEach(i => { if (!cur.has(i)) { cur.add(i); ch = true; } });
+            if (ch) { try { localStorage.setItem('karni_ord_seen', JSON.stringify([...cur].slice(-300))); } catch (e) {} setTimeout(() => { try { grnRefresh(); } catch (e) {} }, 0); }
+        }
         function ordCards() {
             const L = ordPrepList(); if (!L.length) return '';
+            if (grnTab === 'ord') ordSeenMark();
             const locs = [...new Set((state.invoices || []).map(x => x.prepLoc).filter(Boolean))];
             const dl = `<datalist id="ord-locs">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
             return `<div class="gr-h">🛒 ${esc(i18nT('طلبيات الزبائن للتجهيز'))} (${L.filter(o => o.prep === 'new').length})</div>${dl}` + L.map(o => {
@@ -10935,7 +10944,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // عدّاد الشارة + إشعار عند وصول مهمة جديدة لي
         function grnRefresh() {
             if (isStore() && !window.__stLand) { window.__stLand = 1; try { openGrn(); } catch (e) { } }
-            const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + (isOwner() ? cnList().filter(x => x.st === 'submitted').length : 0) + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter())).length;
+            const L = grnList(), OP = ordPrepList(), n = L.filter(grnNeedsMe).length + (isOwner() ? cnList().filter(x => x.st === 'submitted').length : 0) + OP.filter(o => o.prep === 'new' ? (grnCanCount() && (isStore() || isOwner())) : (grnCanEnter() && !ordSeenHas(o.id))).length;
             document.querySelectorAll('[data-grn-n]').forEach(e => { e.innerText = n ? String(n) : ''; e.classList.toggle('hidden', !n); });
             const seen = {}; L.forEach(x => seen[x.id] = x.st);
             if (grnSeen) L.forEach(x => { if (grnSeen[x.id] !== x.st && grnNeedsMe(x) && !(x.hist && x.hist.length && x.hist[x.hist.length - 1].by === ((me && me.name) || '#'))) { try { appToast('🏭 ' + (GRN_ST[x.st] || ['', ''])[1] + ' — ' + x.number); } catch (e) {} } });
