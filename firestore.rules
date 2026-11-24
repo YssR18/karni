@@ -1,0 +1,106 @@
+rules_version = '2';
+// قواعد أمان Firestore لتطبيق KARNI — مقترحة (لم تُنشر تلقائياً)
+// الفكرة: لا يقرأ أو يكتب أحد إلا حساب مُسجَّل له مستند في users وحالته مفعّلة،
+// ثم تُطبَّق صلاحياته (perms) نفسها التي تعرضها الواجهة. المدير (role == owner) له كل شيء.
+// انشرها من: Firebase Console ← Firestore Database ← Rules، بعد أخذ نسخة من القواعد الحالية
+// وتجربتها في «Rules Playground». التفاصيل في SECURITY.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- دوال مساعدة ----------
+    function signedIn() { return request.auth != null; }
+    function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function hasProfile() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function me() { return userDoc().data; }
+    function active() { return hasProfile() && me().get('active', true) != false; }
+    function isOwner() { return active() && me().get('role', '') == 'owner'; }
+    function perms() { return me().get('perms', null); }
+
+    // مستوى الصلاحية لميزة k: none | view | edit  (يطابق permLevel في الواجهة)
+    function level(k) {
+      return perms() != null && perms().get(k, null) != null ? perms()[k]
+        : (k == 'workers' ? (me().get('payroll', false) == true ? 'edit' : 'none')
+        : (me().get('store', false) == true ? (k == 'store' ? 'edit' : (k == 'products' ? 'view' : 'none'))
+        : (k == 'reports' ? 'view' : 'edit')));
+    }
+    function canEdit(k) { return isOwner() || (active() && level(k) == 'edit'); }
+    function canDelete() { return isOwner() || (active() && perms() != null && perms().get('delete', false) == true); }
+
+    // ---------- المستخدمون ----------
+    match /users/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow list: if isOwner();
+      allow create, delete: if isOwner();
+      allow update: if isOwner()
+        || (active() && request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['role', 'perms', 'active', 'store', 'payroll', 'badge', 'email', 'username']));
+    }
+    match /userIndex/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow write: if isOwner();
+    }
+
+    // ---------- بيانات المحل ----------
+    match /customers/{id} {
+      allow read: if active();
+      allow create, update: if canEdit('customers') || canEdit('vouchers') || canEdit('sales') || canEdit('invoices');
+      allow delete: if canDelete();
+    }
+    match /suppliers/{id} {
+      allow read: if active();
+      allow create, update: if canEdit('suppliers') || canEdit('vouchers') || canEdit('invoices');
+      allow delete: if canDelete();
+    }
+    match /products/{id} {
+      allow read: if active();
+      allow create, update: if canEdit('products') || canEdit('store') || canEdit('sales') || canEdit('invoices');
+      allow delete: if canDelete();
+    }
+    match /invoices/{id} {
+      allow read: if active();
+      // سجل الدخول/الخروج يكتبه أي مستخدم عن نفسه فقط (حتى لو لم تكن له صلاحية الفواتير)
+      allow create: if (active() && request.resource.data.get('type', '') == 'att' && request.resource.data.get('uid', '') == request.auth.uid)
+                    || canEdit('invoices') || canEdit('sales') || canEdit('store') || canEdit('customers') || canEdit('suppliers');
+      allow update: if canEdit('invoices') || canEdit('sales') || canEdit('store') || canEdit('customers') || canEdit('suppliers');
+      allow delete: if canDelete() || isOwner();
+    }
+    match /expenses/{id} {
+      allow read: if active();
+      allow create, update: if canEdit('expenses');
+      allow delete: if canDelete();
+    }
+    // مرتبات العمال حساسة: القراءة لمن له صلاحية الرواتب فقط
+    match /workers/{id} {
+      allow read: if isOwner() || (active() && level('workers') != 'none');
+      allow create, update: if canEdit('workers');
+      allow delete: if canDelete() && canEdit('workers');
+    }
+    // ملاحظات شخصية: كل مستخدم يرى ويعدّل ملاحظاته فقط
+    match /notes/{id} {
+      allow read, delete: if active() && resource.data.get('uid', '') == request.auth.uid;
+      allow create, update: if active() && request.resource.data.get('uid', '') == request.auth.uid;
+    }
+    match /settings/{id} {
+      allow read: if active();
+      allow write: if isOwner();
+    }
+    // سجل النشاط: يكتبه الجميع عن أنفسهم، ويقرؤه المدير فقط
+    match /activity/{id} {
+      allow create: if active();
+      allow read, delete: if isOwner();
+    }
+
+    // ---------- مساحات الحسابات القديمة (tenants) ----------
+    // كانت للتسجيل الذاتي (أُغلق). تبقى لأصحابها فقط: مالك المساحة أو من فهرسه userIndex بها.
+    match /tenants/{tid}/{document=**} {
+      allow read, write: if signedIn()
+        && (request.auth.uid == tid
+            || (exists(/databases/$(database)/documents/userIndex/$(request.auth.uid))
+                && get(/databases/$(database)/documents/userIndex/$(request.auth.uid)).data.get('tid', '') == tid));
+    }
+
+    // أي شيء آخر: مرفوض
+    match /{document=**} { allow read, write: if false; }
+  }
+}
