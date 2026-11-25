@@ -1,1 +1,1 @@
-{"version": "v66", "date": "2026-11-25", "notes": {"ar": ["الطلبية المُسلَّمة يظهر فيها زر «تأكيد الطلب وتحويله لفاتورة مبيعات» بعد التسليم."], "fr": ["Confirmation après livraison."], "en": ["Confirm-to-invoice button after delivery."]}}
+{"version": "v67", "date": "2026-11-25", "notes": {"ar": ["تأكيد الطلبية بعد تسليمها لا يعرض تحذير «لم تُجهَّز بعد»."], "fr": ["Plus d'avertissement après livraison."], "en": ["No not-prepared warning after delivery."]}}

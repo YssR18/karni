@@ -9724,7 +9724,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         function printInvoice() { const x = invById(invViewId); if (x) printDoc(invoiceHtml(x), x.number); }
         async function orderConfirm(id) {
             const o = invById(id); if (!o) return;
-            if (o.prep === 'new' && !await appConfirm(i18nT('الطلبية لم تُجهَّز بعد من المخزن. المتابعة رغم ذلك؟'))) return;
+            if (o.prep === 'new' && !o.delivered && !await appConfirm(i18nT('الطلبية لم تُجهَّز بعد من المخزن. المتابعة رغم ذلك؟'))) return;
             openInvForm('sales', null, { fromOrder: id, partyId: o.partyId, name: o.name, phone: o.phone, address: o.address, items: o.items, discount: o.discount, notes: o.notes });
         }
         function orderArchive(id, on) { const o = invById(id); if (!o) return; finSave('invoices', { ...o, status: on ? 'archived' : 'open' }); invOrderFilter = on ? 'archived' : 'open'; if (on) openInvoices('orders'); }
@@ -10451,7 +10451,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v66';
+        const APP_VER = 'v67';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
