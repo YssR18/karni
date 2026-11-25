@@ -36,6 +36,12 @@ jobs:
         run: |
           mkdir -p www
           printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=https://yssr18.github.io/karni/"><title>KARNI</title>' > www/index.html
+          cat << 'EOF' > www/offline.html
+          <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KARNI</title>
+          <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b1437;color:#fff;font-family:sans-serif;text-align:center;padding:24px;box-sizing:border-box}.c{max-width:340px}.i{font-size:64px}h1{font-size:22px;margin:.6rem 0}p{opacity:.8;line-height:1.7;font-size:15px}button{margin-top:18px;background:#2563eb;color:#fff;border:0;border-radius:14px;padding:14px 28px;font-size:17px;font-weight:700;width:100%}</style></head>
+          <body><div class="c"><div class="i">📡</div><h1>لا يوجد اتصال بالإنترنت</h1><p>تعذّر فتح KARNI. تأكد من تشغيل بيانات الهاتف أو الـ Wi-Fi ثم أعد المحاولة.</p><button onclick="go()">🔄 إعادة المحاولة</button></div>
+          <script>function go(){location.href='https://yssr18.github.io/karni/'}window.addEventListener('online',go)</script></body></html>
+          EOF
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/app@6
           cat << 'EOF' > capacitor.config.json
@@ -45,6 +51,7 @@ jobs:
             "webDir": "www",
             "server": {
               "url": "https://yssr18.github.io/karni/",
+              "errorPath": "offline.html",
               "cleartext": false
             }
           }
