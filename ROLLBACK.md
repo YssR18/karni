@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v69 | `2d37b96` | 2026-11-25 | restore empty sw.js (offline mode) |
 | v68 | `3f1d71b` | 2026-11-25 | move updates card to data tab |
 | v67 | `cb37df1` | 2026-11-25 | no not-prepared warning for delivered orders |
 | v66 | `e685eeb` | 2026-11-25 | confirm-to-invoice after delivery |
