@@ -1147,7 +1147,7 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 .gr-ordtop{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5rem}.gr-ordtop .gr-on{justify-self:start}.gr-ordtop .gr-cn{justify-self:center;text-align:center;font-size:1.1rem;min-width:0}.gr-ordtop .gr-chip{justify-self:end}
 .gr-ordsub{text-align:center;margin-top:.2rem}
 .gr-ordgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem}@media(min-width:700px){.gr-ordgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
-.gr-od{font-weight:600;color:#64748b;font-size:.78rem}.gr-note{font-size:1rem;font-weight:700;line-height:1.6;padding:.7rem .9rem;border-radius:.9rem;background:#fef9c3;color:#713f12;border:1px solid #fde68a;align-self:start;text-align:center}.dark .gr-note{background:#3f3510;color:#fde68a;border-color:#78651a}
+.gr-od{font-weight:600;color:#64748b;font-size:.78rem}.gr-note{font-size:1rem;font-weight:500;line-height:1.6;padding:.7rem .9rem;border-radius:.9rem;background:#fef9c3;color:#713f12;border:1px solid #fde68a;align-self:start;text-align:center}.dark .gr-note{background:#3f3510;color:#fde68a;border-color:#78651a}
 .ntf-row{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--border-soft,#e2e8f0)}.ntf-row input{margin-top:.25rem;width:1.1rem;height:1.1rem}
 .ntf-it{display:flex;gap:.6rem;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:.8rem;background:rgba(148,163,184,.12);cursor:pointer;margin-top:.35rem}
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
@@ -10450,7 +10450,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v64';
+        const APP_VER = 'v65';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10723,7 +10723,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         function ordDeliveredList() { return (state.invoices || []).filter(x => x.type === 'orders' && x.delivered).sort((a, b) => (b.delivered.at || 0) - (a.delivered.at || 0)); }
         function ordDoneCards(D) {
             return D.map(o => `<div class="fn-inv gr-card" style="cursor:pointer" onclick="openInvView('${esc(o.id)}')"><div class="gr-top gr-ordtop" style="cursor:pointer"><div class="gr-on font-bold" data-notr>${esc(o.number)}${o.date ? ` <small class="gr-od">· ${esc(isoToDisplay(o.date))}</small>` : ''}</div><div class="gr-cn font-bold" data-notr>${esc(o.name || i18nT('زبون'))}</div><span class="gr-chip g">🚚 ${esc(i18nT('مُسلَّمة'))}</span></div>
-                <div class="gr-body"><div class="gr-oi" data-notr>👤 <b>${esc(o.delivered.name || '')}</b>${o.delivered.phone ? ` · <span dir="ltr">${esc(o.delivered.phone)}</span>` : ''}</div>${o.delivered.note ? `<div class="text-xs text-slate-500" data-notr>📝 ${esc(o.delivered.note)}</div>` : ''}<div class="text-xs text-slate-400">🕐 ${o.delivered.at ? esc(new Date(o.delivered.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })) : ''}${o.delivered.by ? ' · ' + esc(o.delivered.by) : ''}</div></div></div>`).join('');
+                <div class="gr-body"><div class="gr-ordgrid"><div><div class="gr-oi" data-notr>👤 <b>${esc(o.delivered.name || '')}</b>${o.delivered.phone ? ` · <span dir="ltr">${esc(o.delivered.phone)}</span>` : ''}</div><div class="text-xs text-slate-400">🕐 ${o.delivered.at ? esc(new Date(o.delivered.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })) : ''}${o.delivered.by ? ' · ' + esc(o.delivered.by) : ''}</div></div>${o.delivered.note ? `<div class="gr-note" data-notr>📝 ${esc(o.delivered.note)}</div>` : ''}</div></div></div>`).join('');
         }
         function ordCards() {
             const L = ordPrepList(), D = ordDeliveredList(); if (!L.length && !D.length) return '';
