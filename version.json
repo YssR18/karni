@@ -1,1 +1,1 @@
-{"version": "v65", "date": "2026-11-25", "notes": {"ar": ["الطلبيات المُسلَّمة: ملاحظة التسليم في المساحة الفارغة بنفس شكل بطاقة الملاحظة.", "خط الملاحظات بنفس حجم خط أسماء السلع."], "fr": ["Notes de livraison."], "en": ["Delivered order note card, note font size."]}}
+{"version": "v66", "date": "2026-11-25", "notes": {"ar": ["الطلبية المُسلَّمة يظهر فيها زر «تأكيد الطلب وتحويله لفاتورة مبيعات» بعد التسليم."], "fr": ["Confirmation après livraison."], "en": ["Confirm-to-invoice button after delivery."]}}

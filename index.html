@@ -9663,6 +9663,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 b.push(`<button class="fn-btn ok" onclick="orderConfirm('${x.id}')">✅ تأكيد الطلب وتحويله لفاتورة مبيعات</button>`);
                 b.push(`<button class="fn-btn" onclick="orderArchive('${x.id}',true)">🗄️ أرشفة</button>`);
             }
+            if (x.type === 'orders' && x.status === 'archived' && x.delivered) b.push(`<button class="fn-btn ok" onclick="orderConfirm('${x.id}')">✅ تأكيد الطلب وتحويله لفاتورة مبيعات</button>`);
             if (x.type === 'orders' && x.status === 'archived') b.push(`<button class="fn-btn" onclick="orderArchive('${x.id}',false)">↩️ إرجاع للطلبات المفتوحة</button>`);
             if (x.noParty) b.unshift(`<button class="fn-btn warn" onclick="openInvForm('${x.type}','${x.id}')">👤 <span>تحديد المورّد</span></button>`);
             if (!(x.returns && x.returns.length)) b.push(`<button class="fn-btn" onclick="openInvForm('${x.type}','${x.id}')">✏️ تعديل</button>`);
@@ -10450,7 +10451,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v65';
+        const APP_VER = 'v66';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
