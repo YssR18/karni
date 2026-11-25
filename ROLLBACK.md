@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v65 | `835ac73` | 2026-11-25 | delivered note card, note font size |
 | v64 | `6a062db` | 2026-11-25 | notification read button, bold KARNI, delivered orders tab, order card tweaks |
 | v63 | `37389ab` | 2026-11-24 | order delivery, notifications (bell + settings), person card & order card tweaks, hide header on phone Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
 | v62 | `1391cf0` | 2026-11-24 | person card collapses to a sticky one-row bar on scroll Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> Claude-Session: https://claude.ai/code/session_012NjQCB33Hp8PCX9rgFSBMp |
