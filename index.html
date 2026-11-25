@@ -2339,11 +2339,6 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
 
                 <div data-stab="ntf" id="ntf-box" class="fn-card space-y-3"></div>
                 <!-- التحديثات -->
-                <div data-stab="app" class="fn-card flex items-center justify-between gap-3">
-                    <div class="min-w-0"><div class="text-sm font-bold text-slate-700 dark:text-slate-300">🔄 <span>التحديثات</span></div><div id="upd-status" class="text-xs text-slate-500 dark:text-slate-400" data-notr></div></div>
-                    <button type="button" id="upd-check-btn" onclick="updManual()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition">🔍 <span>التحقق من التحديثات</span></button>
-                </div>
-
                 <div data-stab="data" class="owner-only border-b dark:border-slate-700 pb-3 space-y-2">
                     <div class="text-sm font-bold text-slate-700 dark:text-slate-300">الفريق</div>
                     <div class="flex gap-2">
@@ -2393,6 +2388,11 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <p class="text-xs text-slate-400">ملف JSON هو الذي يُستعاد منه (استيراد)، أما Excel فللقراءة والمحاسبة. الاستيراد يضيف الحسابات ويستبدل ما يحمل نفس المعرّف، ولا يحذف أي حساب موجود.</p>
                   </div>
                 </details>
+
+                <div data-stab="data" class="fn-card flex items-center justify-between gap-3">
+                    <div class="min-w-0"><div class="text-sm font-bold text-slate-700 dark:text-slate-300">🔄 <span>التحديثات</span></div><div id="upd-status" class="text-xs text-slate-500 dark:text-slate-400" data-notr></div></div>
+                    <button type="button" id="upd-check-btn" onclick="updManual()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition">🔍 <span>التحقق من التحديثات</span></button>
+                </div>
               </div>
               </div>
 
@@ -10451,7 +10451,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v67';
+        const APP_VER = 'v68';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
