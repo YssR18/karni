@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v67 | `cb37df1` | 2026-11-25 | no not-prepared warning for delivered orders |
 | v66 | `e685eeb` | 2026-11-25 | confirm-to-invoice after delivery |
 | v65 | `835ac73` | 2026-11-25 | delivered note card, note font size |
 | v64 | `6a062db` | 2026-11-25 | notification read button, bold KARNI, delivered orders tab, order card tweaks |
