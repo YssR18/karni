@@ -1131,6 +1131,12 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v64 */
+.ntf-r{display:flex;align-items:center;gap:.6rem}.ntf-ok{width:2rem;height:2rem;border-radius:999px;background:#10b981;color:#fff;font-weight:900;font-size:1rem;display:flex;align-items:center;justify-content:center;border:0}
+.app-header .brand-pill{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.app-header .brand-pill span:nth-of-type(2){font-size:1.7rem;font-weight:900;letter-spacing:.16em}
+.app-header .brand-pill span:first-of-type{font-size:1.5rem}
+@media(max-width:640px){.app-header .brand-pill span:nth-of-type(2){font-size:1.35rem}}
 /* v63 */
 #hp-hero .hp-bal{text-align:center}#hp-hero #person-balance{font-size:3.1rem!important;line-height:1.1}#hp-hero #balance-label{text-align:center}
 @media(max-width:640px){#hp-hero #person-balance{font-size:2.3rem!important}}
@@ -1141,7 +1147,7 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 .gr-ordtop{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:.5rem}.gr-ordtop .gr-on{justify-self:start}.gr-ordtop .gr-cn{justify-self:center;text-align:center;font-size:1.1rem;min-width:0}.gr-ordtop .gr-chip{justify-self:end}
 .gr-ordsub{text-align:center;margin-top:.2rem}
 .gr-ordgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:.6rem}@media(min-width:700px){.gr-ordgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
-.gr-note{font-size:1.15rem;font-weight:700;line-height:1.6;padding:.7rem .9rem;border-radius:.9rem;background:#fef9c3;color:#713f12;border:1px solid #fde68a;align-self:start;text-align:center}.dark .gr-note{background:#3f3510;color:#fde68a;border-color:#78651a}
+.gr-od{font-weight:600;color:#64748b;font-size:.78rem}.gr-note{font-size:1rem;font-weight:700;line-height:1.6;padding:.7rem .9rem;border-radius:.9rem;background:#fef9c3;color:#713f12;border:1px solid #fde68a;align-self:start;text-align:center}.dark .gr-note{background:#3f3510;color:#fde68a;border-color:#78651a}
 .ntf-row{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--border-soft,#e2e8f0)}.ntf-row input{margin-top:.25rem;width:1.1rem;height:1.1rem}
 .ntf-it{display:flex;gap:.6rem;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:.8rem;background:rgba(148,163,184,.12);cursor:pointer;margin-top:.35rem}
 @media(max-width:560px){.gr-ln{grid-template-columns:minmax(0,1.4fr) 3.2rem 3.6rem 5.5rem}}
@@ -10444,7 +10450,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v63';
+        const APP_VER = 'v64';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
@@ -10712,15 +10718,25 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             let ch = false; ids.forEach(i => { if (!cur.has(i)) { cur.add(i); ch = true; } });
             if (ch) { try { localStorage.setItem('karni_ord_seen', JSON.stringify([...cur].slice(-300))); } catch (e) {} setTimeout(() => { try { grnRefresh(); } catch (e) {} }, 0); }
         }
+        let ordView = 'open';
+        function ordSetView(v) { ordView = v; renderGrn(); }
+        function ordDeliveredList() { return (state.invoices || []).filter(x => x.type === 'orders' && x.delivered).sort((a, b) => (b.delivered.at || 0) - (a.delivered.at || 0)); }
+        function ordDoneCards(D) {
+            return D.map(o => `<div class="fn-inv gr-card" style="cursor:pointer" onclick="openInvView('${esc(o.id)}')"><div class="gr-top gr-ordtop" style="cursor:pointer"><div class="gr-on font-bold" data-notr>${esc(o.number)}${o.date ? ` <small class="gr-od">· ${esc(isoToDisplay(o.date))}</small>` : ''}</div><div class="gr-cn font-bold" data-notr>${esc(o.name || i18nT('زبون'))}</div><span class="gr-chip g">🚚 ${esc(i18nT('مُسلَّمة'))}</span></div>
+                <div class="gr-body"><div class="gr-oi" data-notr>👤 <b>${esc(o.delivered.name || '')}</b>${o.delivered.phone ? ` · <span dir="ltr">${esc(o.delivered.phone)}</span>` : ''}</div>${o.delivered.note ? `<div class="text-xs text-slate-500" data-notr>📝 ${esc(o.delivered.note)}</div>` : ''}<div class="text-xs text-slate-400">🕐 ${o.delivered.at ? esc(new Date(o.delivered.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })) : ''}${o.delivered.by ? ' · ' + esc(o.delivered.by) : ''}</div></div></div>`).join('');
+        }
         function ordCards() {
-            const L = ordPrepList(); if (!L.length) return '';
+            const L = ordPrepList(), D = ordDeliveredList(); if (!L.length && !D.length) return '';
+            const sw = `<div class="flex gap-2 mb-2"><button type="button" class="fn-btn flex-1 ${ordView === 'open' ? 'primary' : ''}" onclick="ordSetView('open')">🛒 ${esc(i18nT('قيد الطلب'))} (${L.length})</button><button type="button" class="fn-btn flex-1 ${ordView === 'done' ? 'primary' : ''}" onclick="ordSetView('done')">🚚 ${esc(i18nT('المُسلَّمة'))} (${D.length})</button></div>`;
+            if (ordView === 'done') return sw + (D.length ? ordDoneCards(D) : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد طلبيات مُسلَّمة'))}</div>`);
+            if (!L.length) return sw + `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد طلبيات للتجهيز.'))}</div>`;
             if (grnTab === 'ord') ordSeenMark();
             const locs = [...new Set((state.invoices || []).map(x => x.prepLoc).filter(Boolean))];
             const dl = `<datalist id="ord-locs">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
-            return dl + L.map(o => {
+            return sw + dl + L.map(o => {
                 const items = (o.items || []).map(i => { const sh = shelfText(i.name); return `<div class="gr-oi"><b>${esc(fnNum(i.qty))}</b> × <span data-notr>${esc(i.name)}</span>${sh ? ` <small class="gr-sh" data-notr>📍 ${esc(sh)}</small>` : ''}</div>`; }).join('');
                 const act = o.prep === 'new' ? (grnCanCount() ? `<div class="gr-ol"><input id="ordloc-${o.id}" class="fn-in" list="ord-locs" placeholder="${esc(i18nT('مكان تخزين الطلبية (رف، مخزن، ...)'))}"><button class="fn-btn ok" onclick="ordReady('${o.id}')">✅ ${esc(i18nT('تم التجهيز'))}</button></div>` : '') : `<div class="gr-ol"><span>✅ ${esc(i18nT('جاهزة'))} — ${esc(i18nT('المكان'))}: <b data-notr>${esc(o.prepLoc || '')}</b></span>${grnCanCount() ? `<button class="fn-btn" onclick="ordReopen('${o.id}')">↩️</button>` : ''}${(grnCanEnter() || grnCanCount()) ? `<button class="fn-btn ok" onclick="ordDeliver('${o.id}')">🚚 ${esc(i18nT('تسليم'))}</button>` : ''}</div>`;
-                return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top gr-ordtop" style="cursor:default"><div class="gr-on font-bold" data-notr>${esc(o.number)}</div><div class="gr-cn font-bold" data-notr>${esc(o.name || i18nT('زبون'))}</div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-ordsub text-xs text-slate-500" data-notr>${esc(isoToDisplay(o.date || ''))}</div><div class="gr-body"><div class="gr-ordgrid"><div class="gr-oitems">${items}</div>${o.notes ? `<div class="gr-note">📝 ${esc(o.notes)}</div>` : ''}</div>${act}</div></div>`;
+                return `<div class="fn-inv gr-card ${o.prep === 'new' ? 'gr-me' : ''}" style="cursor:default"><div class="gr-top gr-ordtop" style="cursor:default"><div class="gr-on font-bold" data-notr>${esc(o.number)}${o.date ? ` <small class="gr-od">· ${esc(isoToDisplay(o.date))}</small>` : ''}</div><div class="gr-cn font-bold" data-notr>${esc(o.name || i18nT('زبون'))}</div><span class="gr-chip ${o.prep === 'new' ? 'a' : 'g'}">${o.prep === 'new' ? '⏳ ' + esc(i18nT('بانتظار التجهيز')) : '✅ ' + esc(i18nT('جاهزة'))}</span></div><div class="gr-body"><div class="gr-ordgrid"><div class="gr-oitems">${items}</div>${o.notes ? `<div class="gr-note">📝 ${esc(o.notes)}</div>` : ''}</div>${act}</div></div>`;
             }).join('');
         }
         // ---- نقل السلع بين المخازن (عامل المخزن) ----
@@ -11276,7 +11292,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const m = grnModalEl();
             m.innerHTML = `<div class="fn-card gr-box"><div class="font-extrabold text-lg">🚚 ${esc(i18nT('تسليم الطلبية'))} <span data-notr>${esc(o.number || '')}</span></div>
                 <label class="fn-lbl">${esc(i18nT('اسم المستلم'))} *</label><input id="odv-name" class="fn-in" value="${esc(o.name || '')}" autocomplete="off">
-                <label class="fn-lbl">${esc(i18nT('رقم الهاتف (اختياري)'))}</label><input id="odv-phone" class="fn-in" type="tel" inputmode="tel" value="${esc(o.phone || '')}" autocomplete="off" dir="ltr">
+                <label class="fn-lbl">${esc(i18nT('رقم الهاتف (اختياري)'))}</label><input id="odv-phone" class="fn-in" type="tel" inputmode="tel" value="" autocomplete="off" dir="ltr">
                 <label class="fn-lbl">${esc(i18nT('ملاحظة (اختياري)'))}</label><input id="odv-note" class="fn-in" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();ordDeliverSave('${esc(id)}')}">
                 <div class="flex gap-2"><button type="button" class="fn-btn primary flex-1" onclick="ordDeliverSave('${esc(id)}')">✔ ${esc(i18nT('تأكيد التسليم'))}</button><button type="button" class="fn-btn" onclick="grnClose()">${esc(i18nT('إلغاء'))}</button></div></div>`;
             m.classList.remove('hidden'); setTimeout(() => { const i = document.getElementById('odv-name'); if (i) { i.focus(); i.select(); } }, 50);
@@ -11316,8 +11332,18 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (NTF_T.ord.ok()) OP.filter(o => o.prep === 'new').forEach(o => R.ord.push({ k: o.id, t: (o.number || '') + ' · ' + (o.name || ''), go: () => { openGrn(); grnTab = 'ord'; renderGrn(); } }));
             if (NTF_T.ready.ok()) OP.filter(o => o.prep === 'ready' && !ordSeenHas(o.id)).forEach(o => R.ready.push({ k: o.id, t: (o.number || '') + ' · ' + (o.name || ''), go: () => { openGrn(); grnTab = 'ord'; renderGrn(); } }));
             if (NTF_T.low.ok()) rpLowList().forEach(o => R.low.push({ k: o.name, t: o.name + ' — ' + i18nT('المتوفر') + ': ' + fnNum(o.tot), go: () => showScreen('products') }));
+            try { const rd = JSON.parse(localStorage.getItem(ntfKey('r')) || '{}'); Object.keys(R).forEach(k => { const set = new Set(rd[k] || []); R[k] = R[k].filter(i => !set.has(i.k)); }); } catch (e) {}
             return R;
         }
+        function ntfRead(k, ix) {
+            const i = ntfLast && ntfLast[k] && ntfLast[k][ix]; if (!i) return;
+            let rd = {}; try { rd = JSON.parse(localStorage.getItem(ntfKey('r')) || '{}'); } catch (e) {}
+            rd[k] = [...new Set([...(rd[k] || []), i.k])].slice(-400);
+            try { localStorage.setItem(ntfKey('r'), JSON.stringify(rd)); } catch (e) {}
+            ntfOpen();
+        }
+        // تُنظَّف علامات «مقروء» لعناصر لم تعد موجودة حتى يُشعَر بها إن عادت
+        function ntfReadPrune(R0) { try { let rd = JSON.parse(localStorage.getItem(ntfKey('r')) || '{}'), ch = false; Object.keys(rd).forEach(k => { const live = new Set((R0[k] || []).map(i => i.k)); const keep = rd[k].filter(x => live.has(x)); if (keep.length !== rd[k].length) { rd[k] = keep; ch = true; } }); if (ch) localStorage.setItem(ntfKey('r'), JSON.stringify(rd)); } catch (e) {} }
         let ntfFirst = true, ntfLast = null;
         function ntfScan(quiet) {
             try {
@@ -11340,7 +11366,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         }
         function ntfOpen() {
             ntfScan(true); const R = ntfLast || ntfItems(), m = grnModalEl(); let any = false;
-            const sec = Object.keys(NTF_T).filter(k => ntfOn(k) && R[k].length).map(k => { any = true; return `<div class="font-bold mt-3">${NTF_T[k].ic} ${esc(i18nT(NTF_T[k].l))} (${R[k].length})</div>` + R[k].slice(0, 30).map((i, ix) => `<div class="ntf-it" onclick="ntfGo('${k}',${ix})"><span data-notr>${esc(i.t)}</span><span>‹</span></div>`).join(''); }).join('');
+            const sec = Object.keys(NTF_T).filter(k => ntfOn(k) && R[k].length).map(k => { any = true; return `<div class="font-bold mt-3">${NTF_T[k].ic} ${esc(i18nT(NTF_T[k].l))} (${R[k].length})</div>` + R[k].slice(0, 30).map((i, ix) => `<div class="ntf-it" onclick="ntfGo('${k}',${ix})"><span data-notr>${esc(i.t)}</span><span class="ntf-r"><button type="button" class="ntf-ok" title="${esc(i18nT('تحديد كمقروء'))}" onclick="event.stopPropagation();ntfRead('${k}',${ix})">✓</button>‹</span></div>`).join(''); }).join('');
             m.innerHTML = `<div class="fn-card gr-box"><div class="flex items-center justify-between"><div class="font-extrabold text-lg">🔔 ${esc(i18nT('الإشعارات'))}</div><button type="button" class="fn-btn" onclick="grnClose()">✕</button></div>${any ? sec : `<div class="text-center text-slate-400 py-6 text-sm">${esc(i18nT('لا توجد إشعارات'))}</div>`}<button type="button" class="fn-btn w-full" onclick="grnClose();openSettingsModal();stSet('ntf')">⚙️ ${esc(i18nT('إعدادات الإشعارات'))}</button></div>`;
             m.classList.remove('hidden');
         }
