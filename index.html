@@ -8283,15 +8283,15 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             { k: 'supp', ic: '🏬', l: 'الموردين', subs: ['s_top', 's_pay', 's_inv', 's_vch'] },
             { k: 'inv', ic: '🧾', l: 'الفواتير', subs: ['i_all'] },
             { k: 'vch', ic: '📋', l: 'السندات', subs: ['v_all'] },
-            { k: 'prod', ic: '📦', l: 'المنتجات', subs: ['stock', 'p_val', 'p_top', 'dead'] },
+            { k: 'prod', ic: '📦', l: 'المنتجات', subs: ['stock', 'p_val', 'p_top', 'p_mov', 'dead'] },
             { k: 'exp', ic: '💸', l: 'مصاريف ومداخيل', subs: ['e_exp', 'e_inc'] },
             { k: 'att', ic: '🔖', l: 'الدخول والنشاط', subs: ['a_log', 'a_act', 'a_cards'] },
             { k: 'work', ic: '👷', l: 'العمال', subs: ['w_all'] }
         ];
-        const RP_SUB = { a_act: ['🗂️', 'سجل النشاط'], a_log: ['📜', 'سجل الدخول والخروج'], a_cards: ['🪪', 'بطاقات الدخول'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
+        const RP_SUB = { a_act: ['🗂️', 'سجل النشاط'], a_log: ['📜', 'سجل الدخول والخروج'], a_cards: ['🪪', 'بطاقات الدخول'], profit: ['📈', 'الأرباح'], close: ['🧾', 'إغلاق اليوم'], zakat: ['⚖️', 'الزكاة'], c_top: ['🏆', 'ترتيب العملاء'], c_pay: ['💵', 'مدفوعات العملاء'], c_inv: ['🧾', 'فواتير عميل'], c_vch: ['📋', 'سندات عميل'], debts: ['💰', 'الديون'], s_top: ['🏆', 'ترتيب الموردين'], s_pay: ['💵', 'مدفوعات الموردين'], s_inv: ['🧾', 'فواتير مورّد'], s_vch: ['📋', 'سندات مورّد'], i_all: ['🔎', 'بحث في الفواتير'], v_all: ['🔎', 'بحث في السندات'], stock: ['📦', 'نقص المخزون'], p_val: ['💎', 'قيمة المخزون'], p_top: ['🔥', 'الأكثر مبيعاً'], p_mov: ['🔁', 'حركة منتج'], dead: ['🐌', 'الراكد'], e_exp: ['💸', 'المصاريف'], e_inc: ['💵', 'المداخيل'], w_all: ['👷', 'حسابات العمال'] };
         const RP_NORANGE = ['a_scan', 'a_act', 'a_cards', 'stock', 'debts', 'dead', 'zakat', 'p_val'];
         const RP_OLD = ['profit', 'close', 'zakat', 'debts', 'stock', 'dead'];
-        const rpFDef = () => ({ q: '', num: '', st: 'all', it: 'all', vt: 'all', sort: 'debt', g: 'list' });
+        const rpFDef = () => ({ q: '', cq: '', num: '', st: 'all', it: 'all', vt: 'all', sort: 'debt', g: 'list' });
         let rpF = rpFDef(), rpLast = null;
         const rpSecOf = t => RP_SECS.find(s => s.subs.includes(t)) || RP_SECS[0];
         function rpNavHtml() {
@@ -8315,6 +8315,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             if (t === 'i_all') return rpSel('it', [['all', 'كل الأنواع'], ['sales', 'مبيعات'], ['purchases', 'مشتريات'], ['orders', 'طلبات']]) + rpSel('st', rpStOpts) + rpIn('q', 'اسم العميل أو المورّد') + rpIn('num', 'رقم الفاتورة');
             if (t === 'v_all') return rpSel('vt', [['all', 'الكل'], ['receipt', 'سندات القبض'], ['payment', 'سندات الصرف']]) + rpIn('q', 'ابحث بالاسم أو رقم السند');
             if (t === 'p_val') return rpIn('q', 'ابحث عن منتج');
+            if (t === 'p_mov') return `<datalist id="rp-dl">${prodItems().map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>` + rpIn('q', 'اكتب اسم المنتج', 1) + rpSel('it', [['all', 'مبيعات ومشتريات'], ['sales', 'مبيعات فقط'], ['purchases', 'مشتريات فقط']]) + rpIn('cq', 'ابحث باسم العميل / المورّد');
             if (t === 'p_top') return rpSel('sort', [['profit', 'الأكثر ربحاً'], ['qty', 'الأكثر كمية'], ['rev', 'الأكثر مبيعاً (قيمة)']]) + rpIn('q', 'ابحث عن منتج');
             if (t === 'e_exp' || t === 'e_inc') return rpIn('q', 'ابحث في الملاحظات') + (t === 'e_inc' ? rpSel('st', [['all', 'الكل'], ['sales', 'مدخول المبيعات'], ['branch', 'مدخول الفرع'], ['other', 'مدخول خارج المبيعات']]) : '');
             if (t === 'w_all') return rpIn('q', 'اسم العامل');
@@ -8362,6 +8363,22 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 return { sum: [S('عدد المنتجات', L.length), S('قيمة المخزون (بسعر الشراء)', A(c)), S('قيمة المخزون (بسعر البيع)', A(r)), S('الربح المتوقع', A(fnRound(r - c)), 'text-emerald-600')],
                     rows: L.map(o => ({ t: o.p.name, s: i18nT('الكمية') + ': ' + fnNum(o.n) + ' · ' + i18nT('سعر البيع') + ': ' + A(o.ret), a: A(o.cost), cls: '' })) };
             }
+            if (t === 'p_mov') {
+                if (!q) return { sum: [], rows: [], hint: 'اكتب اسم المنتج لعرض حركته: لمن بيع، بأي كمية وسعر، وفي أي فاتورة.' };
+                const cq = rpNm(rpF.cq).trim(), R = [];
+                (state.invoices || []).forEach(x => {
+                    if (!(x.type === 'sales' || x.type === 'purchases') || (rpF.it !== 'all' && x.type !== rpF.it) || !inR(x.date || '')) return;
+                    if (cq && !rpNm(invNm(x)).includes(cq)) return;
+                    (x.items || []).forEach(i => { if (!rpNm(i.name).includes(q)) return; const qty = +i.qty || 0, pr = Math.max(0, (+i.price || 0) - (+i.disc || 0)); R.push({ x, nm: i.name, qty, pr, tot: fnRound(qty * pr), d: x.date || '', ret: false }); });
+                    if (x.type === 'sales') (x.returns || []).forEach(r => { if (!inR(r.date || '')) return; (r.items || []).forEach(i => { if (!rpNm(i.name).includes(q)) return; const qty = -(+i.qty || 0), pr = +i.unit || 0; R.push({ x, nm: i.name, qty, pr, tot: fnRound(qty * pr), d: r.date || x.date || '', ret: true }); }); });
+                });
+                R.sort((a, b) => b.d.localeCompare(a.d) || (b.x.createdAt || 0) - (a.x.createdAt || 0));
+                const sl = R.filter(o => o.x.type === 'sales'), pu = R.filter(o => o.x.type === 'purchases');
+                const smy = [S('عدد الفواتير', new Set(R.map(o => o.x.id)).size)];
+                if (rpF.it !== 'purchases') { smy.push(S('الكمية المباعة', fnNum(fnRound(sum(sl, o => o.qty))))); smy.push(S('قيمة المبيعات', A(sum(sl, o => o.tot)), 'text-emerald-600')); }
+                if (rpF.it !== 'sales') { smy.push(S('الكمية المشتراة', fnNum(fnRound(sum(pu, o => o.qty))))); smy.push(S('قيمة المشتريات', A(sum(pu, o => o.tot)))); }
+                return { sum: smy, rows: R.map(o => ({ t: (invNm(o.x) || '—') + ' — ' + o.nm, s: i18nT('فاتورة') + ' ' + (o.x.number || '') + ' · ' + isoToDisplay(o.d) + ' · ' + i18nT(o.ret ? 'مرتجع' : o.x.type === 'sales' ? 'بيع' : 'شراء') + ' · ' + i18nT('الكمية') + ': ' + fnNum(fnRound(o.qty)) + ' × ' + A(o.pr), a: A(o.tot), cls: o.ret ? 'text-amber-600' : o.x.type === 'sales' ? 'text-emerald-600' : '', click: `openInvView('${esc(o.x.id)}')` })) };
+            }
             if (t === 'p_top') {
                 const d = rpProfitData(), k = rpF.sort, L = d.top.filter(o => !q || rpNm(o.name).includes(q)).sort((a, b) => b[k] - a[k]);
                 return { sum: [S('عدد الفواتير', d.n), S('صافي المبيعات (بعد المرتجع)', A(d.rev)), S('الربح الإجمالي', A(d.gross), d.gross >= 0 ? 'text-emerald-600' : 'text-red-600')],
@@ -8384,9 +8401,10 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const box = document.getElementById('rp-res'); if (!box) return;
             const d = rpNewData(rpT), MAX = 200; rpLast = d;
             box.innerHTML = `<div class="fn-sum" style="grid-template-columns:repeat(${Math.min(d.sum.length, 2) || 1},1fr)">${d.sum.map(s => rpBox(s[0], esc(String(s[1])), s[2])).join('')}</div>`
+                + (d.hint ? `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT(d.hint))}</div>` : '')
                 + (d.rows.length ? `<button type="button" class="fn-btn w-full" onclick="rpResPrint()">🖨️ ${esc(i18nT('طباعة التقرير'))}</button>` : '')
                 + (d.rows.length ? d.rows.slice(0, MAX).map(r => `<div class="fn-inv" style="${r.click ? '' : 'cursor:default'}" ${r.click ? `onclick="${r.click}"` : ''}><div class="flex-1 min-w-0"><div class="font-bold truncate" data-notr>${esc(r.t)}</div><div class="text-xs text-slate-500" data-notr style="word-break:break-word">${esc(r.s)}</div></div><div class="fn-amt ${r.cls || ''}" dir="ltr">${esc(r.a)}</div></div>`).join('') + (d.rows.length > MAX ? `<div class="text-center text-xs text-slate-400 py-2">${esc(i18nT('يُعرض أول 200 نتيجة، ضيّق البحث لرؤية الباقي'))}</div>` : '')
-                    : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد نتائج مطابقة'))}</div>`);
+                    : (d.hint ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد نتائج مطابقة'))}</div>`));
         }
         function rpRenderNew(el) {
             if (el.dataset.t === rpT && document.getElementById('rp-res')) { rpNewRes(); return; }
@@ -10451,7 +10469,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v69';
+        const APP_VER = 'v70';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }

@@ -1,1 +1,1 @@
-{"version": "v69", "date": "2026-11-25", "notes": {"ar": ["إصلاح مهم: إعادة ملف العمل دون اتصال (sw.js) الذي أُفرغ بالخطأ في v65–v68، فعاد التطبيق يعمل بلا إنترنت بعد أول فتح."], "fr": ["Correctif: mode hors ligne restauré."], "en": ["Fix: offline mode (sw.js) restored."]}}
+{"version": "v70", "date": "2026-11-28", "notes": {"ar": ["تقرير جديد «حركة منتج» (التقارير ← المنتجات): اكتب اسم المنتج لترى لمن بيع، الكمية والسعر ورقم الفاتورة، مع المرتجعات والمشتريات."], "fr": ["Nouveau rapport: mouvement d'un produit."], "en": ["New report: product movement."]}}
