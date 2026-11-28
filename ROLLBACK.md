@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v74 | `b76044e` | 2026-11-28 | mobile invoice card layout, readable autocomplete |
 | v73 | `24673e5` | 2026-11-28 | mobile tx layout, invoice button in tx modal, day modal colors |
 | v72 | `18a91c5` | 2026-11-28 | invoice window from debt tx, centered balance, day-close modal, shop/truck slider |
 | v71 | `5e5883c` | 2026-11-28 | home card order, calendar button, currency side, product movement cards, activity search |
