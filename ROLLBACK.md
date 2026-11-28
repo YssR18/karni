@@ -14,6 +14,7 @@ git push origin main
 ## الجدول
 | الإصدار | الرمز | التاريخ | الوصف |
 |---|---|---|---|
+| v72 | `18a91c5` | 2026-11-28 | invoice window from debt tx, centered balance, day-close modal, shop/truck slider |
 | v71 | `5e5883c` | 2026-11-28 | home card order, calendar button, currency side, product movement cards, activity search |
 | v70 | `1ba8340` | 2026-11-27 | product movement report |
 | v69 | `2d37b96` | 2026-11-25 | restore empty sw.js (offline mode) |
