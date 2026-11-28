@@ -1131,6 +1131,10 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v73 */
+.fx-fd .r b{color:#0f172a;font-size:1.12rem;font-weight:900}.dark .fx-fd .r b{color:#f1f5f9}
+.fx-fd .r b.fx-red,.dark .fx-fd .r b.fx-red{color:#dc2626}.fx-fd .r b.fx-grn,.dark .fx-fd .r b.fx-grn{color:#059669;font-size:1.3rem}
+@media(max-width:640px){.tx-amt-in>span{align-items:flex-start!important;padding-top:.15rem}.tx-amt-in{min-height:5rem}}
 /* v72 */
 @media(min-width:641px){#hp-hero:not(.hp-mini) .hp-row{display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center}#hp-hero:not(.hp-mini) .hp-bal{grid-column:2;grid-row:1;min-width:14rem}#hp-hero:not(.hp-mini) .hp-btns{grid-column:3;grid-row:1;justify-self:start}}
 .tx-row.tx-inv{cursor:pointer}
@@ -5264,6 +5268,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 <div class="txd-n"><small>${esc(i18nT('ملاحظة'))}</small><p>${esc(tx.note) || '—'}</p></div>
                 ${row('أُدخلت بواسطة', tx.by ? esc(tx.by) : '')}${row('وقت الإدخال', esc(tm))}${row('عدّلها', tx.editedBy ? esc(tx.editedBy) : '')}
                 <div class="tx-acts" style="flex-direction:row;gap:.4rem;margin-top:.6rem">
+                    ${txInvoiceOf(person, tx) ? `<button type="button" class="tx-btn" style="flex:1;justify-content:center" onclick="vchClose();invQuickView('${esc(txInvoiceOf(person, tx).id)}')"><i>🧾</i><span>${esc(i18nT('الفاتورة'))}</span></button>` : ''}
                     <button type="button" class="tx-btn" style="flex:1;justify-content:center" onclick="vchClose();openSendModal('${esc(String(tx.id))}')"><i>📤</i><span>${esc(i18nT('إرسال'))}</span></button>
                     <button type="button" class="tx-btn" style="flex:1;justify-content:center" onclick="vchClose();openEditTransactionModal('${esc(String(tx.id))}')"><i>✏️</i><span>${esc(i18nT('تعديل'))}</span></button>
                     ${isOwner() || canDelete() ? `<button type="button" class="tx-btn del" style="flex:1;justify-content:center" onclick="vchClose();deleteTransaction('${esc(String(tx.id))}')"><i>🗑️</i><span>${esc(i18nT('حذف'))}</span></button>` : ''}
@@ -5294,14 +5299,15 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="tx-info">
                     <div class="tx-old">
                         <div class="tx-top">
-                            <div class="font-bold flex items-center gap-2 flex-wrap">
-                                <span>${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
-                                ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
+                            <div class="font-bold flex items-center gap-2 tx-kindrow" style="flex-wrap:nowrap;min-width:0">
+                                <span style="white-space:nowrap">${isAdd ? 'إضافة دين +' : 'تسديد -'}</span>
+                                ${tx.invoice ? `<span class="text-xs font-normal bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}
                             </div>
                             <span class="font-bold text-base" style="white-space:nowrap">${formatAmount(tx.amount)}</span>
                         </div>
-                        <div class="text-xs opacity-75 mt-0.5 tx-nt">${esc(tx.note) || 'بدون ملاحظة'} • ${esc(tx.date)}</div>
+                        <div class="text-xs opacity-75 mt-0.5 tx-nt">${esc(tx.note) || 'بدون ملاحظة'}</div>
                         ${tx.by ? `<div class="text-[11px] opacity-60 mt-0.5">👤 ${esc(tx.by)}${tx.at ? ' • ' + esc(new Date(tx.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })) : ''}${tx.editedBy ? ' • ✏️ <span>عدّلها</span> ' + esc(tx.editedBy) : ''}</div>` : ''}
+                        <div class="text-[11px] opacity-60 mt-0.5">📅 ${esc(tx.date)}</div>
                                         </div>
                     <div class="tx-full">
                         <div class="tx-f-kind"><b>${isAdd ? 'إضافة دين +' : 'تسديد -'}</b>${tx.invoice ? `<span class="tx-f-doc">${esc(tx.docType || 'وثيقة')}: ${esc(tx.invoice)}</span>` : ''}</div>
@@ -7646,13 +7652,13 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         function fxDaySend(k) { window.open('https://wa.me/?text=' + encodeURIComponent(fxDayText(k)), '_blank'); }
         function fxDayModal(k) {
             const v = fxView(k), c = v.c, st = fxStatus(c), A = formatAmount, T = s => esc(i18nT(s));
-            const r = (l, val, col) => `<div class="r"><span>${T(l)}</span><b style="${col ? 'color:' + col : ''}">${esc(A(val))}</b></div>`;
+            const r = (l, val, col) => `<div class="r"><span>${T(l)}</span><b class="${col ? 'fx-red' : ''}">${esc(A(val))}</b></div>`;
             const debts = fxDebtRows(k, k);
             let m = document.getElementById('modal-vchd');
             if (!m) { m = document.createElement('div'); m.id = 'modal-vchd'; m.className = 'vcd-ov hidden'; m.onclick = (e) => { if (e.target === m) vchClose(); }; document.body.appendChild(m); }
             m.innerHTML = `<div class="vcd-box"><div class="fn-card fx-fd" style="padding:1rem"><div class="flex items-center justify-between gap-2 mb-2"><b class="text-lg">📒 ${esc(isoToDisplay(k))}</b><span class="fx-badge" style="--c:${st[1]}">${T(st[0])}</span></div>
-                ${r('مبيعات المحل الرئيسي', v.main, FX_COL.sales)}${r('مدخول الفرع', v.branch, FX_COL.branch)}${r('ديون محصَّلة', v.debt, FX_COL.debt)}${v.truck ? r('حساب الشاحنة (خارج المدخول)', v.truck, FX_COL.truck) : ''}${v.other ? r('مداخيل أخرى', v.other, FX_COL.other) : ''}${r('المصاريف', v.exp, FX_COL.exp)}${v.retCash ? r('مرتجعات نقدية', v.retCash, FX_COL.exp) : ''}
-                <div class="r" style="font-size:1.05rem"><span><b>${T('إجمالي المدخول')}</b></span><b style="color:#059669">${esc(A(v.expected))}</b></div>
+                ${r('مبيعات المحل الرئيسي', v.main)}${r('مدخول الفرع', v.branch)}${r('ديون محصَّلة', v.debt)}${v.truck ? r('حساب الشاحنة (خارج المدخول)', v.truck) : ''}${v.other ? r('مداخيل أخرى', v.other) : ''}${r('المصاريف', v.exp, FX_COL.exp)}${v.retCash ? r('مرتجعات نقدية', v.retCash, FX_COL.exp) : ''}
+                <div class="r" style="font-size:1.05rem"><span><b>${T('إجمالي المدخول')}</b></span><b class="fx-grn">${esc(A(v.expected))}</b></div>
                 ${c ? `${r('المبلغ المعدود', c.counted)}<div class="r"><span>${T('الفرق')}</span><span>${fxDiffHtml(c.diff != null ? c.diff : 0)}</span></div>${c.note ? `<div class="r"><span>${T('ملاحظة')}</span><span data-notr>${esc(c.note)}</span></div>` : ''}<div class="r"><span>${T('أغلقه:')}</span><span data-notr>${esc(c.by || '—')} · ${esc(fxTime(c.at))}</span></div>${c.st === 'handed' ? `<div class="r"><span>🤝 ${T('سُلّم إلى')}</span><span data-notr>${esc(c.handTo || '')} · ${esc(fxTime(c.handAt))}</span></div>` : ''}` : ''}
                 ${debts.length ? `<div class="mt-2 text-xs font-bold">${T('تفصيل الديون المحصَّلة')}</div>${debts.map(x => `<div class="r" data-notr><span>${esc(x.p.name)} ${x.truck ? '🚚' : '🏪'}</span><b>${esc(A(x.amount))}</b></div>`).join('')}` : ''}
                 <div class="flex gap-2 flex-wrap mt-3"><button type="button" class="fn-btn flex-1" onclick="vchClose();fxPick('${k}',true)">✏️ ${T('تعديل')}</button><button type="button" class="fn-btn primary flex-1" onclick="vchClose();fxPrintReport('${k}','${k}')">🖨️ ${T('طباعة التقرير')}</button><button type="button" class="fn-btn ok flex-1" onclick="fxDaySend('${k}')">📤 ${T('إرسال')}</button></div></div>
@@ -10542,7 +10548,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v72';
+        const APP_VER = 'v73';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
