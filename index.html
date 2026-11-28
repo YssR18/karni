@@ -1131,6 +1131,17 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v72 */
+@media(min-width:641px){#hp-hero:not(.hp-mini) .hp-row{display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center}#hp-hero:not(.hp-mini) .hp-bal{grid-column:2;grid-row:1;min-width:14rem}#hp-hero:not(.hp-mini) .hp-btns{grid-column:3;grid-row:1;justify-self:start}}
+.tx-row.tx-inv{cursor:pointer}
+.fx-mini{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))!important}.fx-mini small{font-size:.8rem!important;font-weight:800;color:#475569!important;margin-bottom:.1rem}.dark .fx-mini small{color:#cbd5e1!important}.fx-mini b{font-size:1.1rem!important;font-weight:900!important}
+.fx-sw{position:relative;display:flex;flex:none;width:11rem;height:2.2rem;border-radius:999px;background:rgba(100,116,139,.18);border:1px solid rgba(100,116,139,.35);padding:0;overflow:hidden;cursor:pointer;direction:rtl}
+.fx-sw span{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:#475569;transition:color .2s}
+.fx-sw i{position:absolute;top:2px;bottom:2px;inset-inline-start:2px;width:calc(50% - 2px);border-radius:999px;background:#059669;transition:inset-inline-start .25s ease,background .25s ease}
+.fx-sw.t i{inset-inline-start:calc(50%);background:#0ea5e9}
+.fx-sw:not(.t) span:first-of-type,.fx-sw.t span:last-of-type{color:#fff}
+.fx-sw:disabled{opacity:.6;cursor:default}
+.fx-fd .r{display:flex;justify-content:space-between;gap:.6rem;padding:.45rem 0;border-bottom:1px dashed rgba(100,116,139,.3);font-size:.9rem}.fx-fd .r b{direction:ltr}
 /* v71 */
 .mv-card{display:block!important;cursor:pointer}.mv-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.mv-who{font-weight:800;font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mv-k{font-weight:800;font-size:.8rem;padding:.15rem .6rem;border-radius:999px;background:rgba(100,116,139,.12);white-space:nowrap}
 .mv-nm{font-size:.82rem;color:#64748b;margin:.15rem 0 .45rem}.mv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem .6rem;border-top:1px dashed var(--border-soft,#e2e8f0);padding-top:.45rem}.mv-c small{display:block;font-size:.7rem;color:#94a3b8}.mv-c b{display:block;font-size:.95rem;direction:ltr;text-align:right}
@@ -5220,7 +5231,24 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             showScreen('detail');
         }
 
-        function txRowTap(ev, id) { if (window.innerWidth <= 640) txOpen(id); }
+        function txInvoiceOf(person, tx) {
+            const L = state.invoices || [];
+            return L.find(i => i.txId && String(i.txId) === String(tx.id)) || (tx.invoice ? L.find(i => i.partyId === person.id && String(i.number) === String(tx.invoice) && (i.type === 'sales' || i.type === 'purchases')) : null) || null;
+        }
+        function txRowTap(ev, id) {
+            if (window.innerWidth <= 640) { txOpen(id); return; }
+            const person = state[state.activeSection] && state[state.activeSection].find(p => p.id === state.currentPersonId); if (!person) return;
+            const tx = (person.transactions || []).find(t => String(t.id) === String(id)); if (!tx) return;
+            const inv = txInvoiceOf(person, tx); if (inv) invQuickView(inv.id);
+        }
+        function invQuickView(id) {
+            const x = invById(id); if (!x) return; invViewId = id;
+            let m = document.getElementById('modal-vchd');
+            if (!m) { m = document.createElement('div'); m.id = 'modal-vchd'; m.className = 'vcd-ov hidden'; m.onclick = (e) => { if (e.target === m) vchClose(); }; document.body.appendChild(m); }
+            m.innerHTML = `<div class="vcd-box" style="max-width:46rem"><div class="fn-card" style="background:#fff;color:#0f172a;padding:1rem">${invoiceHtml(x)}</div>
+                <div class="flex gap-2 flex-wrap"><button type="button" class="fn-btn primary flex-1" onclick="printInvoice()">🖨️ ${esc(i18nT('طباعة / PDF'))}</button><button type="button" class="fn-btn flex-1" onclick="vchClose();openInvView('${esc(x.id)}')">🧾 ${esc(i18nT('فتحها في قسم الفواتير'))}</button><button type="button" class="fn-btn flex-1" onclick="vchClose()">${esc(i18nT('إغلاق'))}</button></div></div>`;
+            m.classList.remove('hidden');
+        }
         function txOpen(id) {
             const person = state[state.activeSection].find(p => p.id === state.currentPersonId); if (!person) return;
             const tx = (person.transactions || []).find(t => String(t.id) === String(id)); if (!tx) return;
@@ -5262,7 +5290,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                 const isAdd = tx.type === 'add';
                 el.className = `p-3 rounded-xl border text-sm ${isAdd ? 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-400'}`;
                 el.innerHTML = `
-                    <div class="tx-row" onclick="txRowTap(event,'${tx.id}')">
+                    <div class="tx-row${txInvoiceOf(person, tx) ? ' tx-inv' : ''}" onclick="txRowTap(event,'${tx.id}')">
                     <div class="tx-info">
                     <div class="tx-old">
                         <div class="tx-top">
@@ -7540,10 +7568,8 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const plus = (k, t) => `<button type="button" class="fx-act fx-plus" onclick="fxQToggle('${k}')">＋ ${T(t)}</button>`;
             const qrow = k => `<div class="fx-q fx-act${fxOpenQ.has(k) ? '' : ' hidden'}" id="fxq-${k}" style="--c:${k === 'exp' ? FX_COL.exp : k === 'branch' ? FX_COL.branch : FX_COL.sales}"><input id="fxq-${k}-a" type="number" inputmode="decimal" step="any" min="0" placeholder="${esc(i18nT('المبلغ'))}" class="fn-in" onkeydown="if(event.key==='Enter'){event.preventDefault();fxQuickSave('${k}')}"><input id="fxq-${k}-n" type="text" maxlength="200" autocomplete="off" placeholder="${esc(i18nT(k === 'exp' ? 'فيما صُرف؟' : 'ملاحظة (اختياري)'))}" class="fn-in fx-qn" onkeydown="if(event.key==='Enter'){event.preventDefault();fxQuickSave('${k}')}"><button type="button" class="fx-ok" onclick="fxQuickSave('${k}')">✅</button></div>`;
             const debts = fxDebtRows(fxDate, fxDate);
-            const drow = x => `<div class="fx-dro"><button type="button" class="fx-ck fx-act${x.truck ? ' on' : ''}" onclick="fxTruck('${esc(String(x.id))}', ${x.truck ? 'false' : 'true'})" title="${esc(i18nT(x.truck ? 'إرجاع إلى مدخول المحل' : 'نقل إلى حساب الشاحنة'))}">✓</button><div class="fx-dn" data-notr onclick="rpOpenCust('${esc(x.p.id)}')"><b>${esc(x.p.name)}</b>${x.note && x.note !== x.p.name ? `<small>${esc(x.note)}</small>` : ''}<small>${x.by ? esc(i18nT('سجّله:')) + ' ' + esc(x.by) : ''}${x.at ? ' · ' + esc(fxTime(x.at)) : ''} · ${esc(i18nT('المتبقي عليه'))}: ${esc(formatAmount(getPersonBalance(x.p)))}</small></div><div class="fx-da" dir="ltr" style="${x.truck ? 'color:' + FX_COL.truck : ''}">${esc(formatAmount(x.amount))}</div></div>`;
-            const shopD = debts.filter(x => !x.truck), truckD = debts.filter(x => x.truck);
-            const debtList = (shopD.length ? `<div class="fx-dl"><div class="fx-dlh"><span>💰 ${T('ديون محصَّلة اليوم')}</span><b>${shopD.length}</b></div>${shopD.map(drow).join('')}<div class="fx-dh">✓ ${T('اضغط العلامة لنقل الدين إلى حساب الشاحنة')}</div></div>` : '')
-                + (truckD.length ? `<div class="fx-dl fx-dl-t"><div class="fx-dlh"><span>🚚 ${T('ديون الشاحنة')}</span><b>${truckD.length}</b></div>${truckD.map(drow).join('')}</div>` : '');
+            const drow = x => `<div class="fx-dro"><button type="button" class="fx-sw fx-act${x.truck ? ' t' : ''}" onclick="fxTruck('${esc(String(x.id))}', ${x.truck ? 'false' : 'true'})" title="${esc(i18nT(x.truck ? 'ديون الشاحنة: تظهر في التقرير فقط' : 'مدخول المحل: تُحسب في الإجمالي'))}"><span>🏪 ${esc(i18nT('المحل'))}</span><span>🚚 ${esc(i18nT('الشاحنة'))}</span><i></i></button><div class="fx-dn" data-notr onclick="rpOpenCust('${esc(x.p.id)}')"><b>${esc(x.p.name)}</b>${x.note && x.note !== x.p.name ? `<small>${esc(x.note)}</small>` : ''}<small>${x.by ? esc(i18nT('سجّله:')) + ' ' + esc(x.by) : ''}${x.at ? ' · ' + esc(fxTime(x.at)) : ''} · ${esc(i18nT('المتبقي عليه'))}: ${esc(formatAmount(getPersonBalance(x.p)))}</small></div><div class="fx-da" dir="ltr" style="${x.truck ? 'color:' + FX_COL.truck : ''}">${esc(formatAmount(x.amount))}</div></div>`;
+            const debtList = debts.length ? `<div class="fx-dl"><div class="fx-dlh"><span>💰 ${T('ديون محصَّلة اليوم')}</span><b>${debts.length}</b></div>${debts.map(drow).join('')}<div class="fx-dh">🏪 ${T('المحل: تُحسب في إجمالي المدخول وتظهر في التقرير')} · 🚚 ${T('الشاحنة: تظهر في التقرير فقط')}</div></div>` : '';
             let h = `<div class="fn-card fx-card space-y-3">
                 <div class="flex items-center justify-between gap-2 flex-wrap"><div class="flex items-center gap-2"><span class="font-extrabold">📒 ${T('إغلاق اليوم')}</span><span class="fx-badge" style="--c:${st[1]}">${T(st[0])}</span></div>
                 <input id="fx-date" type="date" class="fn-in" style="width:auto" value="${esc(fxDate)}" onchange="fxPick(this.value)"></div>
@@ -7602,10 +7628,36 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             list.innerHTML = days.map(k => {
                 const v = fxView(k), st = fxStatus(v.c), c = v.c;
                 const cell = (col, l, val) => `<div style="--c:${col}"><small>${esc(i18nT(l))}</small><b dir="ltr">${esc(formatAmount(val))}</b></div>`;
-                return `<div class="fn-day fx-dayc${k === fxDate ? ' sel' : ''}" onclick="fxPick('${k}',true)"><div class="fn-dayh"><span>${esc(isoToDisplay(k))}</span><span class="fx-badge" style="--c:${st[1]}">${esc(i18nT(st[0]))}</span></div>
+                return `<div class="fn-day fx-dayc${k === fxDate ? ' sel' : ''}" onclick="fxDayModal('${k}')"><div class="fn-dayh"><span>${esc(isoToDisplay(k))}</span><span class="fx-badge" style="--c:${st[1]}">${esc(i18nT(st[0]))}</span></div>
                     <div class="fx-mini">${cell(FX_COL.sales, 'المحل', v.main)}${cell(FX_COL.branch, 'الفرع', v.branch)}${cell(FX_COL.debt, 'ديون', v.debt)}${v.truck ? cell(FX_COL.truck, 'شاحنة', v.truck) : ''}${cell(FX_COL.exp, 'مصاريف', v.exp)}${cell('#059669', 'المدخول', v.expected)}</div>
                     ${c ? `<div class="fx-cd" data-notr>${esc(i18nT('المعدود'))}: <b dir="ltr">${esc(formatAmount(c.counted))}</b> · ${fxDiffHtml(c.diff != null ? c.diff : 0)}${c.st === 'handed' ? ' · 🤝 ' + esc(c.handTo || '') : ''}${v.stale ? ' · ⚠️' : ''}</div>` : ''}</div>`;
             }).join('');
+        }
+        function fxDayText(k) {
+            const v = fxView(k), c = v.c, st = fxStatus(c), A = formatAmount, L = [];
+            L.push('📒 ' + i18nT('إغلاق اليوم') + ' — ' + isoToDisplay(k), i18nT(st[0].replace(/^\S+\s/, '')));
+            L.push('🏪 ' + i18nT('المحل') + ': ' + A(v.main), '🏬 ' + i18nT('الفرع') + ': ' + A(v.branch), '💰 ' + i18nT('ديون') + ': ' + A(v.debt));
+            if (v.truck) L.push('🚚 ' + i18nT('شاحنة') + ': ' + A(v.truck) + ' (' + i18nT('خارج المدخول') + ')');
+            if (v.other) L.push('➕ ' + i18nT('مداخيل أخرى') + ': ' + A(v.other));
+            L.push('💸 ' + i18nT('مصاريف') + ': ' + A(v.exp), '✅ ' + i18nT('المدخول') + ': ' + A(v.expected));
+            if (c) { L.push(i18nT('المعدود') + ': ' + A(c.counted)); if (c.note) L.push('📝 ' + c.note); if (c.st === 'handed') L.push('🤝 ' + i18nT('سُلّم إلى') + ' ' + (c.handTo || '')); }
+            return L.join('\n');
+        }
+        function fxDaySend(k) { window.open('https://wa.me/?text=' + encodeURIComponent(fxDayText(k)), '_blank'); }
+        function fxDayModal(k) {
+            const v = fxView(k), c = v.c, st = fxStatus(c), A = formatAmount, T = s => esc(i18nT(s));
+            const r = (l, val, col) => `<div class="r"><span>${T(l)}</span><b style="${col ? 'color:' + col : ''}">${esc(A(val))}</b></div>`;
+            const debts = fxDebtRows(k, k);
+            let m = document.getElementById('modal-vchd');
+            if (!m) { m = document.createElement('div'); m.id = 'modal-vchd'; m.className = 'vcd-ov hidden'; m.onclick = (e) => { if (e.target === m) vchClose(); }; document.body.appendChild(m); }
+            m.innerHTML = `<div class="vcd-box"><div class="fn-card fx-fd" style="padding:1rem"><div class="flex items-center justify-between gap-2 mb-2"><b class="text-lg">📒 ${esc(isoToDisplay(k))}</b><span class="fx-badge" style="--c:${st[1]}">${T(st[0])}</span></div>
+                ${r('مبيعات المحل الرئيسي', v.main, FX_COL.sales)}${r('مدخول الفرع', v.branch, FX_COL.branch)}${r('ديون محصَّلة', v.debt, FX_COL.debt)}${v.truck ? r('حساب الشاحنة (خارج المدخول)', v.truck, FX_COL.truck) : ''}${v.other ? r('مداخيل أخرى', v.other, FX_COL.other) : ''}${r('المصاريف', v.exp, FX_COL.exp)}${v.retCash ? r('مرتجعات نقدية', v.retCash, FX_COL.exp) : ''}
+                <div class="r" style="font-size:1.05rem"><span><b>${T('إجمالي المدخول')}</b></span><b style="color:#059669">${esc(A(v.expected))}</b></div>
+                ${c ? `${r('المبلغ المعدود', c.counted)}<div class="r"><span>${T('الفرق')}</span><span>${fxDiffHtml(c.diff != null ? c.diff : 0)}</span></div>${c.note ? `<div class="r"><span>${T('ملاحظة')}</span><span data-notr>${esc(c.note)}</span></div>` : ''}<div class="r"><span>${T('أغلقه:')}</span><span data-notr>${esc(c.by || '—')} · ${esc(fxTime(c.at))}</span></div>${c.st === 'handed' ? `<div class="r"><span>🤝 ${T('سُلّم إلى')}</span><span data-notr>${esc(c.handTo || '')} · ${esc(fxTime(c.handAt))}</span></div>` : ''}` : ''}
+                ${debts.length ? `<div class="mt-2 text-xs font-bold">${T('تفصيل الديون المحصَّلة')}</div>${debts.map(x => `<div class="r" data-notr><span>${esc(x.p.name)} ${x.truck ? '🚚' : '🏪'}</span><b>${esc(A(x.amount))}</b></div>`).join('')}` : ''}
+                <div class="flex gap-2 flex-wrap mt-3"><button type="button" class="fn-btn flex-1" onclick="vchClose();fxPick('${k}',true)">✏️ ${T('تعديل')}</button><button type="button" class="fn-btn primary flex-1" onclick="vchClose();fxPrintReport('${k}','${k}')">🖨️ ${T('طباعة التقرير')}</button><button type="button" class="fn-btn ok flex-1" onclick="fxDaySend('${k}')">📤 ${T('إرسال')}</button></div></div>
+                <button type="button" class="fn-btn vcd-x" onclick="vchClose()">${T('إغلاق')}</button></div>`;
+            m.classList.remove('hidden');
         }
         function fxPick(d, scroll) { if (!d) return; fxDate = d; if (!d.startsWith(expMonth)) expMonth = d.slice(0, 7); renderExpenses(); if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' }); }
         function fxLive() {
@@ -10490,7 +10542,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v71';
+        const APP_VER = 'v72';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
