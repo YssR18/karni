@@ -1131,6 +1131,11 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v74 */
+.rp-ac{position:relative;flex:1;min-width:9rem}.rp-sug{position:absolute;inset-inline:0;top:calc(100% + 4px);z-index:60;background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:.8rem;box-shadow:0 10px 30px rgba(15,23,42,.25);max-height:14rem;overflow:auto;opacity:1}.rp-sug.hidden{display:none}
+.rp-si{padding:.65rem .85rem;font-size:1rem;font-weight:600;border-bottom:1px solid #e2e8f0;cursor:pointer;opacity:1}.rp-si:last-child{border-bottom:0}.rp-si:active{background:#e0e7ff}
+.dark .rp-sug{background:#1e293b;color:#f1f5f9;border-color:#334155}.dark .rp-si{border-color:#334155}
+@media(max-width:640px){.iv-card{display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"b e" "m e";align-items:center;column-gap:.6rem;row-gap:.35rem}.iv-card>.nt-body{grid-area:b}.iv-card>.pc-mid{grid-area:m;justify-self:start}.iv-card>.pc-end{grid-area:e}.iv-card .iv-nm{font-size:.98rem}.iv-card .iv-sm{font-size:.76rem}.iv-card .od-box{min-width:0;padding:.18rem .7rem;font-size:.74rem}.iv-card .fn-amt{font-size:1.35rem}}
 /* v73 */
 .fx-fd .r b{color:#0f172a;font-size:1.12rem;font-weight:900}.dark .fx-fd .r b{color:#f1f5f9}
 .fx-fd .r b.fx-red,.dark .fx-fd .r b.fx-red{color:#dc2626}.fx-fd .r b.fx-grn,.dark .fx-fd .r b.fx-grn{color:#059669;font-size:1.3rem}
@@ -8376,7 +8381,20 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         function rpSecGo(k) { rpTab(RP_SECS.find(s => s.k === k).subs[0]); }
         function rpFSet(k, v) { rpF[k] = v; rpNewRes(); }
         function rpOpenP(sec, id) { state.activeSection = sec; openPersonDetail(id); showScreen('detail'); }
-        const rpIn = (k, ph, list) => `<input type="search" class="fn-in" ${list ? 'list="rp-dl"' : ''} value="${esc(rpF[k])}" placeholder="${esc(i18nT(ph))}" oninput="rpFSet('${k}',this.value)" style="flex:1;min-width:9rem">`;
+        const rpIn = (k, ph, list) => list
+            ? `<div class="rp-ac"><input type="search" class="fn-in" autocomplete="off" value="${esc(rpF[k])}" placeholder="${esc(i18nT(ph))}" oninput="rpFSet('${k}',this.value);rpSug(this,'${k}')" onfocus="rpSug(this,'${k}')" onblur="setTimeout(()=>rpSugHide(),180)" style="width:100%"><div class="rp-sug hidden"></div></div>`
+            : `<input type="search" class="fn-in" value="${esc(rpF[k])}" placeholder="${esc(i18nT(ph))}" oninput="rpFSet('${k}',this.value)" style="flex:1;min-width:9rem">`;
+        function rpSug(inp, k) {
+            const box = inp.parentElement.querySelector('.rp-sug'); if (!box) return;
+            const q = rpNm(inp.value).trim();
+            const all = [...document.querySelectorAll('#rp-dl option')].map(o => o.value);
+            const L = (q ? all.filter(n => rpNm(n).includes(q)) : all).slice(0, 8).filter(n => rpNm(n) !== q);
+            if (!L.length) { box.classList.add('hidden'); return; }
+            box.innerHTML = L.map((n, i) => `<div class="rp-si" data-i="${i}" data-notr>${esc(n)}</div>`).join('');
+            box.onpointerdown = e => { const t = e.target.closest('.rp-si'); if (!t) return; e.preventDefault(); inp.value = L[+t.dataset.i]; rpFSet(k, inp.value); box.classList.add('hidden'); inp.blur(); };
+            box.classList.remove('hidden');
+        }
+        function rpSugHide() { document.querySelectorAll('.rp-sug').forEach(b => b.classList.add('hidden')); }
         const rpSel = (k, opts) => `<select class="fn-in" onchange="rpFSet('${k}',this.value)" style="flex:1;min-width:8rem">${opts.map(o => `<option value="${o[0]}" ${rpF[k] === o[0] ? 'selected' : ''}>${esc(i18nT(o[1]))}</option>`).join('')}</select>`;
         const rpStOpts = [['all', 'الكل'], ['paid', 'مدفوعة'], ['unpaid', 'غير مدفوعة']];
         function rpFlt(t) {
@@ -10548,7 +10566,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v73';
+        const APP_VER = 'v74';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
