@@ -604,8 +604,8 @@
         .fn-chk{display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;color:#475569;cursor:pointer}.dark .fn-chk{color:#cbd5e1}
         .dt-wrap{position:relative;display:flex;align-items:stretch;gap:.35rem;flex:1 1 auto;min-width:0}.dt-wrap.dt-full{width:100%}
         .dt-text{flex:1 1 auto;min-width:0;width:100%}
-        .dt-btn{flex:0 0 auto;padding:0 .6rem;border-radius:.75rem;background:#e2e8f0;font-size:1rem;line-height:1}.dark .dt-btn{background:#334155}
-        .dt-native{position:absolute!important;inset:0;width:100%!important;height:100%!important;opacity:0;pointer-events:none}
+        .dt-btn{position:relative;overflow:hidden;flex:0 0 auto;padding:0 .6rem;border-radius:.75rem;background:#e2e8f0;font-size:1rem;line-height:1}.dark .dt-btn{background:#334155}
+        .dt-native{position:absolute!important;inset:0;width:100%!important;height:100%!important;opacity:0;pointer-events:auto!important;cursor:pointer;margin:0;padding:0;border:0}
 
         /* إعادة تصميم الفواتير + المنتجات */
         .iv-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
@@ -1131,6 +1131,10 @@ html.has-side.side-mini .sn .gr-badge{position:absolute;top:.4rem;left:calc(50% 
 #hp-hero.hp-mini #person-balance{font-size:1.3rem!important;margin:0!important}
 #hp-hero.hp-mini .hp-btns{flex-direction:row;gap:.35rem}
 #hp-hero.hp-mini .hp-btns button{padding:.3rem .6rem!important;font-size:.75rem!important;border-radius:.6rem}
+/* v71 */
+.mv-card{display:block!important;cursor:pointer}.mv-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.mv-who{font-weight:800;font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mv-k{font-weight:800;font-size:.8rem;padding:.15rem .6rem;border-radius:999px;background:rgba(100,116,139,.12);white-space:nowrap}
+.mv-nm{font-size:.82rem;color:#64748b;margin:.15rem 0 .45rem}.mv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem .6rem;border-top:1px dashed var(--border-soft,#e2e8f0);padding-top:.45rem}.mv-c small{display:block;font-size:.7rem;color:#94a3b8}.mv-c b{display:block;font-size:.95rem;direction:ltr;text-align:right}
+@media(min-width:700px){.mv-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 /* v64 */
 .ntf-r{display:flex;align-items:center;gap:.6rem}.ntf-ok{width:2rem;height:2rem;border-radius:999px;background:#10b981;color:#fff;font-weight:900;font-size:1rem;display:flex;align-items:center;justify-content:center;border:0}
 .app-header .brand-pill{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
@@ -1552,38 +1556,6 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="dash-foot"><span class="gr-badge hidden" data-grn-n></span></div>
                 </div>
 
-                <!-- بطاقة مرتبات العمال -->
-                <div onclick="openWorkersSection()" style="--accent:#8b5cf6" class="payroll-only dash-card group">
-                    <div class="flex justify-between items-start gap-3">
-                        <div>
-                            <span class="inline-block px-3 py-1 bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-300 rounded-full text-xs font-bold mb-2">قسم العمال</span>
-                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">مرتبات العمال</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(الرواتب، السلف، التسديد)</p>
-                        </div>
-                        <div class="dash-ico bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400">👷</div>
-                    </div>
-                    <div class="dash-foot">
-                        <div class="text-xs text-slate-400 mb-1">عدد العمال المسجلين:</div>
-                        <div id="home-workers-count" class="text-2xl font-extrabold text-violet-600 dark:text-violet-400">0</div>
-                    </div>
-                </div>
-
-                <!-- بطاقة المصاريف -->
-                <div onclick="openExpenses()" style="--accent:#ef4444" class="dash-card group">
-                    <div class="flex justify-between items-start gap-3">
-                        <div>
-                            <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold mb-2">مصاريف ومداخيل</span>
-                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition">مصاريف ومداخيل المحل</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(مصاريف ومداخيل يومية وتقرير شهري)</p>
-                        </div>
-                        <div class="dash-ico bg-red-50 dark:bg-red-950/60">💸</div>
-                    </div>
-                    <div class="dash-foot">
-                        <div class="text-xs text-slate-400 mb-1">مصاريف هذا الشهر:</div>
-                        <div id="home-exp-total" class="text-2xl font-extrabold text-red-600 dark:text-red-400">0</div>
-                    </div>
-                </div>
-
                 <!-- بطاقة الفواتير -->
                 <div onclick="openInvoices()" style="--accent:#4f46e5" class="dash-card group">
                     <div class="flex justify-between items-start gap-3">
@@ -1617,6 +1589,38 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
                     <div class="dash-foot">
                         <div class="text-xs text-slate-400 mb-1">عدد المنتجات:</div>
                         <div id="home-prod-count" class="text-2xl font-extrabold nt-num" style="color:#7c3aed">0</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة مرتبات العمال -->
+                <div onclick="openWorkersSection()" style="--accent:#8b5cf6" class="payroll-only dash-card group">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-300 rounded-full text-xs font-bold mb-2">قسم العمال</span>
+                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">مرتبات العمال</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(الرواتب، السلف، التسديد)</p>
+                        </div>
+                        <div class="dash-ico bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400">👷</div>
+                    </div>
+                    <div class="dash-foot">
+                        <div class="text-xs text-slate-400 mb-1">عدد العمال المسجلين:</div>
+                        <div id="home-workers-count" class="text-2xl font-extrabold text-violet-600 dark:text-violet-400">0</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة المصاريف -->
+                <div onclick="openExpenses()" style="--accent:#ef4444" class="dash-card group">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold mb-2">مصاريف ومداخيل</span>
+                            <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition">مصاريف ومداخيل</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">(مصاريف ومداخيل يومية وتقرير شهري)</p>
+                        </div>
+                        <div class="dash-ico bg-red-50 dark:bg-red-950/60">💸</div>
+                    </div>
+                    <div class="dash-foot">
+                        <div class="text-xs text-slate-400 mb-1">مصاريف هذا الشهر:</div>
+                        <div id="home-exp-total" class="text-2xl font-extrabold text-red-600 dark:text-red-400">0</div>
                     </div>
                 </div>
 
@@ -2834,9 +2838,10 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
     <div id="modal-activity" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-3 max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-extrabold text-slate-800 dark:text-slate-100">📜 سجل النشاط (آخر 100 عملية)</h3>
+                <h3 class="text-lg font-extrabold text-slate-800 dark:text-slate-100">📜 سجل النشاط (آخر 300 عملية)</h3>
                 <button type="button" onclick="closeModal('modal-activity')" class="text-slate-500 hover:text-slate-800 dark:hover:text-white text-xl px-2">✕</button>
             </div>
+            <div class="flex gap-2"><input id="act-q" type="search" class="fn-in" style="flex:1;min-width:0" placeholder="بحث: اسم المستخدم أو الشخص أو التفاصيل" oninput="actDraw()"><select id="act-t" class="fn-in" style="flex:0 0 8.5rem" onchange="actDraw()"><option value="">كل الحركات</option><option value="add">➕ إضافة</option><option value="edit">✏️ تعديل</option><option value="delete">🗑️ حذف</option><option value="worker">👷 العمال</option><option value="price">💲 الأسعار</option><option value="stock">📋 الجرد</option><option value="other">أخرى</option></select></div>
             <div id="activity-list" class="space-y-2 text-xs"></div>
         </div>
     </div>
@@ -3876,7 +3881,7 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
 
         function formatAmount(num) {
             const val = num.toLocaleString('en-US');
-            return state.showCurrency ? `${val} د.ج` : val;
+            return state.showCurrency ? `\u2066د.ج\u00A0${val}\u2069` : val;
         }
 
         function updateHomeShopNameDisplay() {
@@ -4886,19 +4891,29 @@ html.is-desk #wh-list.space-y-2 .pr-p b{line-height:1.25}
             worker_debt: '💸 سلفة / دين عامل', worker_repay: '💰 تسديد دين عامل', worker_payout: '🧾 صرف راتب', worker_tx_delete: '🗑️ حذف حركة عامل'
         };
 
+        let actRows = [];
+        const actCat = a => { const k = String(a.action || ''); if (/^worker/.test(k)) return 'worker'; if (/price/.test(k)) return 'price'; if (/stock/.test(k)) return 'stock'; if (/^add|_add$/.test(k)) return 'add'; if (/^edit|_edit$/.test(k)) return 'edit'; if (/delete/.test(k)) return 'delete'; return 'other'; };
+        function actDraw() {
+            const box = document.getElementById('activity-list'); if (!box) return;
+            const q = ((document.getElementById('act-q') || {}).value || '').trim().toLowerCase(), t = (document.getElementById('act-t') || {}).value || '';
+            const rows = actRows.filter(a => {
+                if (t) { const c = actCat(a); if (t === 'add' || t === 'edit' || t === 'delete' ? !(c === t || (t === 'delete' && /delete/.test(a.action)) || (t === 'add' && /(^add|_add$)/.test(a.action)) || (t === 'edit' && /(^edit|_edit$)/.test(a.action))) : c !== t) return false; }
+                return !q || [a.by, a.personName, a.details, ACTION_LABEL[a.action], a.action].join(' ').toLowerCase().includes(q);
+            });
+            box.innerHTML = rows.length ? rows.map(a => `<div class="border dark:border-slate-700 rounded-xl p-2.5">
+                    <div class="flex justify-between gap-2"><span class="font-bold">${ACTION_LABEL[a.action] || esc(a.action)}</span><span class="text-slate-400" dir="ltr">${esc(new Date(a.at).toLocaleString('en-GB', { hour12: false }).slice(0, 17))}</span></div>
+                    <div class="text-slate-600 dark:text-slate-300 mt-0.5">👤 ${esc(a.by)}${a.personName ? ` · ${a.section === 'suppliers' ? 'مورد' : (a.section === 'workers' ? 'عامل' : (a.section === 'products' ? 'منتج' : 'عميل'))}: ${esc(a.personName)}` : ''}</div>
+                    ${a.details ? `<div class="text-slate-500 dark:text-slate-400 mt-0.5">${esc(a.details)}</div>` : ''}
+                </div>`).join('') : `<div class="text-slate-500">${actRows.length ? 'لا توجد نتائج مطابقة.' : 'لا توجد عمليات مسجلة بعد.'}</div>`;
+        }
         async function openActivityModal() {
             if (!isOwner()) return;
             const box = document.getElementById('activity-list');
             box.innerHTML = '<div class="text-slate-500">جاري التحميل...</div>';
             document.getElementById('modal-activity').classList.remove('hidden');
             try {
-                const snap = await db.collection('activity').orderBy('at', 'desc').limit(100).get();
-                const rows = snap.docs.map(d => d.data());
-                box.innerHTML = rows.length ? rows.map(a => `<div class="border dark:border-slate-700 rounded-xl p-2.5">
-                    <div class="flex justify-between gap-2"><span class="font-bold">${ACTION_LABEL[a.action] || esc(a.action)}</span><span class="text-slate-400" dir="ltr">${esc(new Date(a.at).toLocaleString('en-GB', { hour12: false }).slice(0, 17))}</span></div>
-                    <div class="text-slate-600 dark:text-slate-300 mt-0.5">👤 ${esc(a.by)}${a.personName ? ` · ${a.section === 'suppliers' ? 'مورد' : (a.section === 'workers' ? 'عامل' : (a.section === 'products' ? 'منتج' : 'عميل'))}: ${esc(a.personName)}` : ''}</div>
-                    ${a.details ? `<div class="text-slate-500 dark:text-slate-400 mt-0.5">${esc(a.details)}</div>` : ''}
-                </div>`).join('') : '<div class="text-slate-500">لا توجد عمليات مسجلة بعد.</div>';
+                const snap = await db.collection('activity').orderBy('at', 'desc').limit(300).get();
+                actRows = snap.docs.map(d => d.data()); actDraw();
             } catch (err) {
                 console.error(err);
                 box.innerHTML = '<div class="text-red-600">تعذّر تحميل السجل (قد تحتاج لتحديث قواعد Firebase).</div>';
@@ -8377,7 +8392,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const smy = [S('عدد الفواتير', new Set(R.map(o => o.x.id)).size)];
                 if (rpF.it !== 'purchases') { smy.push(S('الكمية المباعة', fnNum(fnRound(sum(sl, o => o.qty))))); smy.push(S('قيمة المبيعات', A(sum(sl, o => o.tot)), 'text-emerald-600')); }
                 if (rpF.it !== 'sales') { smy.push(S('الكمية المشتراة', fnNum(fnRound(sum(pu, o => o.qty))))); smy.push(S('قيمة المشتريات', A(sum(pu, o => o.tot)))); }
-                return { sum: smy, rows: R.map(o => ({ t: (invNm(o.x) || '—') + ' — ' + o.nm, s: i18nT('فاتورة') + ' ' + (o.x.number || '') + ' · ' + isoToDisplay(o.d) + ' · ' + i18nT(o.ret ? 'مرتجع' : o.x.type === 'sales' ? 'بيع' : 'شراء') + ' · ' + i18nT('الكمية') + ': ' + fnNum(fnRound(o.qty)) + ' × ' + A(o.pr), a: A(o.tot), cls: o.ret ? 'text-amber-600' : o.x.type === 'sales' ? 'text-emerald-600' : '', click: `openInvView('${esc(o.x.id)}')` })) };
+                return { sum: smy, rows: R.map(o => ({ mv: { who: invNm(o.x) || '—', nm: o.nm, kind: o.ret ? 'ret' : o.x.type === 'sales' ? 'sale' : 'buy', num: o.x.number || '', d: isoToDisplay(o.d), qty: fnNum(fnRound(o.qty)), pr: A(o.pr), tot: A(o.tot) }, click: `openInvView('${esc(o.x.id)}')` })) };
             }
             if (t === 'p_top') {
                 const d = rpProfitData(), k = rpF.sort, L = d.top.filter(o => !q || rpNm(o.name).includes(q)).sort((a, b) => b[k] - a[k]);
@@ -8397,13 +8412,20 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             }
             return { sum: [], rows: [] };
         }
+        function rpMvCard(r) {
+            const m = r.mv, K = { sale: ['🛒 ' + i18nT('بيع'), 'text-emerald-600'], ret: ['↩️ ' + i18nT('مرتجع'), 'text-amber-600'], buy: ['📥 ' + i18nT('شراء'), 'text-indigo-600'] }[m.kind];
+            const cell = (l, v, c) => `<div class="mv-c"><small>${esc(i18nT(l))}</small><b class="${c || ''}" data-notr>${esc(v)}</b></div>`;
+            return `<div class="fn-inv mv-card" onclick="${r.click}"><div class="mv-top"><div class="mv-who" data-notr>👤 ${esc(m.who)}</div><span class="mv-k ${K[1]}">${K[0]}</span></div>
+                <div class="mv-nm" data-notr>${esc(m.nm)}</div>
+                <div class="mv-grid">${cell('الكمية', m.qty)}${cell('السعر', m.pr)}${cell('الإجمالي', m.tot, K[1])}${cell('رقم الفاتورة', m.num)}${cell('التاريخ', m.d)}</div></div>`;
+        }
         function rpNewRes() {
             const box = document.getElementById('rp-res'); if (!box) return;
             const d = rpNewData(rpT), MAX = 200; rpLast = d;
             box.innerHTML = `<div class="fn-sum" style="grid-template-columns:repeat(${Math.min(d.sum.length, 2) || 1},1fr)">${d.sum.map(s => rpBox(s[0], esc(String(s[1])), s[2])).join('')}</div>`
                 + (d.hint ? `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT(d.hint))}</div>` : '')
                 + (d.rows.length ? `<button type="button" class="fn-btn w-full" onclick="rpResPrint()">🖨️ ${esc(i18nT('طباعة التقرير'))}</button>` : '')
-                + (d.rows.length ? d.rows.slice(0, MAX).map(r => `<div class="fn-inv" style="${r.click ? '' : 'cursor:default'}" ${r.click ? `onclick="${r.click}"` : ''}><div class="flex-1 min-w-0"><div class="font-bold truncate" data-notr>${esc(r.t)}</div><div class="text-xs text-slate-500" data-notr style="word-break:break-word">${esc(r.s)}</div></div><div class="fn-amt ${r.cls || ''}" dir="ltr">${esc(r.a)}</div></div>`).join('') + (d.rows.length > MAX ? `<div class="text-center text-xs text-slate-400 py-2">${esc(i18nT('يُعرض أول 200 نتيجة، ضيّق البحث لرؤية الباقي'))}</div>` : '')
+                + (d.rows.length ? d.rows.slice(0, MAX).map(r => r.mv ? rpMvCard(r) : `<div class="fn-inv" style="${r.click ? '' : 'cursor:default'}" ${r.click ? `onclick="${r.click}"` : ''}><div class="flex-1 min-w-0"><div class="font-bold truncate" data-notr>${esc(r.t)}</div><div class="text-xs text-slate-500" data-notr style="word-break:break-word">${esc(r.s)}</div></div><div class="fn-amt ${r.cls || ''}" dir="ltr">${esc(r.a)}</div></div>`).join('') + (d.rows.length > MAX ? `<div class="text-center text-xs text-slate-400 py-2">${esc(i18nT('يُعرض أول 200 نتيجة، ضيّق البحث لرؤية الباقي'))}</div>` : '')
                     : (d.hint ? '' : `<div class="text-center text-slate-400 py-8 text-sm">${esc(i18nT('لا توجد نتائج مطابقة'))}</div>`));
         }
         function rpRenderNew(el) {
@@ -9377,7 +9399,6 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
             const tot = fnRound(list.reduce((s, x) => s + (x.total || 0), 0));
             const cr = fnRound(list.filter(x => x.pay === 'credit' && x.type !== 'orders').reduce((s, x) => s + (x.total || 0) - (x.paid || 0), 0));
             const st = [];
-            if (invTab !== 'orders') st.push([i18nT('منها غير خالص'), formatAmount(cr), 'red']);
             const sb = document.getElementById('inv-stats');
             sb.style.display = st.length ? '' : 'none'; sb.style.gridTemplateColumns = `repeat(${Math.max(1, st.length)},1fr)`;
             sb.innerHTML = st.map(([l, v, c]) => `<div class="iv-st ${c}"><small>${esc(l)}</small><b>${esc(v)}</b></div>`).join('');
@@ -10245,7 +10266,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                 const btn = document.createElement('button');
                 btn.type = 'button'; btn.className = 'dt-btn'; btn.tabIndex = -1; btn.textContent = '📅'; btn.title = 'التقويم';
                 el.parentNode.insertBefore(wrap, el);
-                wrap.append(txt, btn, el);
+                btn.append(el); wrap.append(txt, btn);
                 el.required = false; el.tabIndex = -1; el.classList.add('dt-native');
                 const sync = () => { txt.value = fmt(D.get.call(el)); txt.setCustomValidity(''); };
                 Object.defineProperty(el, 'value', { configurable: true, get() { return D.get.call(this); }, set(v) { D.set.call(this, v); sync(); } });
@@ -10265,7 +10286,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
                     txt.setCustomValidity(o && !iso ? (LANG === 'ar' ? 'تاريخ غير صحيح (يوم/شهر/سنة)' : 'Invalid date (dd/mm/yyyy)') : '');
                     if (D.get.call(el) !== iso) { D.set.call(el, iso); emit(); }
                 });
-                btn.addEventListener('click', () => { try { el.showPicker(); } catch (e) { try { el.click(); } catch (e2) {} } });
+                btn.addEventListener('click', () => { try { el.showPicker(); } catch (e) {} });
                 el.addEventListener('change', (ev) => { if (ev.isTrusted) sync(); });
                 if (el.form) el.form.addEventListener('reset', () => setTimeout(sync, 0));
             }
@@ -10469,7 +10490,7 @@ html:not([data-theme]) #prod-list .pr-p b{font-size:.85rem}
         // ---- نظام التحديثات: بطاقة بشرح مختصر + «تحديث الآن» / «لاحقاً» + تحقق يدوي من الإعدادات ----
         // عند إصدار تحديث: ارفع APP_VER هنا و VERSION في sw.js وحدّث version.json (الرقم والملاحظات)
         try { if (window.karniDesktop) document.documentElement.classList.add('is-desk'); } catch (e) {}
-        const APP_VER = 'v70';
+        const APP_VER = 'v71';
         var updInfo = null, updAvail = false, updBusy = false, updSwReady = false, updLastCheck = 0;
         function updLang() { try { return localStorage.getItem('app_lang') || 'ar'; } catch (e) { return 'ar'; } }
         function updSnoozed(v) { try { return Date.now() < +(localStorage.getItem('upd_snooze_' + v) || 0); } catch (e) { return false; } }
